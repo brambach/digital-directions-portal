@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, FileText, MessageSquare, Clock, Download, User } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { MessageForm } from "@/components/message-form";
 
 export const dynamic = "force-dynamic";
 
@@ -220,17 +221,8 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
             )}
 
             {/* Message Input */}
-            <div className="mt-4 bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-              <textarea
-                placeholder="Type a message to your team..."
-                className="w-full border border-gray-300 rounded-md p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-              />
-              <div className="flex justify-end mt-2">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors text-sm font-medium">
-                  Send Message
-                </button>
-              </div>
+            <div className="mt-4">
+              <MessageForm projectId={id} />
             </div>
           </div>
         </div>

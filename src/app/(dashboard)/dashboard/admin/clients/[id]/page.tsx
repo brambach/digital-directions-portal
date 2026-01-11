@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Building2, Calendar, Activity, FolderOpen, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { AddProjectDialog } from "@/components/add-project-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -126,9 +127,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               </div>
             </div>
           </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors text-sm font-medium">
-            Edit Client
-          </button>
         </div>
       </div>
 
@@ -172,9 +170,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Projects</h2>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-              + New Project
-            </button>
+            <AddProjectDialog clients={[{ id: client.id, companyName: client.companyName }]} />
           </div>
 
           {clientProjects.length === 0 ? (
@@ -262,21 +258,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     : "No downloads yet"}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-            <p className="text-sm text-blue-900 font-medium mb-2">Quick Actions</p>
-            <div className="space-y-2">
-              <button className="w-full text-left text-sm text-blue-700 hover:text-blue-800 transition-colors">
-                Send message
-              </button>
-              <button className="w-full text-left text-sm text-blue-700 hover:text-blue-800 transition-colors">
-                Upload files
-              </button>
-              <button className="w-full text-left text-sm text-blue-700 hover:text-blue-800 transition-colors">
-                View all activity
-              </button>
             </div>
           </div>
         </div>
