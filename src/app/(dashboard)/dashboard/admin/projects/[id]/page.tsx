@@ -10,7 +10,6 @@ import { MessageForm } from "@/components/message-form";
 import { FileUploader } from "@/components/file-uploader";
 import { EditProjectDialog } from "@/components/edit-project-dialog";
 import { UpdateStatusDialog } from "@/components/update-status-dialog";
-import { ProjectQuickActions } from "@/components/project-quick-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -316,7 +315,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <ProjectQuickActions projectId={project.id} />
         </div>
       </div>
     </div>
