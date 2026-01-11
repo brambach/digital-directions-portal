@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { clients, projects, clientActivity } from "@/lib/db/schema";
 import { eq, isNull, and, count, sql } from "drizzle-orm";
 import Link from "next/link";
-import { Users, Activity, Archive, Plus, FolderOpen, Zap, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { Users, Activity, Archive, FolderOpen, Zap, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { AddClientDialog } from "@/components/add-client-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -110,10 +111,7 @@ export default async function ClientsPage() {
           <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Clients</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your client relationships and projects.</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2 shadow-sm text-sm font-medium group">
-          <Plus className="w-[18px] h-[18px]" strokeWidth={1.5} />
-          <span>Add Client</span>
-        </button>
+        <AddClientDialog />
       </div>
 
       {/* Stats Row */}

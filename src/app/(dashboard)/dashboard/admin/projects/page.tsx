@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import { projects, clients } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import Link from "next/link";
-import { Plus, FolderOpen, Clock, CheckCircle, AlertCircle, Pause, FileSearch } from "lucide-react";
+import { FolderOpen, Clock, CheckCircle, AlertCircle, Pause, FileSearch } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { AddProjectDialog } from "@/components/add-project-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,16 @@ function getStatusBadge(status: string): { bg: string; text: string; border: str
 export default async function ProjectsPage() {
   await requireAdmin();
 
+  // Fetch all clients for the project form
+  const allClients = await db
+    .select({
+      id: clients.id,
+      companyName: clients.companyName,
+    })
+    .from(clients)
+    .where(isNull(clients.deletedAt))
+    .orderBy(clients.companyName);
+
   // Fetch all projects with their client info
   const allProjects = await db
     .select({
@@ -103,10 +114,7 @@ export default async function ProjectsPage() {
           <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Projects</h1>
           <p className="text-sm text-gray-500 mt-1">Manage all client projects and deliverables.</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2 shadow-sm text-sm font-medium group">
-          <Plus className="w-[18px] h-[18px]" strokeWidth={1.5} />
-          <span>New Project</span>
-        </button>
+        <AddProjectDialog clients={allClients} />
       </div>
 
       {/* Stats Row */}
