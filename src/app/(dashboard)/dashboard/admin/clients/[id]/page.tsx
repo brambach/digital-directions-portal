@@ -41,14 +41,15 @@ function getProjectStatusBadge(status: string): { bg: string; text: string; bord
   }
 }
 
-export default async function ClientDetailPage({ params }: { params: { id: string } }) {
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
+  const { id } = await params;
 
   // Fetch client data
   const client = await db
     .select()
     .from(clients)
-    .where(and(eq(clients.id, params.id), isNull(clients.deletedAt)))
+    .where(and(eq(clients.id, id), isNull(clients.deletedAt)))
     .limit(1)
     .then((rows) => rows[0]);
 
@@ -60,14 +61,14 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
   const clientProjects = await db
     .select()
     .from(projects)
-    .where(and(eq(projects.clientId, params.id), isNull(projects.deletedAt)))
+    .where(and(eq(projects.clientId, id), isNull(projects.deletedAt)))
     .orderBy(projects.createdAt);
 
   // Fetch client activity
   const activity = await db
     .select()
     .from(clientActivity)
-    .where(eq(clientActivity.clientId, params.id))
+    .where(eq(clientActivity.clientId, id))
     .limit(1)
     .then((rows) => rows[0] || null);
 

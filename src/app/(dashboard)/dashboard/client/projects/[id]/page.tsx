@@ -43,14 +43,15 @@ function getFileIconColor(fileType: string): string {
   return "text-gray-500";
 }
 
-export default async function ClientProjectDetailPage({ params }: { params: { id: string } }) {
+export default async function ClientProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireAuth();
+  const { id } = await params;
 
   // Fetch project and verify it belongs to this client
   const project = await db
     .select()
     .from(projects)
-    .where(and(eq(projects.id, params.id), eq(projects.clientId, user.clientId!), isNull(projects.deletedAt)))
+    .where(and(eq(projects.id, id), eq(projects.clientId, user.clientId!), isNull(projects.deletedAt)))
     .limit(1)
     .then((rows) => rows[0]);
 
@@ -62,7 +63,7 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
   const projectFiles = await db
     .select()
     .from(files)
-    .where(eq(files.projectId, params.id))
+    .where(eq(files.projectId, id))
     .orderBy(desc(files.uploadedAt));
 
   // Fetch project messages
@@ -75,7 +76,7 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
       senderId: messages.senderId,
     })
     .from(messages)
-    .where(and(eq(messages.projectId, params.id), isNull(messages.deletedAt)))
+    .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
     .orderBy(desc(messages.createdAt))
     .limit(10);
 

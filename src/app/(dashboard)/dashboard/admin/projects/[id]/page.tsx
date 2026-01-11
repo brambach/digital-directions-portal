@@ -43,8 +43,9 @@ function getFileIconColor(fileType: string): string {
   return "text-gray-500";
 }
 
-export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
+  const { id } = await params;
 
   // Fetch project with client info
   const project = await db
@@ -62,7 +63,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     })
     .from(projects)
     .leftJoin(clients, eq(projects.clientId, clients.id))
-    .where(and(eq(projects.id, params.id), isNull(projects.deletedAt)))
+    .where(and(eq(projects.id, id), isNull(projects.deletedAt)))
     .limit(1)
     .then((rows) => rows[0]);
 
@@ -74,7 +75,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   const projectFiles = await db
     .select()
     .from(files)
-    .where(eq(files.projectId, params.id))
+    .where(eq(files.projectId, id))
     .orderBy(desc(files.uploadedAt));
 
   // Fetch project messages with sender info
@@ -87,7 +88,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
       senderId: messages.senderId,
     })
     .from(messages)
-    .where(and(eq(messages.projectId, params.id), isNull(messages.deletedAt)))
+    .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
     .orderBy(desc(messages.createdAt))
     .limit(10);
 
