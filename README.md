@@ -6,7 +6,7 @@ Custom-built HiBob implementation and integration management portal for Digital 
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 15 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS + Shadcn UI
 - **Authentication:** Clerk (role-based)
@@ -21,7 +21,7 @@ Custom-built HiBob implementation and integration management portal for Digital 
 ## What's Implemented
 
 ### Core Infrastructure
-- ✅ Next.js 14 with TypeScript and App Router
+- ✅ Next.js 15 with TypeScript and App Router
 - ✅ Tailwind CSS with Shadcn UI components
 - ✅ Drizzle ORM with 7 database tables
 - ✅ Database indexes for performance
