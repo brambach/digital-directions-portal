@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { ChevronsRight, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 
 interface NavItem {
@@ -30,11 +31,15 @@ export function TopNav({ navItems, isAdmin }: TopNavProps) {
   return (
     <nav className="relative z-20 flex items-center justify-between px-6 lg:px-8 py-4 border-b border-slate-200/60 bg-white/60 sticky top-0 backdrop-blur-sm">
       {/* Brand */}
-      <Link href={isAdmin ? "/dashboard/admin" : "/dashboard/client"} className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-[#6366F1] flex items-center justify-center text-white shadow-sm shadow-indigo-200">
-          <ChevronsRight className="w-5 h-5 stroke-[2.5]" />
-        </div>
-        <span className="font-semibold text-slate-900 tracking-tight text-[15px]">
+      <Link href={isAdmin ? "/dashboard/admin" : "/dashboard/client"} className="flex items-center gap-2.5">
+        <Image
+          src="/images/dd-logo.png"
+          alt="Digital Directions"
+          width={32}
+          height={32}
+          className="w-8 h-8 flex-shrink-0"
+        />
+        <span className="font-semibold text-slate-900 tracking-tight text-base leading-none translate-y-[1px]">
           Digital Directions
         </span>
       </Link>

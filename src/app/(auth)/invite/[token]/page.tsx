@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { SignUp, useUser, useSignUp } from "@clerk/nextjs";
 import { Loader2, ChevronRight } from "lucide-react";
 
@@ -152,9 +153,13 @@ export default function InvitePage() {
         <div className="text-center mb-8">
           {/* Logo */}
           <div className="flex items-center justify-center mb-6">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_-5px_rgba(124,58,237,0.5)]">
-              <ChevronRight className="text-white w-6 h-6 relative left-[1px]" strokeWidth={2.5} />
-            </div>
+            <Image
+              src="/images/dd-logo.png"
+              alt="Digital Directions"
+              width={64}
+              height={64}
+              className="w-16 h-16"
+            />
           </div>
 
           <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-br from-white via-white to-slate-400 bg-clip-text text-transparent">

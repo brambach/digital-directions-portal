@@ -3,12 +3,46 @@ import { db } from "@/lib/db";
 import { tickets, clients, projects, users } from "@/lib/db/schema";
 import { eq, isNull, and, desc, or } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
-import { TicketList } from "@/components/ticket-card";
 import { CreateTicketDialog } from "@/components/create-ticket-dialog";
-import { Ticket, LayoutGrid } from "lucide-react";
+import { Ticket, AlertTriangle, Zap, TrendingUp, Clock, User, Building2, ExternalLink } from "lucide-react";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 export const dynamic = "force-dynamic";
+
+// Helper functions for status and priority badges
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "open":
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">Open</span>;
+    case "in_progress":
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase tracking-wider">In Progress</span>;
+    case "waiting_on_client":
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-200 uppercase tracking-wider">Waiting</span>;
+    case "resolved":
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-wider">Resolved</span>;
+    case "closed":
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">Closed</span>;
+    default:
+      return null;
+  }
+}
+
+function getPriorityInfo(priority: string) {
+  switch (priority) {
+    case "urgent":
+      return { icon: AlertTriangle, color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200", label: "URGENT" };
+    case "high":
+      return { icon: Zap, color: "text-orange-600", bgColor: "bg-orange-50", borderColor: "border-orange-200", label: "HIGH" };
+    case "medium":
+      return { icon: TrendingUp, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200", label: "MEDIUM" };
+    case "low":
+      return { icon: Clock, color: "text-slate-500", bgColor: "bg-slate-50", borderColor: "border-slate-200", label: "LOW" };
+    default:
+      return { icon: Clock, color: "text-slate-500", bgColor: "bg-slate-50", borderColor: "border-slate-200", label: "NONE" };
+  }
+}
 
 export default async function AdminTicketsPage() {
   await requireAdmin();
@@ -102,98 +136,161 @@ export default async function AdminTicketsPage() {
     };
   });
 
-  // Group tickets by status for dashboard view
-  const openTickets = enrichedTickets.filter((t) => t.status === "open");
-  const inProgressTickets = enrichedTickets.filter((t) => t.status === "in_progress" || t.status === "waiting_on_client");
-  const resolvedTickets = enrichedTickets.filter((t) => t.status === "resolved" || t.status === "closed");
+  // Group by priority (urgent/high first)
+  const urgentTickets = enrichedTickets.filter((t) => t.priority === "urgent" && (t.status === "open" || t.status === "in_progress"));
+  const highPriorityTickets = enrichedTickets.filter((t) => t.priority === "high" && (t.status === "open" || t.status === "in_progress"));
+  const mediumPriorityTickets = enrichedTickets.filter((t) => t.priority === "medium" && (t.status === "open" || t.status === "in_progress"));
+  const lowPriorityTickets = enrichedTickets.filter((t) => t.priority === "low" && (t.status === "open" || t.status === "in_progress"));
+
+  // Active (open + in progress) tickets
+  const activeTickets = enrichedTickets.filter((t) => t.status === "open" || t.status === "in_progress" || t.status === "waiting_on_client");
 
   return (
     <>
       <AnimateOnScroll />
       <div className="px-6 lg:px-8 py-10 max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.1s_both]">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.1s_both]">
           <div className="max-w-2xl">
             <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight mb-2 flex items-center gap-3">
               <Ticket className="w-7 h-7 text-indigo-600" />
-              Tickets Overview
+              Support Queue
             </h1>
             <p className="text-slate-500 text-[15px] leading-relaxed font-light">
-              Manage support tickets and customer requests across all clients.
+              Priority-sorted ticket queue across all active clients.
             </p>
           </div>
           <CreateTicketDialog clients={allClients} projects={allProjects} isAdmin />
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white rounded-2xl p-6 border border-amber-50 shadow-[0_4px_20px_-4px_rgba(245,158,11,0.05)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.2s_both]">
-            <p className="text-[11px] font-semibold text-amber-600 uppercase tracking-widest mb-2">Open</p>
-            <p className="text-[32px] font-medium text-slate-900 tracking-tight">{openTickets.length}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 border border-indigo-50 shadow-[0_4px_20px_-4px_rgba(99,102,241,0.05)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
-            <p className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest mb-2">In Progress</p>
-            <p className="text-[32px] font-medium text-slate-900 tracking-tight">{inProgressTickets.length}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 border border-emerald-50 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.4s_both]">
-            <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest mb-2">Resolved</p>
-            <p className="text-[32px] font-medium text-slate-900 tracking-tight">{resolvedTickets.length}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.5s_both]">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Total</p>
-            <p className="text-[32px] font-medium text-slate-900 tracking-tight">{enrichedTickets.length}</p>
-          </div>
-        </div>
-
-        {/* Open Tickets Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6 opacity-80 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.6s_both]">
-            <LayoutGrid className="w-4 h-4 text-amber-500" />
-            <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
-              Open Tickets ({openTickets.length})
-            </h2>
-            <div className="h-px bg-slate-200 flex-1 ml-2"></div>
-          </div>
-          <TicketList
-            tickets={openTickets}
-            basePath="/dashboard/admin/tickets"
-            emptyMessage="No open tickets"
-          />
-        </div>
-
-        {/* In Progress Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6 opacity-80 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.7s_both]">
-            <LayoutGrid className="w-4 h-4 text-indigo-500" />
-            <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
-              In Progress ({inProgressTickets.length})
-            </h2>
-            <div className="h-px bg-slate-200 flex-1 ml-2"></div>
-          </div>
-          <TicketList
-            tickets={inProgressTickets}
-            basePath="/dashboard/admin/tickets"
-            emptyMessage="No tickets in progress"
-          />
-        </div>
-
-        {/* Resolved Section */}
-        {resolvedTickets.length > 0 && (
-          <div className="pb-12">
-            <div className="flex items-center gap-3 mb-6 opacity-80 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.8s_both]">
-              <LayoutGrid className="w-4 h-4 text-emerald-500" />
-              <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
-                Recently Resolved ({resolvedTickets.length})
+        {/* Priority Queue Sections */}
+        {urgentTickets.length > 0 && (
+          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.2s_both]">
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <h2 className="text-xs font-bold text-red-600 uppercase tracking-widest">
+                Urgent ({urgentTickets.length})
               </h2>
-              <div className="h-px bg-slate-200 flex-1 ml-2"></div>
             </div>
-            <TicketList
-              tickets={resolvedTickets.slice(0, 5)}
-              basePath="/dashboard/admin/tickets"
-            />
+            <div className="space-y-2">
+              {urgentTickets.map((ticket) => (
+                <TicketRow key={ticket.id} ticket={ticket} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {highPriorityTickets.length > 0 && (
+          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <Zap className="w-4 h-4 text-orange-600" />
+              <h2 className="text-xs font-bold text-orange-600 uppercase tracking-widest">
+                High Priority ({highPriorityTickets.length})
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {highPriorityTickets.map((ticket) => (
+                <TicketRow key={ticket.id} ticket={ticket} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {mediumPriorityTickets.length > 0 && (
+          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.4s_both]">
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <TrendingUp className="w-4 h-4 text-blue-600" />
+              <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest">
+                Medium Priority ({mediumPriorityTickets.length})
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {mediumPriorityTickets.map((ticket) => (
+                <TicketRow key={ticket.id} ticket={ticket} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {lowPriorityTickets.length > 0 && (
+          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.5s_both]">
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <Clock className="w-4 h-4 text-slate-500" />
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                Low Priority ({lowPriorityTickets.length})
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {lowPriorityTickets.map((ticket) => (
+                <TicketRow key={ticket.id} ticket={ticket} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTickets.length === 0 && (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm animate-on-scroll [animation:animationIn_0.5s_ease-out_0.2s_both]">
+            <Ticket className="w-16 h-16 text-slate-300 mx-auto mb-4" strokeWidth={1.5} />
+            <p className="text-slate-600 text-lg font-medium mb-2">All caught up!</p>
+            <p className="text-slate-400 text-sm">No active support tickets at the moment.</p>
           </div>
         )}
       </div>
     </>
+  );
+}
+
+// Ticket Row Component
+function TicketRow({ ticket }: { ticket: any }) {
+  const priorityInfo = getPriorityInfo(ticket.priority);
+  const PriorityIcon = priorityInfo.icon;
+
+  return (
+    <Link
+      href={`/dashboard/admin/tickets/${ticket.id}`}
+      className="block bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 group"
+    >
+      <div className="flex items-start gap-4">
+        {/* Priority Indicator */}
+        <div className={`w-10 h-10 rounded-lg ${priorityInfo.bgColor} border ${priorityInfo.borderColor} flex items-center justify-center flex-shrink-0`}>
+          <PriorityIcon className={`w-5 h-5 ${priorityInfo.color}`} />
+        </div>
+
+        {/* Ticket Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+              {ticket.title}
+            </h3>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {getStatusBadge(ticket.status)}
+              <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500 mb-3 line-clamp-1">
+            {ticket.description}
+          </p>
+
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            {ticket.clientName && (
+              <div className="flex items-center gap-1.5">
+                <Building2 className="w-3 h-3" />
+                <span className="font-medium text-slate-600">{ticket.clientName}</span>
+              </div>
+            )}
+            {ticket.assigneeName ? (
+              <div className="flex items-center gap-1.5">
+                <User className="w-3 h-3" />
+                <span>{ticket.assigneeName}</span>
+              </div>
+            ) : (
+              <span className="text-orange-600 font-medium">Unassigned</span>
+            )}
+            <span>{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }

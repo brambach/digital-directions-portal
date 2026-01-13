@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Radial gradient for background (lighter center, darker edges) -->
+    <radialGradient id="bgGradient" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" style="stop-color:#B794F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </radialGradient>
+
+    <!-- Gradient for inner chevron fill -->
+    <linearGradient id="chevronFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#6D28D9;stop-opacity:0.5" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background with radial gradient -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGradient)"/>
+
+  <!-- First chevron (left) - with thick white border -->
+  <path d="M 140 160 L 220 256 L 140 352 L 140 340 Q 140 330 148 322 L 200 256 L 148 190 Q 140 182 140 172 Z"
+        fill="url(#chevronFill)"/>
+  <path d="M 140 160 L 220 256 L 140 352"
+        stroke="white"
+        stroke-width="28"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+        opacity="0.95"/>
+
+  <!-- Second chevron (right) - with thick white border -->
+  <path d="M 240 160 L 320 256 L 240 352 L 240 340 Q 240 330 248 322 L 300 256 L 248 190 Q 240 182 240 172 Z"
+        fill="url(#chevronFill)"/>
+  <path d="M 240 160 L 320 256 L 240 352"
+        stroke="white"
+        stroke-width="28"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+        opacity="0.95"/>
+
+  <!-- Subtle highlight for glossy effect -->
+  <ellipse cx="256" cy="180" rx="180" ry="100" fill="white" opacity="0.12"/>
+</svg>

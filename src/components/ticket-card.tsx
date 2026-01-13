@@ -24,7 +24,7 @@ interface TicketCardProps {
 export function TicketCard({ ticket, href, showClient = true }: TicketCardProps) {
   return (
     <Link href={href} className="block">
-      <div className="bg-white rounded-lg p-4 border border-slate-100 hover:border-indigo-200 transition-all duration-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.04)] group">
+      <div className="bg-white rounded-lg p-4 border border-slate-100 hover:border-indigo-200 transition-all duration-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.04)] group animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-medium text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{ticket.title}</h3>
@@ -73,7 +73,7 @@ interface TicketListProps {
 export function TicketList({ tickets, basePath, showClient = true, emptyMessage = "No tickets found" }: TicketListProps) {
   if (tickets.length === 0) {
     return (
-      <div className="bg-white rounded-lg p-8 text-center border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
+      <div className="bg-white rounded-lg p-8 text-center border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
         <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
         <p className="text-slate-400 text-sm">{emptyMessage}</p>
       </div>

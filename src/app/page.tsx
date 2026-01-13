@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronsRight, FolderOpen, MessageSquare, FileText } from "lucide-react";
 
 export default function Home() {
@@ -10,9 +11,13 @@ export default function Home() {
       <div className="text-center relative z-10 max-w-2xl">
         {/* Logo */}
         <div className="flex items-center justify-center mb-8">
-          <div className="h-16 w-16 rounded-2xl bg-[#6366F1] flex items-center justify-center shadow-lg shadow-indigo-200">
-            <ChevronsRight className="text-white w-8 h-8 stroke-[2.5]" />
-          </div>
+          <Image
+            src="/images/dd-logo.png"
+            alt="Digital Directions"
+            width={80}
+            height={80}
+            className="w-20 h-20"
+          />
         </div>
 
         {/* Title */}
