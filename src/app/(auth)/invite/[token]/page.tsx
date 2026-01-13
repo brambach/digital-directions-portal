@@ -106,10 +106,10 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
-          <p className="mt-4 text-slate-400">Validating your invite...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
+          <p className="mt-4 text-slate-600">Validating your invite...</p>
         </div>
       </div>
     );
@@ -117,17 +117,17 @@ export default function InvitePage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4 bg-slate-50">
         <div className="max-w-md w-full text-center">
-          <div className="glass-panel rounded-2xl p-8">
-            <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+            <div className="w-16 h-16 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">❌</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Invalid Invite</h1>
-            <p className="text-slate-400 mb-6">{error}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Invalid Invite</h1>
+            <p className="text-slate-600 mb-6">{error}</p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 transition-all font-semibold"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
             >
               Go to Home
               <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
@@ -140,10 +140,10 @@ export default function InvitePage() {
 
   if (acceptingInvite) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
-          <p className="mt-4 text-slate-400">Setting up your account...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
+          <p className="mt-4 text-slate-600">Setting up your account...</p>
         </div>
       </div>
     );
@@ -152,16 +152,16 @@ export default function InvitePage() {
   // Show warning if already logged in
   if (alreadyLoggedInWarning) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4 bg-slate-50">
         <div className="max-w-md w-full text-center">
-          <div className="glass-panel rounded-2xl p-8">
-            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+            <div className="w-16 h-16 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Already Logged In</h1>
-            <p className="text-slate-400 mb-6">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Already Logged In</h1>
+            <p className="text-slate-600 mb-6">
               You're currently logged in to another account. This invite is for{" "}
-              <strong className="text-amber-400">{invite?.email}</strong>.
+              <strong className="text-amber-600">{invite?.email}</strong>.
             </p>
             <p className="text-sm text-slate-500 mb-6">
               To accept this invitation, you need to sign out of your current account first.
@@ -169,14 +169,14 @@ export default function InvitePage() {
             <div className="flex flex-col gap-3">
               <Link
                 href="/sign-out"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 transition-all font-semibold"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
               >
                 Sign Out & Continue
                 <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
               </Link>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-slate-300 rounded-full hover:bg-slate-700 transition-all font-medium"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
               >
                 Cancel & Go to Dashboard
               </Link>
@@ -188,7 +188,7 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-slate-50">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           {/* Logo */}
@@ -202,21 +202,21 @@ export default function InvitePage() {
             />
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-br from-white via-white to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Welcome to Digital Directions!
           </h1>
-          <p className="text-slate-400 mb-4">
+          <p className="text-slate-600 mb-4">
             You&apos;ve been invited to join as a{" "}
-            <strong className="text-indigo-400">{invite?.role === "admin" ? "team member" : "client"}</strong>
+            <strong className="text-purple-600">{invite?.role === "admin" ? "team member" : "client"}</strong>
             {invite?.clientName && (
               <>
                 {" "}
-                for <strong className="text-indigo-400">{invite.clientName}</strong>
+                for <strong className="text-purple-600">{invite.clientName}</strong>
               </>
             )}
           </p>
           <p className="text-sm text-slate-500">
-            Email: <strong className="text-slate-400">{invite?.email}</strong>
+            Email: <strong className="text-slate-700">{invite?.email}</strong>
           </p>
         </div>
 
@@ -224,17 +224,17 @@ export default function InvitePage() {
           appearance={{
             elements: {
               rootBox: "mx-auto",
-              card: "glass-panel shadow-2xl border-white/10",
+              card: "bg-white shadow-lg border-slate-200",
             },
           }}
-          afterSignUpUrl={`/api/invites/accept?token=${token}`}
+          afterSignUpUrl={`/invite/${token}/complete`}
           signInUrl="/sign-in"
-          redirectUrl={`/api/invites/accept?token=${token}`}
+          redirectUrl={`/invite/${token}/complete`}
         />
 
         <p className="text-center text-sm text-slate-500 mt-6">
           Already have an account?{" "}
-          <Link href="/sign-in" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+          <Link href="/sign-in" className="text-purple-600 hover:text-purple-700 font-medium transition-colors">
             Sign in
           </Link>
         </p>
