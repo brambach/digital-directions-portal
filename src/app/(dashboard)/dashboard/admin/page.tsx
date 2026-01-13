@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clients, projects, tickets, users } from "@/lib/db/schema";
 import { isNull, eq, and, sql, desc, or, count } from "drizzle-orm";
-import { Users, Activity, Ticket, TrendingUp, AlertTriangle, CheckCircle, Clock, Building2, FolderKanban, Zap, ArrowRight, ExternalLink } from "lucide-react";
+import { Users, Activity, Ticket, TrendingUp, AlertTriangle, CheckCircle, Clock, Building2, FolderKanban, Zap, ArrowRight, ExternalLink, LayoutDashboard } from "lucide-react";
 import { InviteTeamMemberDialog } from "@/components/invite-team-member-dialog";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import Link from "next/link";
@@ -171,7 +171,8 @@ export default async function AdminDashboard() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.1s_both]">
           <div className="max-w-2xl">
-            <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight mb-2">
+            <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight mb-2 flex items-center gap-3">
+              <LayoutDashboard className="w-7 h-7 text-indigo-600" />
               Dashboard
             </h1>
             <p className="text-slate-500 text-[15px] leading-relaxed font-light">
