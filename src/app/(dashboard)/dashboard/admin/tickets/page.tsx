@@ -148,7 +148,7 @@ export default async function AdminTicketsPage() {
   return (
     <>
       <AnimateOnScroll />
-      <div className="px-6 lg:px-8 py-10 max-w-7xl mx-auto">
+      <div className="px-6 lg:px-8 py-10 max-w-[1600px] mx-auto">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.1s_both]">
           <div className="max-w-2xl">
