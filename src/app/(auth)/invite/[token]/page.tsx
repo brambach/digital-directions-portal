@@ -24,6 +24,7 @@ export default function InvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<InviteData | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
+  const [alreadyLoggedInWarning, setAlreadyLoggedInWarning] = useState(false);
 
   const acceptInvite = useCallback(async () => {
     setAcceptingInvite(true);
@@ -80,9 +81,9 @@ export default function InvitePage() {
         if (data.valid) {
           setInvite(data.invite);
 
-          // If already signed in, accept the invite immediately
+          // If already signed in, show warning instead of auto-accepting
           if (isSignedIn) {
-            acceptInvite();
+            setAlreadyLoggedInWarning(true);
           }
         } else {
           setError("Invalid or expired invite");
@@ -143,6 +144,44 @@ export default function InvitePage() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
           <p className="mt-4 text-slate-400">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show warning if already logged in
+  if (alreadyLoggedInWarning) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="glass-panel rounded-2xl p-8">
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Already Logged In</h1>
+            <p className="text-slate-400 mb-6">
+              You're currently logged in to another account. This invite is for{" "}
+              <strong className="text-amber-400">{invite?.email}</strong>.
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              To accept this invitation, you need to sign out of your current account first.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/sign-out"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 transition-all font-semibold"
+              >
+                Sign Out & Continue
+                <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-slate-300 rounded-full hover:bg-slate-700 transition-all font-medium"
+              >
+                Cancel & Go to Dashboard
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );

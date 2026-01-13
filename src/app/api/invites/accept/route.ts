@@ -49,15 +49,34 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (existingUser) {
-      // Update existing user with correct role and clientId
+      // Check if user already has a different role or clientId
+      if (existingUser.role !== invite.role || existingUser.clientId !== invite.clientId) {
+        return NextResponse.json(
+          {
+            error: "Account conflict: You already have an account with a different role. Please contact support or sign out and create a new account.",
+            conflictDetails: {
+              currentRole: existingUser.role,
+              inviteRole: invite.role,
+            }
+          },
+          { status: 409 }
+        );
+      }
+
+      // If role and clientId match, just mark invite as accepted (idempotent)
       await db
-        .update(users)
+        .update(invites)
         .set({
-          role: invite.role,
-          clientId: invite.clientId,
-          updatedAt: new Date(),
+          status: "accepted",
+          acceptedAt: new Date(),
         })
-        .where(eq(users.id, existingUser.id));
+        .where(eq(invites.id, invite.id));
+
+      return NextResponse.json({
+        success: true,
+        role: invite.role,
+        message: "Invite already accepted",
+      });
     } else {
       // Create new user
       await db.insert(users).values({
