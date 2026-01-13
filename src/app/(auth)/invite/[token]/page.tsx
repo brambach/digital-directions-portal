@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { SignUp, useUser, useSignUp } from "@clerk/nextjs";
 import { Loader2, ChevronRight } from "lucide-react";
 
@@ -23,6 +24,34 @@ export default function InvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<InviteData | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
+
+  const acceptInvite = useCallback(async () => {
+    setAcceptingInvite(true);
+    try {
+      const response = await fetch("/api/invites/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to accept invite");
+      }
+
+      const data = await response.json();
+
+      // Redirect to appropriate dashboard
+      if (data.role === "admin") {
+        router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard/client");
+      }
+    } catch (err) {
+      console.error("Error accepting invite:", err);
+      setError("Failed to accept invite");
+      setAcceptingInvite(false);
+    }
+  }, [token, router]);
 
   useEffect(() => {
     if (!token) {
@@ -67,35 +96,7 @@ export default function InvitePage() {
     }
 
     validateInvite();
-  }, [token, isSignedIn]);
-
-  const acceptInvite = async () => {
-    setAcceptingInvite(true);
-    try {
-      const response = await fetch("/api/invites/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to accept invite");
-      }
-
-      const data = await response.json();
-
-      // Redirect to appropriate dashboard
-      if (data.role === "admin") {
-        router.push("/dashboard/admin");
-      } else {
-        router.push("/dashboard/client");
-      }
-    } catch (err) {
-      console.error("Error accepting invite:", err);
-      setError("Failed to accept invite");
-      setAcceptingInvite(false);
-    }
-  };
+  }, [token, isSignedIn, acceptInvite]);
 
   // After successful Clerk signup, accept the invite
   const handleSignUpComplete = async () => {
@@ -123,13 +124,13 @@ export default function InvitePage() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Invalid Invite</h1>
             <p className="text-slate-400 mb-6">{error}</p>
-            <a
+            <Link
               href="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 transition-all font-semibold"
             >
               Go to Home
               <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -166,7 +167,7 @@ export default function InvitePage() {
             Welcome to Digital Directions!
           </h1>
           <p className="text-slate-400 mb-4">
-            You've been invited to join as a{" "}
+            You&apos;ve been invited to join as a{" "}
             <strong className="text-indigo-400">{invite?.role === "admin" ? "team member" : "client"}</strong>
             {invite?.clientName && (
               <>
@@ -194,9 +195,9 @@ export default function InvitePage() {
 
         <p className="text-center text-sm text-slate-500 mt-6">
           Already have an account?{" "}
-          <a href="/sign-in" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+          <Link href="/sign-in" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>

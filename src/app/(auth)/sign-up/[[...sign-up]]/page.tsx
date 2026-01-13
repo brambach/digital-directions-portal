@@ -22,7 +22,7 @@ export default function SignUpPage() {
               Invite Only
             </h1>
             <p className="text-gray-600">
-              Digital Directions Portal is invitation-only. You'll need an invite to create an account.
+              Digital Directions Portal is invitation-only. You&apos;ll need an invite to create an account.
             </p>
           </div>
 

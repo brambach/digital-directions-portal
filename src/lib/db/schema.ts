@@ -133,6 +133,7 @@ export const files = pgTable(
   (table) => ({
     projectIdx: index("files_project_idx").on(table.projectId),
     uploadedByIdx: index("files_uploaded_by_idx").on(table.uploadedBy),
+    deletedAtIdx: index("files_deleted_at_idx").on(table.deletedAt),
   })
 );
 

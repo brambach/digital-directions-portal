@@ -332,7 +332,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                       </div>
                     ))}
                     <p className="text-xs text-slate-400 mt-2">
-                      These users have been invited but haven't signed up yet. Invites expire after 7 days.
+                      These users have been invited but haven&apos;t signed up yet. Invites expire after 7 days.
                     </p>
                   </div>
                 </div>

@@ -118,7 +118,7 @@ export default async function ClientDashboard() {
             Welcome back!
           </h1>
           <p className="text-slate-500 text-[15px] leading-relaxed font-light">
-            Here's what's happening with your projects.
+            Here&apos;s what&apos;s happening with your projects.
           </p>
         </div>
 

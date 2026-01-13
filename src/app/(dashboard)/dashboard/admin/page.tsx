@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clients, projects, tickets, users } from "@/lib/db/schema";
-import { isNull, eq, and, sql, desc, or } from "drizzle-orm";
+import { isNull, eq, and, sql, desc, or, count } from "drizzle-orm";
 import { Users, Activity, Ticket, TrendingUp, AlertTriangle, CheckCircle, Clock, Building2, FolderKanban, Zap, ArrowRight, ExternalLink } from "lucide-react";
 import { InviteTeamMemberDialog } from "@/components/invite-team-member-dialog";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
@@ -14,76 +14,155 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  // Fetch all data in parallel
-  const [allClients, allProjects, allTickets, allUsers] = await Promise.all([
-    db.select().from(clients).where(isNull(clients.deletedAt)),
-    db.select().from(projects).where(isNull(projects.deletedAt)),
-    db.select().from(tickets).where(isNull(tickets.deletedAt)),
-    db.select().from(users).where(isNull(users.deletedAt)),
+  // Optimized: Use SQL aggregation instead of loading all records
+  const [clientStats, projectStats, ticketStats, userStats] = await Promise.all([
+    // Client stats with SQL aggregation
+    db
+      .select({
+        total: count(),
+        active: sql<number>`count(*) filter (where ${clients.status} = 'active')`.as('active'),
+        inactive: sql<number>`count(*) filter (where ${clients.status} = 'inactive')`.as('inactive'),
+      })
+      .from(clients)
+      .where(isNull(clients.deletedAt))
+      .then(rows => rows[0]),
+
+    // Project stats with SQL aggregation
+    db
+      .select({
+        total: count(),
+        active: sql<number>`count(*) filter (where ${projects.status} in ('in_progress', 'planning', 'review'))`.as('active'),
+        completed: sql<number>`count(*) filter (where ${projects.status} = 'completed')`.as('completed'),
+        overdue: sql<number>`count(*) filter (where ${projects.dueDate} < now() and ${projects.status} != 'completed')`.as('overdue'),
+      })
+      .from(projects)
+      .where(isNull(projects.deletedAt))
+      .then(rows => rows[0]),
+
+    // Ticket stats with SQL aggregation
+    db
+      .select({
+        total: count(),
+        open: sql<number>`count(*) filter (where ${tickets.status} = 'open')`.as('open'),
+        inProgress: sql<number>`count(*) filter (where ${tickets.status} = 'in_progress')`.as('in_progress'),
+        urgent: sql<number>`count(*) filter (where ${tickets.priority} = 'urgent' and ${tickets.status} in ('open', 'in_progress'))`.as('urgent'),
+        unassigned: sql<number>`count(*) filter (where ${tickets.assignedTo} is null and ${tickets.status} in ('open', 'in_progress'))`.as('unassigned'),
+      })
+      .from(tickets)
+      .where(isNull(tickets.deletedAt))
+      .then(rows => rows[0]),
+
+    // User stats with SQL aggregation
+    db
+      .select({
+        total: count(),
+        admins: sql<number>`count(*) filter (where ${users.role} = 'admin')`.as('admins'),
+        clients: sql<number>`count(*) filter (where ${users.role} = 'client')`.as('clients'),
+      })
+      .from(users)
+      .where(isNull(users.deletedAt))
+      .then(rows => rows[0]),
   ]);
 
-  // Calculate comprehensive stats
   const stats = {
     clients: {
-      total: allClients.length,
-      active: allClients.filter(c => c.status === "active").length,
-      inactive: allClients.filter(c => c.status === "inactive").length,
+      total: clientStats.total,
+      active: Number(clientStats.active),
+      inactive: Number(clientStats.inactive),
     },
     projects: {
-      total: allProjects.length,
-      active: allProjects.filter(p => ["in_progress", "planning", "review"].includes(p.status)).length,
-      completed: allProjects.filter(p => p.status === "completed").length,
-      overdue: allProjects.filter(p => p.dueDate && new Date(p.dueDate) < new Date() && p.status !== "completed").length,
+      total: projectStats.total,
+      active: Number(projectStats.active),
+      completed: Number(projectStats.completed),
+      overdue: Number(projectStats.overdue),
     },
     tickets: {
-      total: allTickets.length,
-      open: allTickets.filter(t => t.status === "open").length,
-      inProgress: allTickets.filter(t => t.status === "in_progress").length,
-      urgent: allTickets.filter(t => t.priority === "urgent" && ["open", "in_progress"].includes(t.status)).length,
-      unassigned: allTickets.filter(t => !t.assignedTo && ["open", "in_progress"].includes(t.status)).length,
+      total: ticketStats.total,
+      open: Number(ticketStats.open),
+      inProgress: Number(ticketStats.inProgress),
+      urgent: Number(ticketStats.urgent),
+      unassigned: Number(ticketStats.unassigned),
     },
     users: {
-      total: allUsers.length,
-      admins: allUsers.filter(u => u.role === "admin").length,
-      clients: allUsers.filter(u => u.role === "client").length,
+      total: userStats.total,
+      admins: Number(userStats.admins),
+      clients: Number(userStats.clients),
     },
   };
 
-  // Get recent activity - tickets and projects
-  const recentTickets = allTickets
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  // Get recent activity with client names (optimized - only fetch what's needed)
+  const [recentTicketsData, activeProjectsData, urgentTicketsCount, overdueProjectsCount] = await Promise.all([
+    // Recent 5 tickets with client names
+    db
+      .select({
+        id: tickets.id,
+        title: tickets.title,
+        status: tickets.status,
+        priority: tickets.priority,
+        clientId: tickets.clientId,
+        createdAt: tickets.createdAt,
+        clientName: clients.companyName,
+      })
+      .from(tickets)
+      .leftJoin(clients, eq(tickets.clientId, clients.id))
+      .where(isNull(tickets.deletedAt))
+      .orderBy(desc(tickets.createdAt))
+      .limit(5),
 
-  const activeProjects = allProjects
-    .filter(p => ["in_progress", "review"].includes(p.status))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+    // Active 5 projects with client names
+    db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        status: projects.status,
+        dueDate: projects.dueDate,
+        clientId: projects.clientId,
+        createdAt: projects.createdAt,
+        clientName: clients.companyName,
+      })
+      .from(projects)
+      .leftJoin(clients, eq(projects.clientId, clients.id))
+      .where(and(
+        isNull(projects.deletedAt),
+        or(eq(projects.status, "in_progress"), eq(projects.status, "review"))
+      ))
+      .orderBy(desc(projects.createdAt))
+      .limit(5),
 
-  // Get client names for tickets and projects
-  const clientMap = new Map(allClients.map(c => [c.id, c.companyName]));
+    // Count urgent tickets
+    db
+      .select({ count: count() })
+      .from(tickets)
+      .where(and(
+        isNull(tickets.deletedAt),
+        eq(tickets.priority, "urgent"),
+        or(eq(tickets.status, "open"), eq(tickets.status, "in_progress"))
+      ))
+      .then(rows => rows[0]?.count || 0),
 
-  // Enrich tickets with client names
-  const enrichedTickets = recentTickets.map(ticket => ({
+    // Count overdue projects
+    db
+      .select({ count: count() })
+      .from(projects)
+      .where(and(
+        isNull(projects.deletedAt),
+        sql`${projects.dueDate} < now()`,
+        sql`${projects.status} != 'completed'`
+      ))
+      .then(rows => rows[0]?.count || 0),
+  ]);
+
+  const enrichedTickets = recentTicketsData.map(ticket => ({
     ...ticket,
-    clientName: clientMap.get(ticket.clientId) || "Unknown",
+    clientName: ticket.clientName || "Unknown",
   }));
 
-  // Enrich projects with client names
-  const enrichedProjects = activeProjects.map(project => ({
+  const enrichedProjects = activeProjectsData.map(project => ({
     ...project,
-    clientName: clientMap.get(project.clientId) || "Unknown",
+    clientName: project.clientName || "Unknown",
   }));
 
-  // Get urgent items that need attention
-  const urgentTickets = allTickets.filter(t =>
-    t.priority === "urgent" && ["open", "in_progress"].includes(t.status)
-  );
-
-  const overdueProjects = allProjects.filter(p =>
-    p.dueDate && new Date(p.dueDate) < new Date() && p.status !== "completed"
-  );
-
-  const needsAttention = [...urgentTickets, ...overdueProjects].length;
+  const needsAttention = Number(urgentTicketsCount) + Number(overdueProjectsCount);
 
   return (
     <>
@@ -115,9 +194,9 @@ export default async function AdminDashboard() {
                     {needsAttention} {needsAttention === 1 ? "item" : "items"} need immediate attention
                   </h3>
                   <p className="text-xs text-slate-600">
-                    {urgentTickets.length > 0 && `${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? "s" : ""}`}
-                    {urgentTickets.length > 0 && overdueProjects.length > 0 && " • "}
-                    {overdueProjects.length > 0 && `${overdueProjects.length} overdue project${overdueProjects.length > 1 ? "s" : ""}`}
+                    {stats.tickets.urgent > 0 && `${stats.tickets.urgent} urgent ticket${stats.tickets.urgent > 1 ? "s" : ""}`}
+                    {stats.tickets.urgent > 0 && stats.projects.overdue > 0 && " • "}
+                    {stats.projects.overdue > 0 && `${stats.projects.overdue} overdue project${stats.projects.overdue > 1 ? "s" : ""}`}
                   </p>
                 </div>
               </div>

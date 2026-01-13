@@ -68,7 +68,8 @@ export async function GET(
     }
 
     // Fetch ticket comments
-    const commentsQuery = db
+    // For clients, exclude internal comments
+    const comments = await db
       .select({
         id: ticketComments.id,
         content: ticketComments.content,
@@ -77,19 +78,16 @@ export async function GET(
         createdAt: ticketComments.createdAt,
       })
       .from(ticketComments)
-      .where(and(eq(ticketComments.ticketId, id), isNull(ticketComments.deletedAt)))
+      .where(
+        user.role === "client"
+          ? and(
+              eq(ticketComments.ticketId, id),
+              isNull(ticketComments.deletedAt),
+              eq(ticketComments.isInternal, false)
+            )
+          : and(eq(ticketComments.ticketId, id), isNull(ticketComments.deletedAt))
+      )
       .orderBy(desc(ticketComments.createdAt));
-
-    // For clients, exclude internal comments
-    const comments = user.role === "client"
-      ? await commentsQuery.where(
-          and(
-            eq(ticketComments.ticketId, id),
-            isNull(ticketComments.deletedAt),
-            eq(ticketComments.isInternal, false)
-          )
-        )
-      : await commentsQuery;
 
     // Fetch Clerk user info for all related users
     const userIds = [

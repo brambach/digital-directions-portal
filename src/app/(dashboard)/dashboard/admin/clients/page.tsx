@@ -1,13 +1,18 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clients, projects, users } from "@/lib/db/schema";
-import { eq, isNull, and, count, desc } from "drizzle-orm";
+import { eq, isNull, and, count, desc, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Users, Building2, Mail, FolderKanban, UserCircle, ExternalLink } from "lucide-react";
-import { AddClientDialog } from "@/components/add-client-dialog";
+import dynamicImport from "next/dynamic";
 import { ClientStatusMenu } from "@/components/client-status-menu";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { formatDistanceToNow } from "date-fns";
+
+// Lazy load dialog for better performance
+const AddClientDialog = dynamicImport(() => import("@/components/add-client-dialog").then(mod => ({ default: mod.AddClientDialog })), {
+  loading: () => null,
+});
 
 export const dynamic = "force-dynamic";
 
@@ -55,38 +60,48 @@ export default async function ClientsPage() {
     .where(isNull(clients.deletedAt))
     .orderBy(desc(clients.createdAt));
 
-  // Fetch project counts and user counts for each client
-  const clientData = await Promise.all(
-    allClients.map(async (client) => {
-      const projectsData = await db
-        .select({
-          id: projects.id,
-          status: projects.status,
-        })
-        .from(projects)
-        .where(and(eq(projects.clientId, client.id), isNull(projects.deletedAt)));
+  // Fetch project counts and user counts in batch (optimized - no N+1)
+  const [projectCounts, userCounts] = await Promise.all([
+    // Get all project counts grouped by clientId
+    db
+      .select({
+        clientId: projects.clientId,
+        totalCount: count(),
+        activeCount: sql<number>`count(*) filter (where ${projects.status} in ('in_progress', 'planning', 'review'))`.as('active_count'),
+      })
+      .from(projects)
+      .where(isNull(projects.deletedAt))
+      .groupBy(projects.clientId),
 
-      const activeProjects = projectsData.filter((p) =>
-        p.status === "in_progress" || p.status === "planning" || p.status === "review"
-      ).length;
+    // Get all user counts grouped by clientId
+    db
+      .select({
+        clientId: users.clientId,
+        count: count(),
+      })
+      .from(users)
+      .where(isNull(users.deletedAt))
+      .groupBy(users.clientId),
+  ]);
 
-      const totalProjects = projectsData.length;
-
-      // Count users for this client
-      const userCount = await db
-        .select({ count: count() })
-        .from(users)
-        .where(and(eq(users.clientId, client.id), isNull(users.deletedAt)))
-        .then((rows) => rows[0]?.count || 0);
-
-      return {
-        ...client,
-        activeProjects,
-        totalProjects,
-        userCount,
-      };
-    })
+  // Create lookup maps for O(1) access
+  const projectCountMap = new Map(
+    projectCounts.map((p) => [p.clientId, { total: p.totalCount, active: Number(p.activeCount) }])
   );
+  const userCountMap = new Map(userCounts.map((u) => [u.clientId, u.count]));
+
+  // Combine data efficiently
+  const clientData = allClients.map((client) => {
+    const projectData = projectCountMap.get(client.id) || { total: 0, active: 0 };
+    const userCount = userCountMap.get(client.id) || 0;
+
+    return {
+      ...client,
+      activeProjects: projectData.active,
+      totalProjects: projectData.total,
+      userCount,
+    };
+  });
 
   return (
     <>

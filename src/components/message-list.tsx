@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { User, MessageSquare, Loader2 } from "lucide-react";
@@ -22,7 +22,7 @@ interface MessageListProps {
   initialMessages: Message[];
 }
 
-export function MessageList({ projectId, initialMessages }: MessageListProps) {
+const MessageListComponent = ({ projectId, initialMessages }: MessageListProps) => {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [loading, setLoading] = useState(false);
@@ -122,4 +122,7 @@ export function MessageList({ projectId, initialMessages }: MessageListProps) {
       )}
     </div>
   );
-}
+};
+
+// Export memoized component for better performance
+export const MessageList = memo(MessageListComponent);

@@ -82,7 +82,7 @@ export function InviteUserToClientDialog({ clientId, companyName }: InviteUserTo
         <DialogHeader>
           <DialogTitle>Invite User to {companyName}</DialogTitle>
           <DialogDescription>
-            Send a portal invite to another person from {companyName}. They'll get access to all projects and files for this client.
+            Send a portal invite to another person from {companyName}. They&apos;ll get access to all projects and files for this client.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -97,7 +97,7 @@ export function InviteUserToClientDialog({ clientId, companyName }: InviteUserTo
               onChange={(e) => setEmail(e.target.value)}
             />
             <p className="text-xs text-slate-400">
-              They'll receive an email with a signup link that expires in 7 days.
+              They&apos;ll receive an email with a signup link that expires in 7 days.
             </p>
           </div>
 

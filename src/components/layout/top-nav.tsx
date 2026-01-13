@@ -38,6 +38,7 @@ export function TopNav({ navItems, isAdmin }: TopNavProps) {
           width={32}
           height={32}
           className="w-8 h-8 flex-shrink-0"
+          priority
         />
         <span className="font-semibold text-slate-900 tracking-tight text-base leading-none translate-y-[1px]">
           Digital Directions

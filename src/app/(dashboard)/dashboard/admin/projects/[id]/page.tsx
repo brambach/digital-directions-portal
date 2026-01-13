@@ -6,13 +6,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User, Building2, FileText, MessageSquare, Clock, Download, LayoutGrid } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { MessageForm } from "@/components/message-form";
-import { FileUploader } from "@/components/file-uploader";
-import { EditProjectDialog } from "@/components/edit-project-dialog";
-import { UpdateStatusDialog } from "@/components/update-status-dialog";
+import dynamicImport from "next/dynamic";
 import { clerkClient } from "@clerk/nextjs/server";
-import { MessageList } from "@/components/message-list";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
+
+// Lazy load heavy components for better performance
+const MessageForm = dynamicImport(() => import("@/components/message-form").then(mod => ({ default: mod.MessageForm })), {
+  loading: () => <div className="h-32 bg-slate-50 animate-pulse rounded-lg" />,
+});
+const FileUploader = dynamicImport(() => import("@/components/file-uploader").then(mod => ({ default: mod.FileUploader })), {
+  loading: () => <div className="h-24 bg-slate-50 animate-pulse rounded-lg" />,
+});
+const EditProjectDialog = dynamicImport(() => import("@/components/edit-project-dialog").then(mod => ({ default: mod.EditProjectDialog })), {
+  loading: () => null,
+});
+const UpdateStatusDialog = dynamicImport(() => import("@/components/update-status-dialog").then(mod => ({ default: mod.UpdateStatusDialog })), {
+  loading: () => null,
+});
+const MessageList = dynamicImport(() => import("@/components/message-list").then(mod => ({ default: mod.MessageList })), {
+  loading: () => <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-lg" />)}</div>,
+});
 
 export const dynamic = "force-dynamic";
 

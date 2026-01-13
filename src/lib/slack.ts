@@ -243,7 +243,7 @@ export async function sendSlackNotification(notification: SlackNotification): Pr
 
     await slack.chat.postMessage({
       channel: SLACK_CHANNEL_ID,
-      blocks: blocks as Parameters<typeof slack.chat.postMessage>[0]["blocks"],
+      blocks: blocks as any,
       text: getPlainTextFallback(notification),
     });
 

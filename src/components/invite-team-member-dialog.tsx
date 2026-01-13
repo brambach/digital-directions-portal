@@ -65,7 +65,7 @@ export function InviteTeamMemberDialog() {
         <DialogHeader>
           <DialogTitle className="text-slate-900">Invite Team Member</DialogTitle>
           <DialogDescription className="text-slate-500">
-            Send an invitation to join your team as an admin. They'll receive an email with a signup link.
+            Send an invitation to join your team as an admin. They&apos;ll receive an email with a signup link.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -80,7 +80,7 @@ export function InviteTeamMemberDialog() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <p className="text-xs text-slate-400">
-              They'll be able to manage clients, projects, and provide support.
+              They&apos;ll be able to manage clients, projects, and provide support.
             </p>
           </div>
 
