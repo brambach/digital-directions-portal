@@ -39,7 +39,7 @@ export async function sendStatusUpdateEmail(params: {
   const newStatusLabel = statusLabels[params.newStatus] || params.newStatus;
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.to,
       subject: `Project Update: ${params.projectName} is now ${newStatusLabel}`,
@@ -76,12 +76,21 @@ export async function sendStatusUpdateEmail(params: {
             </p>
           </div>
           <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
-            Digital Directions • HiBob Implementation Specialists
+            Digital Directions • HR Consulting & Implementation
           </p>
         </body>
         </html>
       `,
     });
+
+    // Check if Resend returned an error
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error)
+      };
+    }
 
     console.log(`Status update email sent to ${params.to}`);
     return { success: true };
@@ -106,7 +115,7 @@ export async function sendTicketResponseEmail(params: {
   }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.to,
       subject: `New Response: ${params.ticketTitle}`,
@@ -139,12 +148,21 @@ export async function sendTicketResponseEmail(params: {
             </p>
           </div>
           <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
-            Digital Directions • HiBob Implementation Specialists
+            Digital Directions • HR Consulting & Implementation
           </p>
         </body>
         </html>
       `,
     });
+
+    // Check if Resend returned an error
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error)
+      };
+    }
 
     console.log(`Ticket response email sent to ${params.to}`);
     return { success: true };
@@ -168,7 +186,7 @@ export async function sendTicketResolvedEmail(params: {
   }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.to,
       subject: `Ticket Resolved: ${params.ticketTitle}`,
@@ -202,12 +220,21 @@ export async function sendTicketResolvedEmail(params: {
             </p>
           </div>
           <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
-            Digital Directions • HiBob Implementation Specialists
+            Digital Directions • HR Consulting & Implementation
           </p>
         </body>
         </html>
       `,
     });
+
+    // Check if Resend returned an error
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error)
+      };
+    }
 
     console.log(`Ticket resolved email sent to ${params.to}`);
     return { success: true };
@@ -232,7 +259,7 @@ export async function sendNewFileEmail(params: {
   }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.to,
       subject: `New File: ${params.fileName}`,
@@ -264,12 +291,21 @@ export async function sendNewFileEmail(params: {
             </p>
           </div>
           <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
-            Digital Directions • HiBob Implementation Specialists
+            Digital Directions • HR Consulting & Implementation
           </p>
         </body>
         </html>
       `,
     });
+
+    // Check if Resend returned an error
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error)
+      };
+    }
 
     console.log(`New file email sent to ${params.to}`);
     return { success: true };
@@ -296,7 +332,7 @@ export async function sendInviteEmail(params: {
   const roleLabel = params.role === "admin" ? "Team Member" : "Client Portal User";
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.to,
       subject: params.role === "admin"
@@ -335,14 +371,23 @@ export async function sendInviteEmail(params: {
             </p>
           </div>
           <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
-            Digital Directions • HiBob Implementation Specialists
+            Digital Directions • HR Consulting & Implementation
           </p>
         </body>
         </html>
       `,
     });
 
-    console.log(`Invite email sent to ${params.to}`);
+    // Check if Resend returned an error
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error)
+      };
+    }
+
+    console.log(`Invite email sent successfully to ${params.to}`);
     return { success: true };
   } catch (error) {
     console.error("Error sending invite email:", error);

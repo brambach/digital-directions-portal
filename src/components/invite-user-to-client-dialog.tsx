@@ -41,22 +41,27 @@ export function InviteUserToClientDialog({ clientId, companyName }: InviteUserTo
         }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
+      const result = await response.json();
 
+      if (!response.ok) {
         // Check if it's a duplicate invite error
-        if (error.error?.includes("already exists")) {
+        if (result.error?.includes("already exists")) {
           toast.error(`${email} has already been invited. Check the "Pending Invites" section below to see who's waiting to sign up.`);
+        } else if (result.error?.includes("Failed to send invite email")) {
+          // Email sending failed - show user-friendly message
+          toast.error(`Unable to send invite to ${email}. ${result.error.includes("verify a domain") ? "Please verify your domain in Resend to send emails." : result.error}`);
         } else {
-          toast.error(error.error || "Failed to send invite");
+          toast.error(result.error || "Failed to send invite");
         }
-        throw new Error(error.error || "Failed to send invite");
+        throw new Error(result.error || "Failed to send invite");
       }
+
+      // Success - email was sent and invite created
+      toast.success(`Invite sent to ${email}! They'll receive an email with signup instructions.`);
 
       setEmail("");
       setOpen(false);
       router.refresh();
-      toast.success(`Invite sent to ${email}! They'll receive an email with signup instructions.`);
     } catch (error) {
       console.error("Error sending invite:", error);
       // Error already handled above with better messaging

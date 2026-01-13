@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { tickets, users, clients } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notifyTicketResolved } from "@/lib/slack";
-import { updateLinearIssueStatus, addLinearComment } from "@/lib/linear";
 import { sendTicketResolvedEmail } from "@/lib/email";
 
 export async function POST(
@@ -53,7 +52,6 @@ export async function POST(
         id: tickets.id,
         title: tickets.title,
         clientId: tickets.clientId,
-        linearIssueId: tickets.linearIssueId,
       })
       .from(tickets)
       .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
@@ -106,22 +104,6 @@ export async function POST(
       clientName: client?.companyName || "Unknown Client",
       resolverName,
     }).catch((err) => console.error("Slack notification failed:", err));
-
-    // Sync with Linear
-    if (existingTicket.linearIssueId) {
-      const newStatus = closeTicket ? "closed" : "resolved";
-
-      // Update Linear status
-      updateLinearIssueStatus(existingTicket.linearIssueId, newStatus).catch((err) =>
-        console.error("Linear status update failed:", err)
-      );
-
-      // Add resolution as comment
-      addLinearComment(
-        existingTicket.linearIssueId,
-        `**Resolved by ${resolverName}**\n\n${resolution}`
-      ).catch((err) => console.error("Linear comment failed:", err));
-    }
 
     // Send email notification to client
     if (client?.contactEmail) {

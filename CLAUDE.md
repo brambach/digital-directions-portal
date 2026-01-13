@@ -68,7 +68,7 @@ npm run make-admin <email> # Grant admin role to user by email
 - `projects` - HiBob integration projects (5 statuses)
 - `files` - File metadata (actual files in UploadThing)
 - `messages` - Project messaging between DD and clients
-- `tickets` - Support tickets with Linear/Slack integration
+- `tickets` - Support tickets with Slack integration (Freshdesk planned for Phase 2)
 - `invites` - Email invitations for new users (7-day expiry)
 - `clientActivity` - Engagement tracking
 
@@ -150,9 +150,9 @@ Invite-only portal - no public signup:
 - Real-time notifications for tickets, messages, file uploads
 - Set `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID`
 
-**Linear:**
-- Sync tickets to Linear for internal tracking
-- Set `LINEAR_API_KEY` and `LINEAR_TEAM_ID`
+**Freshdesk (Phase 2):**
+- Planned integration for helpdesk ticket management
+- Portal tickets will sync to Freshdesk for team workflows
 
 All integrations are optional - portal works without them.
 

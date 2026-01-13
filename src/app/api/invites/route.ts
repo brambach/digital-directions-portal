@@ -123,7 +123,39 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Create invite
+    // Get client name if applicable (needed for email)
+    let clientName: string | undefined;
+    if (clientId) {
+      const client = await db
+        .select()
+        .from(clients)
+        .where(eq(clients.id, clientId))
+        .limit(1)
+        .then((rows) => rows[0]);
+      clientName = client?.companyName;
+    }
+
+    // Try to send email FIRST before creating database record
+    const emailResult = await sendInviteEmail({
+      to: email,
+      token,
+      role,
+      inviterName: user.role === "admin" ? "Digital Directions Team" : "Team Member",
+      clientName,
+    });
+
+    // If email failed, don't create the invite
+    if (!emailResult.success) {
+      console.error("Failed to send invite email:", emailResult.error);
+      return NextResponse.json(
+        {
+          error: `Failed to send invite email: ${emailResult.error}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Email sent successfully, now create the invite record
     const [newInvite] = await db
       .insert(invites)
       .values({
@@ -136,27 +168,6 @@ export async function POST(req: NextRequest) {
         status: "pending",
       })
       .returning();
-
-    // Get client name if applicable
-    let clientName: string | undefined;
-    if (clientId) {
-      const client = await db
-        .select()
-        .from(clients)
-        .where(eq(clients.id, clientId))
-        .limit(1)
-        .then((rows) => rows[0]);
-      clientName = client?.companyName;
-    }
-
-    // Send invite email
-    await sendInviteEmail({
-      to: email,
-      token,
-      role,
-      inviterName: user.role === "admin" ? "Digital Directions Team" : "Team Member",
-      clientName,
-    });
 
     return NextResponse.json(
       {

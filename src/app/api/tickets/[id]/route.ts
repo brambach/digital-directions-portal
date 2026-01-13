@@ -46,8 +46,6 @@ export async function GET(
         resolvedAt: tickets.resolvedAt,
         resolvedBy: tickets.resolvedBy,
         resolution: tickets.resolution,
-        linearIssueId: tickets.linearIssueId,
-        linearIssueUrl: tickets.linearIssueUrl,
         createdAt: tickets.createdAt,
         updatedAt: tickets.updatedAt,
         clientName: clients.companyName,

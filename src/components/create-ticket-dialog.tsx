@@ -73,7 +73,7 @@ export function CreateTicketDialog({
           description: formData.description,
           type: formData.type,
           priority: formData.priority,
-          projectId: formData.projectId || null,
+          projectId: formData.projectId && formData.projectId !== "none" ? formData.projectId : null,
           clientId: formData.clientId || null,
         }),
       });
@@ -191,7 +191,7 @@ export function CreateTicketDialog({
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific project</SelectItem>
+                  <SelectItem value="none">No specific project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}

@@ -35,8 +35,6 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
       resolvedAt: tickets.resolvedAt,
       resolvedBy: tickets.resolvedBy,
       resolution: tickets.resolution,
-      linearIssueId: tickets.linearIssueId,
-      linearIssueUrl: tickets.linearIssueUrl,
       createdAt: tickets.createdAt,
       clientName: clients.companyName,
       projectName: projects.name,
@@ -173,20 +171,6 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
             isAssigned={!!ticket.assignedTo}
           />
         </div>
-
-        {ticket.linearIssueUrl && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <a
-              href={ticket.linearIssueUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700"
-            >
-              <ExternalLink className="w-4 h-4" />
-              View in Linear
-            </a>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

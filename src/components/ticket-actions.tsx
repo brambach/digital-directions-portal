@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { UserPlus, CheckCircle, Clock } from "lucide-react";
+import { UserPlus, CheckCircle, Clock, UserMinus } from "lucide-react";
 
 interface TicketActionsProps {
   ticketId: string;
@@ -64,6 +64,43 @@ export function ClaimTicketButton({ ticketId }: { ticketId: string }) {
     >
       <UserPlus className="w-4 h-4" />
       {loading ? "Claiming..." : "Claim Ticket"}
+    </button>
+  );
+}
+
+export function UnclaimTicketButton({ ticketId }: { ticketId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleUnclaim = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tickets/${ticketId}/assign`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to unclaim ticket");
+      }
+
+      router.refresh();
+      toast.success("Ticket unclaimed successfully");
+    } catch (error) {
+      console.error("Error unclaiming ticket:", error);
+      toast.error("Failed to unclaim ticket");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleUnclaim}
+      disabled={loading}
+      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+    >
+      <UserMinus className="w-4 h-4" />
+      {loading ? "Unclaiming..." : "Unclaim Ticket"}
     </button>
   );
 }
@@ -230,11 +267,13 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
 
 export function TicketActions({ ticketId, currentStatus, isAssigned }: TicketActionsProps) {
   const showClaim = !isAssigned && currentStatus === "open";
+  const showUnclaim = isAssigned && currentStatus !== "resolved" && currentStatus !== "closed";
   const showResolve = currentStatus !== "resolved" && currentStatus !== "closed";
 
   return (
     <div className="flex items-center gap-2">
       {showClaim && <ClaimTicketButton ticketId={ticketId} />}
+      {showUnclaim && <UnclaimTicketButton ticketId={ticketId} />}
       <UpdateStatusButton ticketId={ticketId} currentStatus={currentStatus} />
       {showResolve && <ResolveTicketDialog ticketId={ticketId} />}
     </div>

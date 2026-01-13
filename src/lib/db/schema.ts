@@ -207,10 +207,6 @@ export const tickets = pgTable(
     }),
     resolution: text("resolution"), // Summary of how it was resolved
 
-    // External integration
-    linearIssueId: varchar("linear_issue_id", { length: 255 }),
-    linearIssueUrl: varchar("linear_issue_url", { length: 500 }),
-
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

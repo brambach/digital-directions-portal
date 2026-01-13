@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { User, MessageSquare, Loader2 } from "lucide-react";
@@ -28,6 +28,13 @@ export function MessageList({ projectId, initialMessages }: MessageListProps) {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialMessages.length >= 10);
   const [offset, setOffset] = useState(initialMessages.length);
+
+  // Sync state when initialMessages changes (after router.refresh())
+  useEffect(() => {
+    setMessages(initialMessages);
+    setOffset(initialMessages.length);
+    setHasMore(initialMessages.length >= 10);
+  }, [initialMessages]);
 
   const loadMore = async () => {
     setLoading(true);

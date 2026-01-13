@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Digital Directions Portal",
-  description: "HiBob implementation and integration management portal",
+  description: "Client portal for project tracking, file sharing, and support tickets",
 };
 
 export default function RootLayout({

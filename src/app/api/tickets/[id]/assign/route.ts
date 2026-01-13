@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notifyTicketAssigned } from "@/lib/slack";
-import { updateLinearIssueStatus, addLinearComment } from "@/lib/linear";
 
 export async function POST(
   req: NextRequest,
@@ -64,7 +63,6 @@ export async function POST(
         title: tickets.title,
         clientId: tickets.clientId,
         projectId: tickets.projectId,
-        linearIssueId: tickets.linearIssueId,
       })
       .from(tickets)
       .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
@@ -134,23 +132,81 @@ export async function POST(
       assigneeName,
     }).catch((err) => console.error("Slack notification failed:", err));
 
-    // Sync with Linear
-    if (existingTicket.linearIssueId) {
-      // Update Linear status to In Progress
-      updateLinearIssueStatus(existingTicket.linearIssueId, "in_progress").catch((err) =>
-        console.error("Linear status update failed:", err)
-      );
-
-      // Add assignment comment
-      addLinearComment(
-        existingTicket.linearIssueId,
-        `Assigned to ${assigneeName} in DD Portal`
-      ).catch((err) => console.error("Linear comment failed:", err));
-    }
-
     return NextResponse.json(updatedTicket[0]);
   } catch (error) {
     console.error("Error assigning ticket:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    // Get the user from DB
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Only admins can unclaim tickets
+    if (user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Get the ticket first to verify it exists
+    const existingTicket = await db
+      .select({
+        id: tickets.id,
+        assignedTo: tickets.assignedTo,
+      })
+      .from(tickets)
+      .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (!existingTicket) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+
+    // Verify ticket is currently assigned
+    if (!existingTicket.assignedTo) {
+      return NextResponse.json(
+        { error: "Ticket is not assigned" },
+        { status: 400 }
+      );
+    }
+
+    // Update the ticket - reset assignment and set status back to open
+    const updatedTicket = await db
+      .update(tickets)
+      .set({
+        assignedTo: null,
+        assignedAt: null,
+        status: "open",
+        updatedAt: new Date(),
+      })
+      .where(eq(tickets.id, id))
+      .returning();
+
+    return NextResponse.json(updatedTicket[0]);
+  } catch (error) {
+    console.error("Error unclaiming ticket:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

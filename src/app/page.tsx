@@ -14,7 +14,7 @@ export default function Home() {
             className="h-auto"
           />
         </div>
-        <p className="text-lg text-gray-600 mb-6">HiBob Implementation Portal</p>
+        <p className="text-lg text-gray-600 mb-6">Your Client Portal for Project Updates & Support</p>
 
         <div className="flex flex-col gap-4 items-center">
           <Link

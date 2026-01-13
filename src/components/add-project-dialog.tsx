@@ -97,7 +97,7 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
             <Input
               id="name"
               required
-              placeholder="HiBob Integration Project"
+              placeholder="Q1 2026 Implementation"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />

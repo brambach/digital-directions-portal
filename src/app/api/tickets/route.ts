@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull, desc, sql, or } from "drizzle-orm";
 import { notifyTicketCreated } from "@/lib/slack";
-import { createLinearIssueForTicket } from "@/lib/linear";
 
 export async function GET(req: NextRequest) {
   try {
@@ -68,8 +67,6 @@ export async function GET(req: NextRequest) {
         assignedTo: tickets.assignedTo,
         assignedAt: tickets.assignedAt,
         resolvedAt: tickets.resolvedAt,
-        linearIssueId: tickets.linearIssueId,
-        linearIssueUrl: tickets.linearIssueUrl,
         createdAt: tickets.createdAt,
         updatedAt: tickets.updatedAt,
         clientName: clients.companyName,
@@ -265,17 +262,6 @@ export async function POST(req: NextRequest) {
       priority: priority || "medium",
       ticketType: type || "general_support",
     }).catch((err) => console.error("Slack notification failed:", err));
-
-    // Create Linear issue (fire and forget)
-    createLinearIssueForTicket({
-      ticketId: newTicket[0].id,
-      title,
-      description,
-      priority: priority || "medium",
-      type: type || "general_support",
-      clientName: client?.companyName || "Unknown Client",
-      projectName,
-    }).catch((err) => console.error("Linear issue creation failed:", err));
 
     return NextResponse.json(newTicket[0], { status: 201 });
   } catch (error) {
