@@ -28,11 +28,12 @@ export default function InviteCompletePage() {
 
         const data = await response.json();
 
-        // Redirect to appropriate dashboard
+        // Use window.location.href to force full page reload and refresh Clerk session
+        // This ensures middleware has the updated role before rendering the dashboard
         if (data.role === "admin") {
-          router.push("/dashboard/admin");
+          window.location.href = "/dashboard/admin";
         } else {
-          router.push("/dashboard/client");
+          window.location.href = "/dashboard/client";
         }
       } catch (err) {
         console.error("Error accepting invite:", err);
