@@ -3,30 +3,37 @@ import { db } from "@/lib/db";
 import { tickets, clients, projects, users } from "@/lib/db/schema";
 import { eq, isNull, and, desc, or } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
-import { CreateTicketDialog } from "@/components/create-ticket-dialog";
-import { Ticket, AlertTriangle, Zap, TrendingUp, Clock, User, Building2, ExternalLink } from "lucide-react";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import dynamicImport from "next/dynamic";
+import { Ticket, AlertTriangle, Zap, TrendingUp, Clock, User, Building2, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+
+const CreateTicketDialog = dynamicImport(
+  () => import("@/components/create-ticket-dialog").then((mod) => ({ default: mod.CreateTicketDialog })),
+  { loading: () => null }
+);
 
 export const dynamic = "force-dynamic";
 
 // Helper functions for status and priority badges
 function getStatusBadge(status: string) {
-  switch (status) {
-    case "open":
-      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">Open</span>;
-    case "in_progress":
-      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase tracking-wider">In Progress</span>;
-    case "waiting_on_client":
-      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-200 uppercase tracking-wider">Waiting</span>;
-    case "resolved":
-      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-wider">Resolved</span>;
-    case "closed":
-      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">Closed</span>;
-    default:
-      return null;
-  }
+  const styles = {
+    open: "badge-warning",
+    in_progress: "badge-primary",
+    waiting_on_client: "badge-info",
+    resolved: "badge-success",
+    closed: "badge-neutral",
+  }[status] || "badge-neutral";
+
+  const labels = {
+    open: "Open",
+    in_progress: "In Progress",
+    waiting_on_client: "Waiting",
+    resolved: "Resolved",
+    closed: "Closed",
+  }[status] || status;
+
+  return <span className={styles}>{labels}</span>;
 }
 
 function getPriorityInfo(priority: string) {
@@ -146,142 +153,141 @@ export default async function AdminTicketsPage() {
   const activeTickets = enrichedTickets.filter((t) => t.status === "open" || t.status === "in_progress" || t.status === "waiting_on_client");
 
   return (
-    <>
-      <AnimateOnScroll />
-      <div className="px-6 lg:px-8 py-10 max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-[#FAFBFC]">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-8 py-10">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.1s_both]">
-          <div className="max-w-2xl">
-            <h1 className="text-[32px] font-semibold text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-              <Ticket className="w-7 h-7 text-indigo-600" />
+        <header className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-10 animate-fade-in-up opacity-0 stagger-1">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Ticket className="w-4 h-4 text-amber-500" />
+              <span className="text-label text-amber-600">Support</span>
+            </div>
+            <h1 className="text-display text-3xl sm:text-4xl text-slate-900 mb-2">
               Support Queue
             </h1>
-            <p className="text-slate-500 text-[15px] leading-relaxed font-light">
+            <p className="text-slate-500 max-w-lg">
               Priority-sorted ticket queue across all active clients.
             </p>
           </div>
           <CreateTicketDialog clients={allClients} projects={allProjects} isAdmin />
-        </div>
+        </header>
 
         {/* Priority Queue Sections */}
         {urgentTickets.length > 0 && (
-          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.2s_both]">
-            <div className="flex items-center gap-2 mb-3 px-3">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <h2 className="text-xs font-bold text-red-600 uppercase tracking-widest">
-                Urgent ({urgentTickets.length})
-              </h2>
+          <section className="mb-8 animate-fade-in-up opacity-0 stagger-2">
+            <div className="section-divider mb-4 text-red-600">
+              <AlertTriangle className="w-4 h-4" />
+              <span>Urgent ({urgentTickets.length})</span>
             </div>
-            <div className="space-y-2">
-              {urgentTickets.map((ticket) => (
-                <TicketRow key={ticket.id} ticket={ticket} />
+            <div className="space-y-3">
+              {urgentTickets.map((ticket, i) => (
+                <TicketRow key={ticket.id} ticket={ticket} index={i} />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {highPriorityTickets.length > 0 && (
-          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
-            <div className="flex items-center gap-2 mb-3 px-3">
-              <Zap className="w-4 h-4 text-orange-600" />
-              <h2 className="text-xs font-bold text-orange-600 uppercase tracking-widest">
-                High Priority ({highPriorityTickets.length})
-              </h2>
+          <section className="mb-8 animate-fade-in-up opacity-0 stagger-3">
+            <div className="section-divider mb-4 text-orange-600">
+              <Zap className="w-4 h-4" />
+              <span>High Priority ({highPriorityTickets.length})</span>
             </div>
-            <div className="space-y-2">
-              {highPriorityTickets.map((ticket) => (
-                <TicketRow key={ticket.id} ticket={ticket} />
+            <div className="space-y-3">
+              {highPriorityTickets.map((ticket, i) => (
+                <TicketRow key={ticket.id} ticket={ticket} index={i} />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {mediumPriorityTickets.length > 0 && (
-          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.4s_both]">
-            <div className="flex items-center gap-2 mb-3 px-3">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                Medium Priority ({mediumPriorityTickets.length})
-              </h2>
+          <section className="mb-8 animate-fade-in-up opacity-0 stagger-4">
+            <div className="section-divider mb-4 text-blue-600">
+              <TrendingUp className="w-4 h-4" />
+              <span>Medium Priority ({mediumPriorityTickets.length})</span>
             </div>
-            <div className="space-y-2">
-              {mediumPriorityTickets.map((ticket) => (
-                <TicketRow key={ticket.id} ticket={ticket} />
+            <div className="space-y-3">
+              {mediumPriorityTickets.map((ticket, i) => (
+                <TicketRow key={ticket.id} ticket={ticket} index={i} />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {lowPriorityTickets.length > 0 && (
-          <div className="mb-6 animate-on-scroll [animation:animationIn_0.5s_ease-out_0.5s_both]">
-            <div className="flex items-center gap-2 mb-3 px-3">
-              <Clock className="w-4 h-4 text-slate-500" />
-              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Low Priority ({lowPriorityTickets.length})
-              </h2>
+          <section className="mb-8 animate-fade-in-up opacity-0 stagger-5">
+            <div className="section-divider mb-4 text-slate-500">
+              <Clock className="w-4 h-4" />
+              <span>Low Priority ({lowPriorityTickets.length})</span>
             </div>
-            <div className="space-y-2">
-              {lowPriorityTickets.map((ticket) => (
-                <TicketRow key={ticket.id} ticket={ticket} />
+            <div className="space-y-3">
+              {lowPriorityTickets.map((ticket, i) => (
+                <TicketRow key={ticket.id} ticket={ticket} index={i} />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {activeTickets.length === 0 && (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm animate-on-scroll [animation:animationIn_0.5s_ease-out_0.2s_both]">
-            <Ticket className="w-16 h-16 text-slate-300 mx-auto mb-4" strokeWidth={1.5} />
-            <p className="text-slate-600 text-lg font-medium mb-2">All caught up!</p>
-            <p className="text-slate-400 text-sm">No active support tickets at the moment.</p>
+          <div className="card-elevated animate-fade-in-up opacity-0 stagger-2">
+            <div className="empty-state">
+              <Ticket className="empty-state-icon" />
+              <h3 className="empty-state-title">All caught up!</h3>
+              <p className="empty-state-description">
+                No active support tickets at the moment.
+              </p>
+            </div>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
 // Ticket Row Component
-function TicketRow({ ticket }: { ticket: any }) {
+function TicketRow({ ticket, index }: { ticket: any; index: number }) {
   const priorityInfo = getPriorityInfo(ticket.priority);
   const PriorityIcon = priorityInfo.icon;
 
   return (
     <Link
       href={`/dashboard/admin/tickets/${ticket.id}`}
-      className="block bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 group"
+      className="card-elevated p-4 block group hover:border-violet-200 hover:shadow-md transition-all duration-200 animate-fade-in-up opacity-0"
+      style={{ animationDelay: `${0.1 + index * 0.03}s` }}
     >
       <div className="flex items-start gap-4">
         {/* Priority Indicator */}
-        <div className={`w-10 h-10 rounded-lg ${priorityInfo.bgColor} border ${priorityInfo.borderColor} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-10 h-10 rounded-xl ${priorityInfo.bgColor} border ${priorityInfo.borderColor} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
           <PriorityIcon className={`w-5 h-5 ${priorityInfo.color}`} />
         </div>
 
         {/* Ticket Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-2">
-            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-violet-700 transition-colors line-clamp-1">
               {ticket.title}
             </h3>
             <div className="flex items-center gap-2 flex-shrink-0">
               {getStatusBadge(ticket.status)}
-              <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
 
-          <p className="text-xs text-slate-500 mb-3 line-clamp-1">
+          <p className="text-xs text-slate-500 mb-3 line-clamp-1 leading-relaxed">
             {ticket.description}
           </p>
 
           <div className="flex items-center gap-4 text-xs text-slate-400">
             {ticket.clientName && (
               <div className="flex items-center gap-1.5">
-                <Building2 className="w-3 h-3" />
+                <Building2 className="w-3.5 h-3.5" />
                 <span className="font-medium text-slate-600">{ticket.clientName}</span>
               </div>
             )}
             {ticket.assigneeName ? (
               <div className="flex items-center gap-1.5">
-                <User className="w-3 h-3" />
+                <User className="w-3.5 h-3.5" />
                 <span>{ticket.assigneeName}</span>
               </div>
             ) : (

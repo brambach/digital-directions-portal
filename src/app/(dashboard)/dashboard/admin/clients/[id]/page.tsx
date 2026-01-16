@@ -6,12 +6,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Building2, Calendar, Activity as ActivityIcon, FolderOpen, CheckCircle, AlertCircle, Clock, User, Users as UsersIcon, MailCheck, LayoutGrid, FileText } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { AddProjectDialog } from "@/components/add-project-dialog";
-import { InviteUserToClientDialog } from "@/components/invite-user-to-client-dialog";
+import dynamicImport from "next/dynamic";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { SupportHoursCard } from "@/components/support-hours-card";
-import { EditClientDialog } from "@/components/edit-client-dialog";
 import { clerkClient } from "@clerk/nextjs/server";
+
+const AddProjectDialog = dynamicImport(
+  () => import("@/components/add-project-dialog").then((mod) => ({ default: mod.AddProjectDialog })),
+  { loading: () => null }
+);
+const InviteUserToClientDialog = dynamicImport(
+  () => import("@/components/invite-user-to-client-dialog").then((mod) => ({ default: mod.InviteUserToClientDialog })),
+  { loading: () => null }
+);
+const EditClientDialog = dynamicImport(
+  () => import("@/components/edit-client-dialog").then((mod) => ({ default: mod.EditClientDialog })),
+  { loading: () => null }
+);
 
 export const dynamic = "force-dynamic";
 

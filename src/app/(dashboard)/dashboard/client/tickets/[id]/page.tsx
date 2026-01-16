@@ -5,16 +5,32 @@ import { eq, and, isNull, desc, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { clerkClient } from "@clerk/nextjs/server";
-import { ArrowLeft, FolderKanban, Calendar, User, LayoutGrid } from "lucide-react";
+import {
+  ArrowLeft,
+  FolderKanban,
+  Calendar,
+  User,
+  MessageSquare,
+  Info,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { TicketStatusBadge, TicketPriorityBadge, TicketTypeBadge } from "@/components/ticket-status-badge";
+import {
+  TicketStatusBadge,
+  TicketPriorityBadge,
+  TicketTypeBadge,
+} from "@/components/ticket-status-badge";
 import { TicketCommentForm } from "@/components/ticket-comment-form";
 import Image from "next/image";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClientTicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientTicketDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const user = await requireAuth();
   const { id } = await params;
 
@@ -84,27 +100,33 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
   const uniqueUserIds = [...new Set(userIds)];
 
   // Fetch DB users
-  const dbUsers = uniqueUserIds.length > 0
-    ? await db
-        .select({ id: users.id, clerkId: users.clerkId, role: users.role })
-        .from(users)
-        .where(or(...uniqueUserIds.map((uid) => eq(users.id, uid))))
-    : [];
+  const dbUsers =
+    uniqueUserIds.length > 0
+      ? await db
+          .select({ id: users.id, clerkId: users.clerkId, role: users.role })
+          .from(users)
+          .where(or(...uniqueUserIds.map((uid) => eq(users.id, uid))))
+      : [];
 
-  const dbUserMap = new Map(dbUsers.map((u) => [u.id, { clerkId: u.clerkId, role: u.role }]));
+  const dbUserMap = new Map(
+    dbUsers.map((u) => [u.id, { clerkId: u.clerkId, role: u.role }])
+  );
 
   // Fetch Clerk users
   const clerk = await clerkClient();
   const clerkIds = [...new Set(dbUsers.map((u) => u.clerkId).filter(Boolean))];
-  const clerkUsers = clerkIds.length > 0
-    ? await Promise.all(clerkIds.map(async (cid) => {
-        try {
-          return await clerk.users.getUser(cid);
-        } catch {
-          return null;
-        }
-      }))
-    : [];
+  const clerkUsers =
+    clerkIds.length > 0
+      ? await Promise.all(
+          clerkIds.map(async (cid) => {
+            try {
+              return await clerk.users.getUser(cid);
+            } catch {
+              return null;
+            }
+          })
+        )
+      : [];
 
   const clerkUserMap = new Map(
     clerkUsers
@@ -119,7 +141,8 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
     const clerkUser = dbUser.clerkId ? clerkUserMap.get(dbUser.clerkId) : null;
     return {
       name: clerkUser
-        ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User"
+        ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+          "User"
         : "User",
       avatar: clerkUser?.imageUrl || null,
       role: dbUser.role,
@@ -130,175 +153,246 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
   const isResolved = ticket.status === "resolved" || ticket.status === "closed";
 
   return (
-    <>
-      <AnimateOnScroll />
-      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-8 md:py-12">
+    <div className="min-h-screen bg-[#FAFBFC]">
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-8 py-10">
         {/* Back Button */}
         <Link
           href="/dashboard/client/tickets"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6 transition-colors [animation:animationIn_0.5s_ease-out_0s_both] animate-on-scroll"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-violet-600 mb-8 transition-colors animate-fade-in-up opacity-0 stagger-1"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Support
         </Link>
 
         {/* Ticket Header */}
-        <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.1s_both] animate-on-scroll">
-          <div className="flex items-center gap-3 mb-3 flex-wrap">
-            <h1 className="text-2xl font-semibold text-slate-900">{ticket.title}</h1>
+        <div className="card-elevated p-8 mb-8 animate-fade-in-up opacity-0 stagger-1">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <h1 className="text-display text-2xl text-slate-900">
+              {ticket.title}
+            </h1>
             <TicketStatusBadge status={ticket.status} size="md" />
             <TicketPriorityBadge priority={ticket.priority} size="md" />
             <TicketTypeBadge type={ticket.type} size="md" />
           </div>
 
-          <p className="text-slate-500 whitespace-pre-wrap mb-4">{ticket.description}</p>
+          <p className="text-slate-600 whitespace-pre-wrap mb-6 leading-relaxed">
+            {ticket.description}
+          </p>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-6 text-sm">
             {ticket.projectName && (
               <Link
                 href={`/dashboard/client/projects/${ticket.projectId}`}
-                className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
+                className="flex items-center gap-2 text-violet-600 hover:text-violet-700 transition-colors"
               >
-                <FolderKanban className="w-4 h-4" />
-                <span>{ticket.projectName}</span>
+                <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
+                  <FolderKanban className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-medium">{ticket.projectName}</span>
               </Link>
             )}
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>Submitted {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+            <div className="flex items-center gap-2 text-slate-500">
+              <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
+                <Calendar className="w-3.5 h-3.5 text-slate-600" />
+              </div>
+              <span>
+                Submitted{" "}
+                {formatDistanceToNow(new Date(ticket.createdAt), {
+                  addSuffix: true,
+                })}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Comments */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3 [animation:animationIn_0.5s_ease-out_0.2s_both] animate-on-scroll">
-              <LayoutGrid className="w-4 h-4 text-indigo-500" />
-              <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Conversation</h2>
-            </div>
-
-            {!isResolved && (
-              <div className="[animation:animationIn_0.5s_ease-out_0.3s_both] animate-on-scroll">
-                <TicketCommentForm ticketId={id} />
+          <div className="lg:col-span-2 space-y-6">
+            <section className="animate-fade-in-up opacity-0 stagger-2">
+              <div className="section-divider mb-4">
+                <MessageSquare className="w-4 h-4 text-blue-500" />
+                <span>Conversation</span>
               </div>
-            )}
 
-            {comments.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.4s_both] animate-on-scroll">
-                <p className="text-slate-500 text-sm">No replies yet. Our team will respond shortly.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {comments.map((comment, index) => {
-                  const author = getUserInfo(comment.authorId);
-                  return (
-                    <div key={comment.id} className={`bg-white rounded-2xl p-4 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_${0.4 + index * 0.1}s_both] animate-on-scroll`}>
-                      <div className="flex items-start gap-3">
-                        {author?.avatar ? (
-                          <Image
-                            src={author.avatar}
-                            alt={author.name}
-                            width={32}
-                            height={32}
-                            className="rounded-full flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200">
-                            <User className="w-4 h-4 text-slate-500" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-slate-900">{author?.name}</span>
-                            {author?.role === "admin" && (
-                              <span className="text-xs px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded-full border border-indigo-200">
-                                Digital Directions
+              {!isResolved && (
+                <div className="card-elevated p-4 mb-4">
+                  <TicketCommentForm ticketId={id} />
+                </div>
+              )}
+
+              {comments.length === 0 ? (
+                <div className="card-elevated">
+                  <div className="empty-state py-8">
+                    <MessageSquare className="empty-state-icon" />
+                    <h3 className="empty-state-title">No replies yet</h3>
+                    <p className="empty-state-description">
+                      Our team will respond to your ticket shortly.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {comments.map((comment, index) => {
+                    const author = getUserInfo(comment.authorId);
+                    const isAdmin = author?.role === "admin";
+                    return (
+                      <div
+                        key={comment.id}
+                        className={`card-elevated p-4 animate-fade-in-up opacity-0 ${isAdmin ? "border-l-2 border-l-violet-400" : ""}`}
+                        style={{ animationDelay: `${0.15 + index * 0.05}s` }}
+                      >
+                        <div className="flex items-start gap-3">
+                          {author?.avatar ? (
+                            <Image
+                              src={author.avatar}
+                              alt={author.name}
+                              width={36}
+                              height={36}
+                              className="rounded-xl flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                              <User className="w-4 h-4 text-slate-500" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-sm font-semibold text-slate-900">
+                                {author?.name}
                               </span>
-                            )}
-                            <span className="text-xs text-slate-400">
-                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                            </span>
+                              {isAdmin && (
+                                <span className="text-[10px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-semibold">
+                                  Digital Directions
+                                </span>
+                              )}
+                              <span className="text-xs text-slate-400">
+                                {formatDistanceToNow(
+                                  new Date(comment.createdAt),
+                                  { addSuffix: true }
+                                )}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                              {comment.content}
+                            </p>
                           </div>
-                          <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment.content}</p>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 [animation:animationIn_0.5s_ease-out_0.2s_both] animate-on-scroll">
-              <LayoutGrid className="w-4 h-4 text-indigo-500" />
-              <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Details</h2>
-            </div>
+            <section className="animate-fade-in-up opacity-0 stagger-2">
+              <div className="section-divider mb-4">
+                <Info className="w-4 h-4 text-slate-500" />
+                <span>Details</span>
+              </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.3s_both] animate-on-scroll">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Assigned to</p>
-                  {assignee ? (
-                    <div className="flex items-center gap-2">
-                      {assignee.avatar ? (
-                        <Image src={assignee.avatar} alt={assignee.name} width={24} height={24} className="rounded-full" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-                          <User className="w-3 h-3 text-slate-500" />
-                        </div>
+              <div className="card-elevated p-5">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-label text-slate-500 mb-1.5">
+                      Assigned to
+                    </p>
+                    {assignee ? (
+                      <div className="flex items-center gap-2">
+                        {assignee.avatar ? (
+                          <Image
+                            src={assignee.avatar}
+                            alt={assignee.name}
+                            width={28}
+                            height={28}
+                            className="rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
+                            <User className="w-3.5 h-3.5 text-slate-500" />
+                          </div>
+                        )}
+                        <span className="text-sm font-medium text-slate-900">
+                          {assignee.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-slate-500 italic">
+                        Awaiting assignment
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-label text-slate-500 mb-1.5">Status</p>
+                    <TicketStatusBadge status={ticket.status} />
+                  </div>
+
+                  <div>
+                    <p className="text-label text-slate-500 mb-1.5">Priority</p>
+                    <TicketPriorityBadge priority={ticket.priority} />
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100">
+                    <p className="text-label text-slate-500 mb-1">Submitted</p>
+                    <p className="text-sm text-slate-700">
+                      {format(
+                        new Date(ticket.createdAt),
+                        "MMM d, yyyy 'at' h:mm a"
                       )}
-                      <span className="text-sm text-slate-900">{assignee.name}</span>
+                    </p>
+                  </div>
+
+                  {ticket.resolvedAt && (
+                    <div>
+                      <p className="text-label text-slate-500 mb-1">Resolved</p>
+                      <p className="text-sm text-slate-700">
+                        {format(
+                          new Date(ticket.resolvedAt),
+                          "MMM d, yyyy 'at' h:mm a"
+                        )}
+                      </p>
                     </div>
-                  ) : (
-                    <span className="text-sm text-slate-500">Awaiting assignment</span>
                   )}
                 </div>
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Status</p>
-                  <TicketStatusBadge status={ticket.status} />
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Priority</p>
-                  <TicketPriorityBadge priority={ticket.priority} />
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Submitted</p>
-                  <p className="text-sm text-slate-900">{format(new Date(ticket.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
-                </div>
-
-                {ticket.resolvedAt && (
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Resolved</p>
-                    <p className="text-sm text-slate-900">{format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' h:mm a")}</p>
-                  </div>
-                )}
               </div>
-            </div>
+            </section>
 
             {ticket.resolution && (
-              <div className="bg-white rounded-2xl p-4 border border-emerald-200 bg-emerald-50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.4s_both] animate-on-scroll">
-                <p className="text-sm font-medium text-emerald-700 mb-2">Resolution</p>
-                <p className="text-sm text-emerald-900 whitespace-pre-wrap">{ticket.resolution}</p>
+              <div className="card-elevated p-5 bg-gradient-to-br from-emerald-50 to-white border-emerald-100 animate-fade-in-up opacity-0 stagger-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <h3 className="text-heading text-emerald-900">Resolution</h3>
+                </div>
+                <p className="text-sm text-emerald-800 whitespace-pre-wrap leading-relaxed">
+                  {ticket.resolution}
+                </p>
               </div>
             )}
 
             {ticket.status === "waiting_on_client" && (
-              <div className="bg-white rounded-2xl p-4 border border-orange-200 bg-orange-50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.5s_both] animate-on-scroll">
-                <p className="text-sm font-medium text-orange-700 mb-1">Action Required</p>
-                <p className="text-sm text-orange-600">
-                  We&apos;re waiting for your response. Please add a comment above to continue.
+              <div className="card-elevated p-5 bg-gradient-to-br from-amber-50 to-white border-amber-100 animate-fade-in-up opacity-0 stagger-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <h3 className="text-heading text-amber-900">
+                    Action Required
+                  </h3>
+                </div>
+                <p className="text-sm text-amber-800">
+                  We&apos;re waiting for your response. Please add a comment
+                  above to continue.
                 </p>
               </div>
             )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,38 +1,67 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, files, messages, users, integrationMonitors } from "@/lib/db/schema";
+import {
+  projects,
+  files,
+  messages,
+  users,
+  integrationMonitors,
+} from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, FileText, MessageSquare, Clock, Download, LayoutGrid, Activity } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  MessageSquare,
+  Clock,
+  Download,
+  Activity,
+  FolderOpen,
+  ExternalLink,
+  HelpCircle,
+  Ticket,
+  AlertCircle,
+} from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { MessageForm } from "@/components/message-form";
 import { clerkClient } from "@clerk/nextjs/server";
 import { MessageList } from "@/components/message-list";
 import { ContactTeamButton } from "@/components/contact-team-button";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { ProjectPhaseManager } from "@/components/project-phase-manager";
 import { IntegrationHealthGrid } from "@/components/integration-health-grid";
 
 export const dynamic = "force-dynamic";
 
-// Helper function to get status badge styles
-function getStatusBadge(status: string): { bg: string; text: string; border: string; label: string } {
-  switch (status) {
-    case "in_progress":
-      return { bg: "bg-indigo-50", text: "text-indigo-600", border: "border-indigo-200", label: "In Progress" };
-    case "review":
-      return { bg: "bg-purple-50", text: "text-purple-600", border: "border-purple-200", label: "In Review" };
-    case "completed":
-      return { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200", label: "Completed" };
-    case "on_hold":
-      return { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200", label: "On Hold" };
-    case "planning":
-      return { bg: "bg-slate-100", text: "text-slate-600", border: "border-slate-200", label: "Planning" };
-    default:
-      return { bg: "bg-slate-100", text: "text-slate-500", border: "border-slate-200", label: status };
-  }
-}
+// Status badge configurations
+const statusConfig = {
+  in_progress: {
+    label: "In Progress",
+    className: "badge-primary",
+    dot: true,
+  },
+  review: {
+    label: "In Review",
+    className: "badge-info",
+    dot: true,
+  },
+  completed: {
+    label: "Completed",
+    className: "badge-success",
+    dot: false,
+  },
+  on_hold: {
+    label: "On Hold",
+    className: "badge-warning",
+    dot: false,
+  },
+  planning: {
+    label: "Planning",
+    className: "badge-neutral",
+    dot: false,
+  },
+} as const;
 
 // Helper function to format file size
 function formatFileSize(bytes: number): string {
@@ -41,16 +70,30 @@ function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
-// Helper function to get file icon color
-function getFileIconColor(fileType: string): string {
-  if (fileType.includes("pdf")) return "text-red-400";
-  if (fileType.includes("image")) return "text-purple-400";
-  if (fileType.includes("zip")) return "text-purple-400";
-  if (fileType.includes("word") || fileType.includes("document")) return "text-indigo-400";
-  return "text-slate-400";
+// Helper function to get file icon styling
+function getFileTypeInfo(fileType: string): {
+  color: string;
+  bg: string;
+  label: string;
+} {
+  if (fileType.includes("pdf"))
+    return { color: "text-red-600", bg: "bg-red-50", label: "PDF" };
+  if (fileType.includes("image"))
+    return { color: "text-violet-600", bg: "bg-violet-50", label: "Image" };
+  if (fileType.includes("zip"))
+    return { color: "text-amber-600", bg: "bg-amber-50", label: "Archive" };
+  if (fileType.includes("word") || fileType.includes("document"))
+    return { color: "text-blue-600", bg: "bg-blue-50", label: "Document" };
+  if (fileType.includes("sheet") || fileType.includes("excel"))
+    return { color: "text-emerald-600", bg: "bg-emerald-50", label: "Spreadsheet" };
+  return { color: "text-slate-600", bg: "bg-slate-50", label: "File" };
 }
 
-export default async function ClientProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientProjectDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const user = await requireAuth();
   const { id } = await params;
 
@@ -58,7 +101,13 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
   const project = await db
     .select()
     .from(projects)
-    .where(and(eq(projects.id, id), eq(projects.clientId, user.clientId!), isNull(projects.deletedAt)))
+    .where(
+      and(
+        eq(projects.id, id),
+        eq(projects.clientId, user.clientId!),
+        isNull(projects.deletedAt)
+      )
+    )
     .limit(1)
     .then((rows) => rows[0]);
 
@@ -77,7 +126,12 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
   const integrations = await db
     .select()
     .from(integrationMonitors)
-    .where(and(eq(integrationMonitors.projectId, id), isNull(integrationMonitors.deletedAt)))
+    .where(
+      and(
+        eq(integrationMonitors.projectId, id),
+        isNull(integrationMonitors.deletedAt)
+      )
+    )
     .orderBy(desc(integrationMonitors.createdAt));
 
   // Fetch project messages with sender info
@@ -98,18 +152,25 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
     .limit(10);
 
   // Fetch Clerk user info for senders
-  const clerkIds = [...new Set(projectMessagesRaw.map((m) => m.senderClerkId).filter(Boolean))] as string[];
+  const clerkIds = [
+    ...new Set(
+      projectMessagesRaw.map((m) => m.senderClerkId).filter(Boolean)
+    ),
+  ] as string[];
   const clerk = await clerkClient();
 
-  const clerkUsers = clerkIds.length > 0
-    ? await Promise.all(clerkIds.map(async (clerkId) => {
-        try {
-          return await clerk.users.getUser(clerkId);
-        } catch {
-          return null;
-        }
-      }))
-    : [];
+  const clerkUsers =
+    clerkIds.length > 0
+      ? await Promise.all(
+          clerkIds.map(async (clerkId) => {
+            try {
+              return await clerk.users.getUser(clerkId);
+            } catch {
+              return null;
+            }
+          })
+        )
+      : [];
 
   const clerkUserMap = new Map(
     clerkUsers
@@ -119,9 +180,12 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
 
   // Enrich messages with sender names
   const projectMessages = projectMessagesRaw.map((message) => {
-    const clerkUser = message.senderClerkId ? clerkUserMap.get(message.senderClerkId) : null;
+    const clerkUser = message.senderClerkId
+      ? clerkUserMap.get(message.senderClerkId)
+      : null;
     const senderName = clerkUser
-      ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "Team Member"
+      ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+        "Team Member"
       : "Team Member";
     const senderAvatar = clerkUser?.imageUrl || null;
 
@@ -137,143 +201,262 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
     };
   });
 
-  const statusBadge = getStatusBadge(project.status);
+  const config =
+    statusConfig[project.status as keyof typeof statusConfig] ||
+    statusConfig.planning;
   const now = new Date();
-  const isOverdue = project.dueDate && new Date(project.dueDate) < now && project.status !== "completed";
+  const isOverdue =
+    project.dueDate &&
+    new Date(project.dueDate) < now &&
+    project.status !== "completed";
 
   return (
-    <>
-      <AnimateOnScroll />
-      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-8 md:py-12">
-        {/* Back Button */}
+    <div className="min-h-screen bg-[#FAFBFC]">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
+        {/* Back Navigation */}
         <Link
-          href="/dashboard/client"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6 transition-colors [animation:animationIn_0.5s_ease-out_0s_both] animate-on-scroll"
+          href="/dashboard/client/projects"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-violet-600 mb-8 transition-colors animate-fade-in-up opacity-0 stagger-1"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
+          Back to Projects
         </Link>
 
-        {/* Project Header */}
-        <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.1s_both] animate-on-scroll">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        {/* Project Header Card */}
+        <div className="card-elevated p-8 mb-8 animate-fade-in-up opacity-0 stagger-1">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">{project.name}</h1>
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <h1 className="text-display text-3xl text-slate-900">
+                  {project.name}
+                </h1>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${config.className}`}
                 >
-                  {statusBadge.label}
+                  {config.dot && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                  )}
+                  {config.label}
                 </span>
               </div>
 
               {project.description && (
-                <p className="text-slate-500 mb-4">{project.description}</p>
+                <p className="text-slate-500 mb-6 max-w-2xl leading-relaxed">
+                  {project.description}
+                </p>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex flex-wrap gap-6 text-sm">
                 {project.startDate && (
                   <div className="flex items-center gap-2 text-slate-500">
-                    <Calendar className="w-4 h-4" />
-                    <span>Started {format(new Date(project.startDate), "MMM d, yyyy")}</span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Started</p>
+                      <p className="font-medium text-slate-700">
+                        {format(new Date(project.startDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {project.dueDate && (
-                  <div className={`flex items-center gap-2 ${isOverdue ? "text-red-600 font-medium" : "text-slate-500"}`}>
-                    <Clock className="w-4 h-4" />
-                    <span>
-                      {isOverdue ? "Overdue" : "Due"} {formatDistanceToNow(new Date(project.dueDate), { addSuffix: true })}
-                    </span>
+                  <div
+                    className={`flex items-center gap-2 ${isOverdue ? "text-red-600" : "text-slate-500"}`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOverdue ? "bg-red-50" : "bg-slate-100"}`}
+                    >
+                      {isOverdue ? (
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-slate-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p
+                        className={`text-xs ${isOverdue ? "text-red-500" : "text-slate-400"}`}
+                      >
+                        {isOverdue ? "Overdue" : "Due Date"}
+                      </p>
+                      <p
+                        className={`font-medium ${isOverdue ? "text-red-700" : "text-slate-700"}`}
+                      >
+                        {format(new Date(project.dueDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
                   </div>
                 )}
+
+                <div className="flex items-center gap-2 text-slate-500">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Files</p>
+                    <p className="font-medium text-slate-700">
+                      {projectFiles.length}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-slate-500">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Messages</p>
+                    <p className="font-medium text-slate-700">
+                      {projectMessages.length}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Project Phases */}
-        <div className="mb-6 [animation:animationIn_0.5s_ease-out_0.15s_both] animate-on-scroll">
+        <div className="mb-8 animate-fade-in-up opacity-0 stagger-2">
           <ProjectPhaseManager projectId={id} isAdmin={false} />
         </div>
 
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar */}
-          <div className="space-y-4 order-2 lg:order-1">
-            <div className="flex items-center gap-3 [animation:animationIn_0.5s_ease-out_0.2s_both] animate-on-scroll">
-              <LayoutGrid className="w-4 h-4 text-indigo-500" />
-              <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Project Details</h2>
-            </div>
+          {/* Left Column - Files & Integrations */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Files Section */}
+            <section className="animate-fade-in-up opacity-0 stagger-3">
+              <div className="section-divider mb-4">
+                <FileText className="w-4 h-4 text-violet-500" />
+                <span>Project Files ({projectFiles.length})</span>
+              </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.3s_both] animate-on-scroll">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Status</p>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}`}
-                  >
-                    {statusBadge.label}
-                  </span>
-                </div>
-
-                {project.startDate && (
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Start Date</p>
-                    <p className="text-sm text-slate-900">{format(new Date(project.startDate), "MMMM d, yyyy")}</p>
-                  </div>
-                )}
-
-                {project.dueDate && (
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Due Date</p>
-                    <p className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-slate-900"}`}>
-                      {format(new Date(project.dueDate), "MMMM d, yyyy")}
+              {projectFiles.length === 0 ? (
+                <div className="card-elevated">
+                  <div className="empty-state">
+                    <FolderOpen className="empty-state-icon" />
+                    <h3 className="empty-state-title">No files yet</h3>
+                    <p className="empty-state-description">
+                      Files will appear here when your team uploads them
                     </p>
                   </div>
-                )}
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Files</p>
-                  <p className="text-sm text-slate-900">{projectFiles.length} {projectFiles.length === 1 ? "file" : "files"}</p>
                 </div>
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Messages</p>
-                  <p className="text-sm text-slate-900">{projectMessages.length} {projectMessages.length === 1 ? "message" : "messages"}</p>
+              ) : (
+                <div className="card-elevated overflow-hidden divide-y divide-slate-100">
+                  {projectFiles.map((file, index) => {
+                    const typeInfo = getFileTypeInfo(file.fileType);
+                    return (
+                      <div
+                        key={file.id}
+                        className="p-4 hover:bg-slate-50/50 transition-colors group animate-fade-in-up opacity-0"
+                        style={{ animationDelay: `${0.2 + index * 0.03}s` }}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div
+                              className={`w-10 h-10 rounded-xl ${typeInfo.bg} flex items-center justify-center flex-shrink-0`}
+                            >
+                              <FileText
+                                className={`w-5 h-5 ${typeInfo.color}`}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate group-hover:text-violet-700 transition-colors">
+                                {file.name}
+                              </p>
+                              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded ${typeInfo.bg} ${typeInfo.color} text-[10px] font-semibold`}
+                                >
+                                  {typeInfo.label}
+                                </span>
+                                <span>•</span>
+                                <span>{formatFileSize(file.fileSize)}</span>
+                                <span>•</span>
+                                <span>
+                                  {formatDistanceToNow(
+                                    new Date(file.uploadedAt),
+                                    { addSuffix: true }
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <a
+                            href={file.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-violet-600 hover:text-violet-700 hover:bg-violet-50 transition-colors text-sm font-medium flex-shrink-0"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Download</span>
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+              )}
+            </section>
+
+            {/* Integrations Section */}
+            <section className="animate-fade-in-up opacity-0 stagger-4">
+              <div className="section-divider mb-4">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                <span>Integration Health</span>
               </div>
-            </div>
+              <IntegrationHealthGrid clientId={project.clientId} />
+            </section>
+          </div>
 
+          {/* Right Column - Messages & Support */}
+          <div className="space-y-6">
             {/* Messages Section */}
-            <div className="[animation:animationIn_0.5s_ease-out_0.35s_both] animate-on-scroll">
-              <div className="flex items-center gap-3 mb-4">
-                <MessageSquare className="w-4 h-4 text-indigo-500" />
-                <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Messages</h2>
+            <section className="animate-fade-in-up opacity-0 stagger-3">
+              <div className="section-divider mb-4">
+                <MessageSquare className="w-4 h-4 text-blue-500" />
+                <span>Messages</span>
               </div>
 
-              <MessageList projectId={id} initialMessages={projectMessages} />
+              <div className="card-elevated overflow-hidden">
+                <MessageList projectId={id} initialMessages={projectMessages} />
 
-              {/* Message Input */}
-              <div className="mt-4">
-                <MessageForm projectId={id} />
+                {/* Message Input */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                  <MessageForm projectId={id} />
+                </div>
               </div>
-            </div>
+            </section>
 
-            <div className="bg-white rounded-2xl p-5 border border-indigo-200 bg-indigo-50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.4s_both] animate-on-scroll">
-              <p className="text-sm text-indigo-700 font-semibold mb-3">Need Help?</p>
+            {/* Help Card */}
+            <div className="card-elevated p-6 bg-gradient-to-br from-violet-50 to-white border-violet-100 animate-fade-in-up opacity-0 stagger-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <HelpCircle className="w-4 h-4 text-violet-600" />
+                </div>
+                <h3 className="text-heading text-slate-900">Need Help?</h3>
+              </div>
 
-              <div className="space-y-3 mb-4">
-                <div className="bg-white/60 rounded-lg p-3 border border-indigo-100">
-                  <p className="text-xs font-semibold text-indigo-900 mb-1">Quick Questions</p>
-                  <p className="text-xs text-indigo-700 leading-relaxed">
-                    Send us a message above for quick questions or updates. Messages are free and don&apos;t count toward your support hours.
+              <div className="space-y-3 mb-5">
+                <div className="bg-white rounded-xl p-3 border border-slate-100">
+                  <p className="text-xs font-semibold text-slate-800 mb-1">
+                    Quick Questions
+                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Use the message form above for quick questions. Messages are
+                    free and don&apos;t count toward support hours.
                   </p>
                 </div>
 
-                <div className="bg-white/60 rounded-lg p-3 border border-indigo-100">
-                  <p className="text-xs font-semibold text-indigo-900 mb-1">Project Support</p>
-                  <p className="text-xs text-indigo-700 leading-relaxed">
-                    Need hands-on project work? Create a ticket for support that counts toward your monthly support hours package.
+                <div className="bg-white rounded-xl p-3 border border-slate-100">
+                  <p className="text-xs font-semibold text-slate-800 mb-1">
+                    Project Support
+                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Need hands-on work? Create a support ticket that counts
+                    toward your monthly support package.
                   </p>
                 </div>
               </div>
@@ -282,76 +465,50 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
                 <ContactTeamButton />
                 <Link
                   href="/dashboard/client/tickets"
-                  className="w-full px-4 py-2 text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200 text-center"
+                  className="btn-secondary w-full justify-center"
                 >
+                  <Ticket className="w-4 h-4" />
                   Create Support Ticket
                 </Link>
               </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-5 order-1 lg:order-2">
-            {/* Files Section */}
-            <div className="[animation:animationIn_0.5s_ease-out_0.2s_both] animate-on-scroll">
-              <div className="flex items-center gap-3 mb-4">
-                <FileText className="w-4 h-4 text-indigo-500" />
-                <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
-                  Files ({projectFiles.length})
-                </h2>
+            {/* Quick Links */}
+            <div className="card-elevated p-4 animate-fade-in-up opacity-0 stagger-5">
+              <h3 className="text-label text-slate-500 mb-3">Quick Links</h3>
+              <div className="space-y-2">
+                <Link
+                  href="/dashboard/client"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="text-sm text-slate-600 group-hover:text-slate-900">
+                    Dashboard
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-violet-500" />
+                </Link>
+                <Link
+                  href="/dashboard/client/projects"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="text-sm text-slate-600 group-hover:text-slate-900">
+                    All Projects
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-violet-500" />
+                </Link>
+                <Link
+                  href="/dashboard/client/tickets"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="text-sm text-slate-600 group-hover:text-slate-900">
+                    Support Tickets
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-violet-500" />
+                </Link>
               </div>
-
-              {projectFiles.length === 0 ? (
-                <div className="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
-                  <FileText className="w-10 h-10 text-slate-300 mx-auto mb-2" strokeWidth={1.5} />
-                  <p className="text-slate-500 text-sm">No files available yet</p>
-                  <p className="text-slate-400 text-xs mt-1">Files will appear here when your team uploads them</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl divide-y divide-slate-100 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
-                  {projectFiles.map((file) => (
-                    <div key={file.id} className="p-4 hover:bg-slate-50 transition-colors">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <FileText className={`w-5 h-5 mt-0.5 flex-shrink-0 ${getFileIconColor(file.fileType)}`} strokeWidth={1.5} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                              <span>{formatFileSize(file.fileSize)}</span>
-                              <span>•</span>
-                              <span>Uploaded {formatDistanceToNow(new Date(file.uploadedAt), { addSuffix: true })}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <a
-                          href={file.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 transition-colors flex-shrink-0 text-sm font-medium"
-                        >
-                          <Download className="w-4 h-4" />
-                          <span>Download</span>
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-
-            {/* Integrations Section */}
-            {integrations.length > 0 && (
-              <div className="[animation:animationIn_0.5s_ease-out_0.25s_both] animate-on-scroll">
-                <div className="flex items-center gap-3 mb-4">
-                  <Activity className="w-4 h-4 text-indigo-500" />
-                  <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Integration Health</h2>
-                </div>
-                <IntegrationHealthGrid projectId={id} clientId={project.clientId} />
-              </div>
-            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -24,10 +24,12 @@ interface TicketCardProps {
 export function TicketCard({ ticket, href, showClient = true }: TicketCardProps) {
   return (
     <Link href={href} className="block">
-      <div className="bg-white rounded-lg p-4 border border-slate-100 hover:border-indigo-200 transition-all duration-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.04)] group animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
+      <div className="card-elevated p-4 group hover:border-violet-200 transition-all duration-200">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{ticket.title}</h3>
+            <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-violet-700 transition-colors">
+              {ticket.title}
+            </h3>
             {showClient && ticket.clientName && (
               <p className="text-xs text-slate-400 mt-0.5">
                 {ticket.clientName}
@@ -38,7 +40,9 @@ export function TicketCard({ ticket, href, showClient = true }: TicketCardProps)
           <TicketPriorityBadge priority={ticket.priority} />
         </div>
 
-        <p className="text-sm text-slate-500 line-clamp-2 mb-3">{ticket.description}</p>
+        <p className="text-sm text-slate-500 line-clamp-2 mb-3 leading-relaxed">
+          {ticket.description}
+        </p>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -48,8 +52,8 @@ export function TicketCard({ ticket, href, showClient = true }: TicketCardProps)
 
           <div className="flex items-center gap-3 text-xs text-slate-400">
             {ticket.assigneeName ? (
-              <div className="flex items-center gap-1">
-                <User className="w-3 h-3" />
+              <div className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" />
                 <span>{ticket.assigneeName}</span>
               </div>
             ) : (
@@ -73,22 +77,29 @@ interface TicketListProps {
 export function TicketList({ tickets, basePath, showClient = true, emptyMessage = "No tickets found" }: TicketListProps) {
   if (tickets.length === 0) {
     return (
-      <div className="bg-white rounded-lg p-8 text-center border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] animate-on-scroll [animation:animationIn_0.5s_ease-out_0.3s_both]">
-        <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
-        <p className="text-slate-400 text-sm">{emptyMessage}</p>
+      <div className="card-elevated">
+        <div className="empty-state py-8">
+          <MessageSquare className="empty-state-icon" />
+          <p className="text-slate-500 text-sm">{emptyMessage}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {tickets.map((ticket) => (
-        <TicketCard
+      {tickets.map((ticket, index) => (
+        <div
           key={ticket.id}
-          ticket={ticket}
-          href={`${basePath}/${ticket.id}`}
-          showClient={showClient}
-        />
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: `${0.05 + index * 0.03}s` }}
+        >
+          <TicketCard
+            ticket={ticket}
+            href={`${basePath}/${ticket.id}`}
+            showClient={showClient}
+          />
+        </div>
       ))}
     </div>
   );

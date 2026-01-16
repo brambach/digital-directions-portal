@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { NotificationBell } from "@/components/notification-bell";
 
@@ -30,70 +30,86 @@ export function TopNav({ navItems, isAdmin }: TopNavProps) {
   };
 
   return (
-    <nav className="relative z-20 flex items-center justify-between px-6 lg:px-8 py-4 border-b border-slate-200/60 bg-white/60 sticky top-0 backdrop-blur-sm">
-      {/* Brand */}
-      <Link href={isAdmin ? "/dashboard/admin" : "/dashboard/client"} className="flex items-center gap-2.5">
-        <Image
-          src="/images/dd-logo.png"
-          alt="Digital Directions"
-          width={32}
-          height={32}
-          className="w-8 h-8 flex-shrink-0"
-          priority
-        />
-        <span className="font-medium text-slate-900 text-base leading-none translate-y-[1px]">
-          Digital Directions
-        </span>
-      </Link>
+    <nav className="sticky top-0 z-50 nav-blur">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Brand */}
+          <Link
+            href={isAdmin ? "/dashboard/admin" : "/dashboard/client"}
+            className="flex items-center gap-3 group"
+          >
+            <Image
+              src="/images/dd-logo.png"
+              alt="Digital Directions"
+              width={36}
+              height={36}
+              className="w-9 h-9 flex-shrink-0 group-hover:scale-105 transition-transform"
+              priority
+            />
+            <span className="font-semibold text-slate-900 tracking-tight hidden sm:block">
+              Digital Directions
+            </span>
+          </Link>
 
-      {/* Desktop Links */}
-      <div className="hidden md:flex items-center gap-1">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`px-4 py-1.5 text-sm font-medium transition-colors rounded-full ${
-                active
-                  ? "text-slate-900 bg-slate-100"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center">
+            <div className="flex items-center bg-slate-100/80 rounded-lg p-1">
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 ${
+                      active
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Side */}
+          <div className="flex items-center gap-2">
+            {/* Notifications & User - Desktop */}
+            <div className="hidden md:flex items-center gap-1">
+              <NotificationBell />
+              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox:
+                      "w-9 h-9 rounded-lg ring-2 ring-white shadow-sm hover:ring-violet-100 transition-all",
+                  },
+                }}
+              />
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Profile */}
-      <div className="flex items-center gap-4">
-        <div className="h-4 w-px bg-slate-200 hidden md:block"></div>
-        <div className="hidden md:flex items-center gap-3">
-          <NotificationBell />
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                avatarBox: "w-9 h-9 rounded-full bg-slate-100 border border-slate-200",
-              },
-            }}
-          />
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </div>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-white border-b border-slate-200/60 shadow-lg md:hidden">
-          <div className="flex flex-col p-4 space-y-1">
+        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-xl animate-fade-in">
+          <div className="px-4 py-4 space-y-1">
             {navItems.map((item) => {
               const active = isActive(item.href);
               return (
@@ -101,19 +117,28 @@ export function TopNav({ navItems, isAdmin }: TopNavProps) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     active
-                      ? "text-slate-900 bg-slate-100"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                      ? "bg-violet-50 text-violet-700"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   {item.label}
                 </Link>
               );
             })}
-            <div className="h-px bg-slate-200 my-2 mx-4"></div>
-            <div className="px-4 py-2 flex items-center gap-3">
-              <UserButton afterSignOutUrl="/" />
+            <div className="pt-4 mt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between px-4">
+                <NotificationBell />
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9 rounded-lg",
+                    },
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
