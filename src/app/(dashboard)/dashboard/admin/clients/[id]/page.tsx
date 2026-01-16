@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { clients, projects, clientActivity, users, invites, integrationMonitors } from "@/lib/db/schema";
+import { clients, projects, clientActivity, users, invites } from "@/lib/db/schema";
 import { eq, isNull, and, gt, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,7 +10,6 @@ import { AddProjectDialog } from "@/components/add-project-dialog";
 import { InviteUserToClientDialog } from "@/components/invite-user-to-client-dialog";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { SupportHoursCard } from "@/components/support-hours-card";
-import { IntegrationManagementSection } from "@/components/integration-management-section";
 import { EditClientDialog } from "@/components/edit-client-dialog";
 import { clerkClient } from "@clerk/nextjs/server";
 
@@ -130,13 +129,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       )
     )
     .orderBy(invites.createdAt);
-
-  // Fetch integrations for this client
-  const integrations = await db
-    .select()
-    .from(integrationMonitors)
-    .where(and(eq(integrationMonitors.clientId, id), isNull(integrationMonitors.deletedAt)))
-    .orderBy(desc(integrationMonitors.createdAt));
 
   // Calculate project stats
   const totalProjects = clientProjects.length;
@@ -355,11 +347,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Support Hours</h2>
             </div>
             <SupportHoursCard clientId={client.id} isAdmin={true} />
-          </div>
-
-          {/* Integrations */}
-          <div className="[animation:animationIn_0.5s_ease-out_0.85s_both] animate-on-scroll">
-            <IntegrationManagementSection clientId={client.id} integrations={integrations} />
           </div>
 
           {/* Activity */}

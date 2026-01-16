@@ -88,12 +88,16 @@ export async function GET(
           metrics.length
         : 0;
 
+    // Get the latest metric with full details (including Workato recipe counts)
+    const latestMetric = metrics.length > 0 ? metrics[0] : null;
+
     return NextResponse.json({
       timeRange,
       totalChecks,
       uptimePercentage: Math.round(uptimePercentage * 100) / 100,
       avgResponseTime: Math.round(avgResponseTime),
       metrics,
+      latestMetric,
     });
   } catch (error: any) {
     console.error("Error fetching integration metrics:", error);

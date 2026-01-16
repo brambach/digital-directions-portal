@@ -29,6 +29,7 @@ npm run db:reset           # Drop all tables, recreate, and reseed (dev only)
 
 # User Management
 npm run make-admin <email> # Grant admin role to user by email
+npm run cleanup-users      # Remove orphaned users (not in Clerk)
 ```
 
 ## Architecture Overview
@@ -64,13 +65,23 @@ npm run make-admin <email> # Grant admin role to user by email
 **Key Tables:**
 - `users` - Minimal (clerkId, role, agencyId/clientId only)
 - `agencies` - Digital Directions record (name, logo, primaryColor)
-- `clients` - Client companies (status: active/inactive/archived)
-- `projects` - HiBob integration projects (5 statuses)
+- `clients` - Client companies (status: active/inactive/archived) + support hours tracking
+- `projects` - HiBob integration projects (5 statuses) + phase tracking
 - `files` - File metadata (actual files in UploadThing)
 - `messages` - Project messaging between DD and clients
-- `tickets` - Support tickets with Slack integration (Freshdesk planned for Phase 2)
+- `tickets` - Support tickets with Slack integration + time tracking
+- `ticketComments` - Ticket conversation thread (internal notes supported)
+- `ticketTimeEntries` - Detailed time logging per ticket
 - `invites` - Email invitations for new users (7-day expiry)
 - `clientActivity` - Engagement tracking
+- `supportHourLogs` - Historical monthly support hours tracking
+- `integrationMonitors` - Per-project integration health monitoring
+- `integrationMetrics` - Historical health check data
+- `integrationAlerts` - Alert history and acknowledgment
+- `userNotifications` - In-app notification system
+- `phaseTemplates` - Reusable project phase templates
+- `templatePhases` - Phases within a template
+- `projectPhases` - Actual phases on projects
 
 **Soft Deletes:**
 All tables have `deletedAt` timestamp. Use `isNull(deletedAt)` in queries. Only clients can be **permanently** deleted (with confirmation dialog).
@@ -98,18 +109,19 @@ Clients can have multiple portal users (e.g., HR Director + Payroll Manager):
 /dashboard/admin/*          # Admin pages (DD staff only)
   /admin                    # Overview dashboard
   /admin/clients            # Client list with user counts
-  /admin/clients/[id]       # Client detail (projects, portal users, activity)
+  /admin/clients/[id]       # Client detail (projects, portal users, activity, support hours)
   /admin/projects           # All projects across clients
-  /admin/projects/[id]      # Project detail (files, messages)
+  /admin/projects/[id]      # Project detail (files, messages, integrations, phases)
   /admin/tickets            # Support ticket queue
-  /admin/tickets/[id]       # Ticket detail with comments
+  /admin/tickets/[id]       # Ticket detail with comments and time entries
+  /admin/settings           # Admin settings (phase templates, etc.)
 
 /dashboard/client/*         # Client pages (client users only)
   /client                   # Client overview
   /client/projects          # Projects for this client
-  /client/projects/[id]     # Project detail
+  /client/projects/[id]     # Project detail (files, messages, integrations - read-only)
   /client/tickets           # Tickets submitted by this client
-  /client/tickets/[id]      # Ticket detail
+  /client/tickets/[id]      # Ticket detail with comments
 ```
 
 ### API Routes
@@ -127,8 +139,355 @@ All API routes require authentication. Most require specific roles.
 - `POST /api/invites/validate` - Validate token (public)
 - `POST /api/invites/accept` - Accept invite after Clerk signup (public)
 
-**Projects, Files, Messages, Tickets:**
-Standard CRUD with role-based permissions. Clients can only access their own data.
+**Projects:**
+- `POST /api/projects` - Create project (admin only)
+- `PUT /api/projects/[id]` - Update project details
+- `DELETE /api/projects/[id]` - Soft delete project
+
+**Project Phases:**
+- `GET /api/projects/[id]/phases` - Get all phases for a project
+- `POST /api/projects/[id]/phases` - Add custom phase (admin only)
+- `PUT /api/projects/[id]/phases/[phaseId]` - Update phase
+- `DELETE /api/projects/[id]/phases/[phaseId]` - Delete phase
+- `POST /api/projects/[id]/phases/apply-template` - Apply phase template to project
+- `POST /api/projects/[id]/phases/reorder` - Reorder phases
+
+**Phase Templates:**
+- `GET /api/phase-templates` - List all templates
+- `POST /api/phase-templates` - Create template (admin only)
+- `PUT /api/phase-templates/[id]` - Update template
+- `DELETE /api/phase-templates/[id]` - Delete template
+
+**Files:**
+- `POST /api/files` - Upload file (via UploadThing)
+- `DELETE /api/files/[id]` - Delete file
+
+**Messages:**
+- `GET /api/messages?projectId=xxx` - Get messages for project
+- `POST /api/messages` - Send message
+
+**Tickets:**
+- `GET /api/tickets` - List tickets (filtered by role/client)
+- `POST /api/tickets` - Create ticket
+- `PUT /api/tickets/[id]` - Update ticket
+- `POST /api/tickets/[id]/assign` - Assign ticket to user
+- `POST /api/tickets/[id]/resolve` - Resolve ticket
+- `GET /api/tickets/[id]/comments` - Get comments
+- `POST /api/tickets/[id]/comments` - Add comment
+
+**Ticket Time Tracking:**
+- `GET /api/tickets/[id]/time` - Get time entries for ticket
+- `POST /api/tickets/[id]/time` - Log time entry (deducts from client hours)
+- `PUT /api/tickets/[id]/time/[entryId]` - Update time entry
+- `DELETE /api/tickets/[id]/time/[entryId]` - Delete time entry
+
+**Support Hours:**
+- `GET /api/clients/[id]/support-hours` - Get support hours status
+- `PATCH /api/clients/[id]/support-hours` - Update allocation (admin only)
+- `GET /api/clients/[id]/support-hours/logs` - Get historical logs
+
+**Integration Monitoring:**
+- `GET /api/integrations` - List integration monitors (filtered by projectId/clientId)
+- `POST /api/integrations` - Create integration monitor (admin only)
+- `GET /api/integrations/[id]` - Get integration details
+- `PUT /api/integrations/[id]` - Update integration monitor
+- `DELETE /api/integrations/[id]` - Delete integration monitor
+- `GET /api/integrations/[id]/metrics` - Get health check history
+- `GET /api/integrations/[id]/status` - Get current status
+
+**Notifications:**
+- `GET /api/notifications` - Get user's notifications
+- `POST /api/notifications/read-all` - Mark all as read
+- `POST /api/notifications/[id]/read` - Mark single as read
+
+**Cron Jobs:**
+- `GET /api/cron/check-integrations` - Check all enabled integration monitors (secured with CRON_SECRET)
+
+### Integration Monitoring System
+
+**Architecture:**
+Integration monitoring is implemented at the **project level** (not client level) since integrations vary per project. Monitors track the health of external services through status pages and optional API checks.
+
+**Supported Integrations:**
+- **HiBob** - Status page monitoring only (https://status.hibob.io)
+- **KeyPay** - Status page monitoring only (https://status.keypay.com.au)
+- **Workato** - Status page + basic recipe list check (requires credentials)
+- **ADP** - Status page monitoring (placeholder implementation)
+- **NetSuite** - Status page monitoring (https://status.netsuite.com)
+
+**How It Works:**
+1. Admins configure integration monitors on project detail pages
+2. Monitors can be enabled/disabled and configured with check intervals (default: 5 minutes)
+3. Vercel Cron job runs every 5 minutes checking all enabled monitors
+4. Health checks fetch status pages using Atlassian Statuspage API format
+5. Results stored in `integrationMetrics` table for historical tracking
+6. Status changes trigger alerts (email + in-app notifications)
+7. Clients can view integration health on their project pages (read-only)
+
+**Status Page Monitoring:**
+All integrations use public status pages that follow Atlassian Statuspage format:
+- Fetch `https://status.{service}.com/api/v2/summary.json`
+- Parse overall status indicator (none/minor/major/critical/maintenance)
+- Extract active incidents (name, impact, status, timestamps)
+- Map to portal statuses: healthy, degraded, down, unknown
+
+**Workato Special Case:**
+In addition to status page monitoring, Workato supports basic recipe list checking:
+- Requires API token and email (stored encrypted)
+- Fetches `/api/recipes` endpoint
+- Counts total recipes, running recipes, stopped recipes
+- If >30% of recipes are stopped, status marked as "degraded"
+- No detailed RecipeOps job statistics (simplified from original design)
+
+**Credential Encryption:**
+Workato credentials are encrypted using AES-256-GCM (optional, requires `CREDENTIALS_ENCRYPTION_KEY`):
+```typescript
+import { encryptCredentials, decryptCredentials } from "@/lib/crypto";
+
+// When saving
+const encrypted = encryptCredentials({ apiToken, email });
+await db.update(integrationMonitors).set({ workatoCredentials: encrypted });
+
+// When reading
+const credentials = decryptCredentials(monitor.workatoCredentials);
+```
+
+**Alert System:**
+Monitors have configurable alerting:
+- **Threshold**: Minimum downtime before alerting (default: 15 minutes)
+- **Channels**: Email + in-app notifications
+- **Alert Types**: Down, degraded, recovered
+- **Recipients**: Client contact email + all client users + all admin users
+- Anti-flapping: Won't re-alert within threshold period
+
+**Health Check Flow:**
+```typescript
+// Cron job (/api/cron/check-integrations)
+1. Fetch all enabled monitors
+2. Check if due for check (based on checkIntervalMinutes)
+3. Call appropriate health checker (hibob.ts, keypay.ts, workato.ts, etc.)
+4. Update integrationMonitors with new status
+5. Insert metric record in integrationMetrics
+6. Check if alert should be sent (via alert-manager.ts)
+7. Send email + create in-app notifications if needed
+```
+
+**UI Components:**
+- `IntegrationManagementSection` - Admin interface for managing monitors
+- `ConfigureIntegrationDialog` - Create/edit integration monitors
+- `IntegrationHealthGrid` - Client-facing status display
+- `IntegrationHealthCard` - Individual integration details
+- `IntegrationStatusBadge` - Color-coded status indicator
+
+**Key Files:**
+- `src/lib/integrations/types.ts` - TypeScript types
+- `src/lib/integrations/status-pages.ts` - Status page parsers
+- `src/lib/integrations/hibob.ts` - HiBob health checker
+- `src/lib/integrations/keypay.ts` - KeyPay health checker
+- `src/lib/integrations/workato.ts` - Workato health checker
+- `src/lib/integrations/adp.ts` - ADP health checker
+- `src/lib/integrations/netsuite.ts` - NetSuite health checker
+- `src/lib/integrations/alert-manager.ts` - Alert triggering logic
+- `src/lib/crypto.ts` - Credential encryption utilities
+- `src/app/api/cron/check-integrations/route.ts` - Cron job endpoint
+
+**Environment Variables:**
+```env
+CRON_SECRET=your-secret-here  # Secure cron endpoint
+CREDENTIALS_ENCRYPTION_KEY=64-char-hex  # Optional, for Workato credentials
+```
+
+**Vercel Cron Configuration:**
+```json
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-integrations",
+      "schedule": "*/5 * * * *"  // Every 5 minutes
+    }
+  ]
+}
+```
+
+### Project Phases System
+
+**Purpose:**
+Track project progress through standardized phases (e.g., Planning → Configuration → Testing → Go-Live). Phases can be managed using reusable templates or custom phases per project.
+
+**Architecture:**
+- **Phase Templates** (`phaseTemplates`) - Reusable phase definitions (e.g., "Standard HiBob Implementation")
+- **Template Phases** (`templatePhases`) - Individual phases within a template
+- **Project Phases** (`projectPhases`) - Actual phases applied to a project
+
+**Phase Statuses:**
+- `pending` - Not yet started
+- `in_progress` - Currently active
+- `completed` - Finished
+- `skipped` - Bypassed
+
+**Key Features:**
+1. **Apply Templates** - Quickly set up project phases using predefined templates
+2. **Custom Phases** - Add project-specific phases beyond template
+3. **Reorder Phases** - Drag-and-drop reordering (via orderIndex)
+4. **Phase Tracking** - Mark phases as in-progress/completed with timestamps
+5. **Current Phase** - Projects track their current phase (stored in `currentPhaseId`)
+
+**UI Components:**
+- `ProjectPhaseStepper` - Visual progress indicator
+- `ProjectPhaseManager` - Admin interface for managing project phases
+- `ManageProjectPhasesDialog` - Edit phases dialog
+- `SelectPhaseTemplateDialog` - Choose template to apply
+- `PhaseTemplateList` - List of available templates (admin settings)
+- `ManagePhaseTemplateDialog` - Create/edit templates
+- `UpdatePhaseDialog` - Update individual phase status
+- `PhaseStatusBadge` - Color-coded status indicator
+
+**Workflow:**
+1. Admin creates phase template in settings (or uses existing)
+2. When creating project, admin can apply a template
+3. Template phases are copied to project as project phases
+4. Admin can add custom phases or edit template-generated phases
+5. As project progresses, admin updates phase statuses
+6. Phase stepper shows visual progress to clients
+
+### Support Hours Tracking
+
+**Purpose:**
+Track monthly support hour allocations and usage for client retainer agreements. Integrates with ticket time tracking to automatically deduct hours.
+
+**Architecture:**
+- Stored in minutes (converted to hours for display)
+- Monthly billing cycles (customizable start date)
+- Historical logs for past periods
+- Auto-deduction when logging ticket time
+
+**Client Fields:**
+- `supportHoursPerMonth` - Allocated minutes per month
+- `hoursUsedThisMonth` - Minutes used in current billing period
+- `supportBillingCycleStart` - When current billing period started
+
+**Features:**
+1. **Set Allocation** - Admin sets monthly hours (converted to minutes)
+2. **Track Usage** - Auto-increments when time logged to tickets
+3. **Visual Indicator** - Progress bar showing used/remaining hours
+4. **Historical Logs** - Archive each billing period in `supportHourLogs`
+5. **Overage Alerts** - Visual warning when exceeding allocation
+
+**Time Entry Flow:**
+```typescript
+// When logging time to a ticket
+1. Admin logs time entry (minutes + description)
+2. If countTowardsSupportHours = true:
+   - Add minutes to ticket.timeSpentMinutes
+   - Add minutes to client.hoursUsedThisMonth
+3. Time entry stored in ticketTimeEntries table
+4. Support hours card shows updated usage
+```
+
+**UI Components:**
+- `SupportHoursCard` - Display allocation and usage
+- `EditSupportHoursDialog` - Set monthly allocation
+- `LogTimeDialog` - Log time to ticket
+- `TimeEntriesList` - Show time entry history
+
+**Key Routes:**
+- `GET /api/clients/[id]/support-hours` - Get current status
+- `PATCH /api/clients/[id]/support-hours` - Update allocation
+- `GET /api/clients/[id]/support-hours/logs` - Get historical logs
+- `POST /api/tickets/[id]/time` - Log time entry
+
+### In-App Notification System
+
+**Purpose:**
+Real-time notifications for users about integration alerts, ticket updates, and other events. Notifications appear in a bell icon in the top navigation.
+
+**Features:**
+- Bell icon with unread count badge
+- Dropdown panel showing recent notifications
+- Click notification to navigate to related content
+- Mark individual or all notifications as read
+- Auto-refresh every 30 seconds
+
+**Notification Types:**
+- `integration_alert` - Integration status changes
+- `ticket_update` - Ticket assignments, comments, status changes
+- `message` - New project messages
+- `file_upload` - New files uploaded
+
+**How It Works:**
+1. System events create records in `userNotifications` table
+2. Notifications created for relevant users (e.g., all admins + client users)
+3. `NotificationBell` component polls `/api/notifications` endpoint
+4. Unread count shown in badge
+5. Clicking notification marks as read and navigates to `linkUrl`
+
+**UI Component:**
+- `NotificationBell` - Bell icon with dropdown panel (in TopNav)
+
+**Key Routes:**
+- `GET /api/notifications` - Get user's notifications
+- `POST /api/notifications/read-all` - Mark all as read
+- `POST /api/notifications/[id]/read` - Mark single as read
+
+### Ticket System
+
+**Purpose:**
+Support ticket management with assignment, time tracking, commenting, and resolution workflows.
+
+**Ticket Types:**
+- `general_support` - General help requests
+- `project_issue` - Project-specific problems
+- `feature_request` - Enhancement requests
+- `bug_report` - Bug reports
+
+**Ticket Statuses:**
+- `open` - New unassigned ticket
+- `in_progress` - Assigned and being worked on
+- `waiting_on_client` - Waiting for client response
+- `resolved` - Fixed but not yet closed
+- `closed` - Completed
+
+**Ticket Priorities:**
+- `low` - Can wait
+- `medium` - Normal priority
+- `high` - Important
+- `urgent` - Needs immediate attention
+
+**Key Features:**
+1. **Claim/Assignment** - Admins can claim tickets (assign to themselves) or assign to other admins
+2. **Unclaim** - Only the admin who claimed a ticket can unclaim it (returns to `open` status)
+3. **Time Tracking** - Log time entries to tickets, optionally deducting from client support hours
+4. **Comments** - Thread of comments, supports internal notes (hidden from clients)
+5. **Resolution** - Mark as resolved with resolution summary
+6. **Slack Integration** - Notifications sent to Slack for new tickets, assignments, etc.
+
+**Assignment Flow:**
+```typescript
+// Claim ticket (POST /api/tickets/[id]/assign with no assignedTo)
+- Sets assignedTo to current user
+- Changes status to "in_progress"
+- Sends Slack notification
+
+// Assign to another admin (POST /api/tickets/[id]/assign with assignedTo)
+- Sets assignedTo to specified admin user
+- Changes status to "in_progress"
+- Sends Slack notification
+
+// Unclaim ticket (DELETE /api/tickets/[id]/assign)
+- Clears assignedTo and assignedAt
+- Changes status back to "open"
+- Only allowed if ticket is currently assigned
+```
+
+**UI Components:**
+- `TicketCard` - Individual ticket display
+- `CreateTicketDialog` - New ticket form
+- `TicketActions` - Claim/unclaim/assign buttons
+- `TicketCommentForm` - Add comments
+- `LogTimeDialog` - Log time entries
+- `TimeEntriesList` - Show time history
+- `TicketStatusBadge` - Color-coded status indicator
 
 ### Invite System
 
@@ -266,9 +625,33 @@ Components in `src/components/ui/` use CSS variables for theming. Don't hardcode
 
 **Client Detail Page** (`/admin/clients/[id]`):
 - Projects section: Full width at top
-- Sidebar cards (Portal Users, Support Hours, Integrations, Activity): 2-column grid below projects
+- Sidebar cards (Portal Users, Support Hours, Activity): 2-column grid below projects
 - Pending Invites: Full width if present
 - Pattern maximizes horizontal space usage and reduces vertical scrolling
+
+**Project Detail Page** (`/admin/projects/[id]` and `/client/projects/[id]`):
+- Three-column layout on large screens
+- Sidebar (1 column): Details card + Messages section (order-2 on mobile, order-1 on desktop)
+- Main content (2 columns): Files section + Integrations section (order-1 on mobile, order-2 on desktop)
+- Mobile: Main content first, then sidebar
+- Desktop: Sidebar left, main content right
+- Reduced spacing (`space-y-5`) for tighter layout
+
+```typescript
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {/* Sidebar */}
+  <div className="space-y-4 order-2 lg:order-1">
+    {/* Details card */}
+    {/* Messages Section */}
+  </div>
+
+  {/* Main Content */}
+  <div className="lg:col-span-2 space-y-5 order-1 lg:order-2">
+    {/* Files Section */}
+    {/* Integrations Section */}
+  </div>
+</div>
+```
 
 **Responsive grid**:
 ```typescript
@@ -348,18 +731,55 @@ Tooltips use `z-[9999]` to ensure they appear above all content including file p
 
 6. **Permanent vs soft delete** - Only clients support permanent delete. Everything else uses soft delete.
 
+7. **Integration monitoring is project-level** - Don't create integration monitors at client level. Each project can have its own set of integration monitors since integrations vary per project.
+
+8. **HiBob status page URL** - Use `https://status.hibob.io` (NOT `.com`). This is a critical detail for the status page checker.
+
+9. **Support hours are stored in minutes** - Always convert to/from hours for display. Database stores everything in minutes for precision.
+
+10. **Time entries auto-deduct from client balance** - When logging time with `countTowardsSupportHours: true`, it automatically updates both `ticket.timeSpentMinutes` and `client.hoursUsedThisMonth`. Don't manually update both.
+
+11. **Cron endpoint security** - The `/api/cron/check-integrations` endpoint is public in middleware but protected by `CRON_SECRET` in the route handler. Always set this env var in production.
+
+12. **Workato credentials encryption** - If `CREDENTIALS_ENCRYPTION_KEY` is not set, credentials are stored in plaintext. Always set this in production environments.
+
 ## File Locations Reference
 
+**Core:**
 - **Schema:** `src/lib/db/schema.ts`
 - **Seed data:** `src/lib/db/seed.ts`
 - **Auth helpers:** `src/lib/auth.ts`
 - **Middleware:** `src/middleware.ts`
 - **Types:** `src/lib/types.ts`
-- **UI components:** `src/components/ui/`
+- **Utilities:** `src/lib/utils.ts`
+- **Error handling:** `src/lib/errors.ts`
+
+**UI Components:**
+- **Shadcn UI components:** `src/components/ui/`
 - **Dialogs/Forms:** `src/components/*.tsx`
+- **Layout components:** `src/components/layout/`
+
+**Pages:**
 - **Admin pages:** `src/app/(dashboard)/dashboard/admin/`
 - **Client pages:** `src/app/(dashboard)/dashboard/client/`
-- **API routes:** `src/app/api/`
+- **Public pages:** `src/app/` (homepage, invite acceptance)
+
+**API Routes:**
+- **All routes:** `src/app/api/`
+- **Cron jobs:** `src/app/api/cron/`
+- **Webhooks:** `src/app/api/webhooks/`
+
+**Integration Monitoring:**
+- **Types:** `src/lib/integrations/types.ts`
+- **Status pages:** `src/lib/integrations/status-pages.ts`
+- **Health checkers:** `src/lib/integrations/{service}.ts`
+- **Alert manager:** `src/lib/integrations/alert-manager.ts`
+- **Encryption:** `src/lib/crypto.ts`
+
+**External Services:**
+- **Email (Resend):** `src/lib/email.ts`
+- **Slack:** `src/lib/slack.ts`
+- **UploadThing:** `src/lib/uploadthing.ts`, `src/app/api/uploadthing/`
 
 ## Environment Variables
 
@@ -389,10 +809,19 @@ NODE_ENV=development
 
 Optional integrations:
 ```env
+# Email (Resend)
 RESEND_API_KEY=re_xxx
 EMAIL_FROM=Digital Directions <notifications@yourdomain.com>
+
+# Slack notifications
 SLACK_BOT_TOKEN=xoxb-xxx
 SLACK_CHANNEL_ID=C0XXX
+
+# Integration monitoring
+CRON_SECRET=your-random-secret-here
+CREDENTIALS_ENCRYPTION_KEY=64-char-hex-string  # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Future integrations
 LINEAR_API_KEY=lin_api_xxx
 LINEAR_TEAM_ID=xxx
 ```

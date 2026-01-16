@@ -1,150 +1,79 @@
 /**
  * Workato Health Check
- * Tests connectivity to Workato API and checks recipe statuses
- *
- * NOTE: Requires Workato API credentials from Digital Directions
- * This is a placeholder implementation pending API access
+ * Uses status page + basic recipe list (no RecipeOps)
  */
 
-interface HealthCheckResult {
-  status: "healthy" | "degraded" | "down" | "unknown";
-  responseTimeMs: number | null;
-  errorMessage: string | null;
-  recipeStatuses?: {
-    recipeId: string;
-    status: string;
-    lastRunAt: string | null;
-  }[];
-}
+import { WorkatoHealthCheckResult } from "./types";
+import { checkWorkatoStatus } from "./status-pages";
 
 export async function checkWorkatoHealth(
-  apiEndpoint: string,
-  credentials: any,
-  recipeIds?: string[]
-): Promise<HealthCheckResult> {
+  credentials: any
+): Promise<WorkatoHealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    // Workato API requires API token
-    const apiToken = credentials?.apiToken || credentials?.token;
+    // First, check status page
+    const statusResult = await checkWorkatoStatus();
 
-    if (!apiToken) {
-      return {
-        status: "unknown",
-        responseTimeMs: null,
-        errorMessage: "Missing API token in credentials (Workato credentials pending)",
-      };
+    const statusMap = {
+      operational: "healthy",
+      degraded: "degraded",
+      major_outage: "down",
+      maintenance: "degraded",
+    } as const;
+
+    let baseStatus = statusMap[statusResult.status] || "unknown";
+
+    // If credentials provided, also check basic recipe list
+    let recipeCount = 0;
+    let runningCount = 0;
+    let stoppedCount = 0;
+
+    if (credentials?.apiToken && credentials?.email) {
+      try {
+        const recipesResponse = await fetch("https://www.workato.com/api/recipes", {
+          headers: {
+            "X-USER-TOKEN": credentials.apiToken,
+            "X-USER-EMAIL": credentials.email,
+            "Content-Type": "application/json",
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (recipesResponse.ok) {
+          const recipes = await recipesResponse.json();
+          recipeCount = recipes.length;
+          runningCount = recipes.filter((r: any) => r.running).length;
+          stoppedCount = recipes.filter((r: any) => !r.running).length;
+
+          // If many recipes stopped, consider degraded
+          if (stoppedCount > 0 && stoppedCount >= recipeCount * 0.3) {
+            baseStatus = "degraded";
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to fetch Workato recipes:", error);
+        // Don't fail the whole check if recipe list fails
+      }
     }
-
-    // Workato Recipe Lifecycle Management API endpoint
-    // Default endpoint if not provided
-    const endpoint = apiEndpoint || "https://www.workato.com/api/recipes";
-
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: {
-        "X-USER-TOKEN": apiToken,
-        "X-USER-EMAIL": credentials?.email || "",
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(15000), // 15 second timeout (Workato can be slower)
-    });
 
     const responseTime = Date.now() - startTime;
 
-    if (response.ok) {
-      const data = await response.json();
-
-      // If specific recipe IDs provided, check their statuses
-      let recipeStatuses: any[] = [];
-      if (recipeIds && recipeIds.length > 0) {
-        // Filter recipes by provided IDs
-        const recipes = Array.isArray(data) ? data : data.items || [];
-        recipeStatuses = recipes
-          .filter((r: any) => recipeIds.includes(r.id.toString()))
-          .map((r: any) => ({
-            recipeId: r.id,
-            status: r.running ? "running" : "stopped",
-            lastRunAt: r.last_run_at || null,
-          }));
-
-        // Check if any recipes are stopped or errored
-        const hasStoppedRecipes = recipeStatuses.some(
-          (r) => r.status === "stopped"
-        );
-
-        if (hasStoppedRecipes) {
-          return {
-            status: "degraded",
-            responseTimeMs: responseTime,
-            errorMessage: "Some Workato recipes are stopped",
-            recipeStatuses,
-          };
-        }
-      }
-
-      return {
-        status: "healthy",
-        responseTimeMs: responseTime,
-        errorMessage: null,
-        recipeStatuses: recipeStatuses.length > 0 ? recipeStatuses : undefined,
-      };
-    }
-
-    // API returned an error
-    if (response.status === 401 || response.status === 403) {
-      return {
-        status: "down",
-        responseTimeMs: responseTime,
-        errorMessage: "Authentication failed - invalid or expired Workato token",
-      };
-    }
-
-    if (response.status >= 500) {
-      return {
-        status: "down",
-        responseTimeMs: responseTime,
-        errorMessage: `Workato API server error (${response.status})`,
-      };
-    }
-
-    if (response.status === 429) {
-      return {
-        status: "degraded",
-        responseTimeMs: responseTime,
-        errorMessage: "Rate limit exceeded",
-      };
-    }
-
     return {
-      status: "degraded",
+      status: baseStatus,
       responseTimeMs: responseTime,
-      errorMessage: `HTTP ${response.status}: ${response.statusText}`,
+      errorMessage: statusResult.description !== "All systems operational"
+        ? statusResult.description
+        : null,
+      recipeCount,
+      runningCount,
+      stoppedCount,
     };
   } catch (error: any) {
-    const responseTime = Date.now() - startTime;
-
-    // Network or timeout errors
-    if (error.name === "AbortError" || error.name === "TimeoutError") {
-      return {
-        status: "down",
-        responseTimeMs: responseTime,
-        errorMessage: "Request timeout - Workato API not responding",
-      };
-    }
-
-    if (error.code === "ENOTFOUND" || error.code === "ECONNREFUSED") {
-      return {
-        status: "down",
-        responseTimeMs: responseTime,
-        errorMessage: "Cannot connect to Workato API - DNS or network error",
-      };
-    }
-
     return {
-      status: "down",
-      responseTimeMs: responseTime,
-      errorMessage: error.message || "Unknown error occurred",
+      status: "unknown",
+      responseTimeMs: Date.now() - startTime,
+      errorMessage: `Failed to check Workato: ${error.message}`,
     };
   }
 }

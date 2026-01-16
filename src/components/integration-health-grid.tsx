@@ -5,11 +5,13 @@ import { IntegrationHealthCard } from "./integration-health-card";
 import { Activity } from "lucide-react";
 
 interface IntegrationHealthGridProps {
-  clientId: string;
+  clientId?: string;
+  projectId?: string;
 }
 
 export function IntegrationHealthGrid({
   clientId,
+  projectId,
 }: IntegrationHealthGridProps) {
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +19,16 @@ export function IntegrationHealthGrid({
   useEffect(() => {
     fetchIntegrations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId]);
+  }, [clientId, projectId]);
 
   const fetchIntegrations = async () => {
     try {
-      const response = await fetch(`/api/integrations?clientId=${clientId}`);
+      // Build query params
+      const params = new URLSearchParams();
+      if (projectId) params.append("projectId", projectId);
+      if (clientId) params.append("clientId", clientId);
+
+      const response = await fetch(`/api/integrations?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setIntegrations(data);
@@ -71,13 +78,25 @@ export function IntegrationHealthGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {integrations.map((integration) => (
-        <IntegrationHealthCard
-          key={integration.id}
-          integration={integration}
-        />
-      ))}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">
+          Status automatically checked every 5 minutes
+        </p>
+        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+          <Activity className="w-3.5 h-3.5" />
+          Live monitoring
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {integrations.map((integration) => (
+          <IntegrationHealthCard
+            key={integration.id}
+            integration={integration}
+          />
+        ))}
+      </div>
     </div>
   );
 }

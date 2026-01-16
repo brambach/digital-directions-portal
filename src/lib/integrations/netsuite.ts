@@ -1,15 +1,16 @@
 /**
- * KeyPay Health Check
+ * NetSuite Health Check
  * Uses status page only - no credential checking
  */
 
 import { BaseHealthCheckResult } from "./types";
-import { checkKeyPayStatus } from "./status-pages";
+import { checkNetSuiteStatus } from "./status-pages";
 
-export async function checkKeyPayHealth(): Promise<BaseHealthCheckResult> {
+export async function checkNetSuiteHealth(): Promise<BaseHealthCheckResult> {
   try {
-    const statusResult = await checkKeyPayStatus();
+    const statusResult = await checkNetSuiteStatus();
 
+    // Map status page result to health check result
     const statusMap = {
       operational: "healthy",
       degraded: "degraded",

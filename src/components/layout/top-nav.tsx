@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface NavItem {
   label: string;
@@ -68,7 +69,8 @@ export function TopNav({ navItems, isAdmin }: TopNavProps) {
       {/* Profile */}
       <div className="flex items-center gap-4">
         <div className="h-4 w-px bg-slate-200 hidden md:block"></div>
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          <NotificationBell />
           <UserButton
             afterSignOutUrl="/"
             appearance={{

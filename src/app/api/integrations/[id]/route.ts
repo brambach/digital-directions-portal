@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { integrationMonitors } from "@/lib/db/schema";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireAuth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
 
 // GET /api/integrations/[id] - Get single integration monitor
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const user = await requireAuth();
     const { id } = await params;
 
     const monitor = await db
@@ -27,6 +27,11 @@ export async function GET(
         { error: "Integration monitor not found" },
         { status: 404 }
       );
+    }
+
+    // Authorization: clients can only access integrations for their projects
+    if (user.role === "client" && monitor.clientId !== user.clientId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json(monitor);
@@ -56,11 +61,12 @@ export async function PUT(
     const body = await request.json();
     const {
       serviceName,
-      apiEndpoint,
-      credentials,
-      workatoRecipeIds,
+      workatoCredentials,
       isEnabled,
       checkIntervalMinutes,
+      alertEnabled,
+      alertChannels,
+      alertThresholdMinutes,
     } = body;
 
     // Validate service name if provided
@@ -108,13 +114,12 @@ export async function PUT(
     };
 
     if (serviceName !== undefined) updateData.serviceName = serviceName;
-    if (apiEndpoint !== undefined) updateData.apiEndpoint = apiEndpoint;
-    if (credentials !== undefined) updateData.credentials = credentials;
-    if (workatoRecipeIds !== undefined)
-      updateData.workatoRecipeIds = workatoRecipeIds;
+    if (workatoCredentials !== undefined) updateData.workatoCredentials = workatoCredentials;
     if (isEnabled !== undefined) updateData.isEnabled = isEnabled;
-    if (checkIntervalMinutes !== undefined)
-      updateData.checkIntervalMinutes = checkIntervalMinutes;
+    if (checkIntervalMinutes !== undefined) updateData.checkIntervalMinutes = checkIntervalMinutes;
+    if (alertEnabled !== undefined) updateData.alertEnabled = alertEnabled;
+    if (alertChannels !== undefined) updateData.alertChannels = alertChannels;
+    if (alertThresholdMinutes !== undefined) updateData.alertThresholdMinutes = alertThresholdMinutes;
 
     // Update monitor
     await db

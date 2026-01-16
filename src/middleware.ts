@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/invites/validate",
   "/api/invites/accept",
+  "/api/cron(.*)", // Cron jobs (secured with CRON_SECRET in the route handler)
 ]);
 
 const isAdminRoute = createRouteMatcher(["/dashboard/admin(.*)"]);

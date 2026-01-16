@@ -8,11 +8,13 @@ import { ConfigureIntegrationDialog } from "@/components/configure-integration-d
 import { formatDistanceToNow } from "date-fns";
 
 interface IntegrationManagementSectionProps {
+  projectId: string;
   clientId: string;
   integrations: any[];
 }
 
 export function IntegrationManagementSection({
+  projectId,
   clientId,
   integrations,
 }: IntegrationManagementSectionProps) {
@@ -38,11 +40,16 @@ export function IntegrationManagementSection({
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Activity className="w-4 h-4 text-emerald-500" />
-          <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
-            Integrations
-          </h2>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <Activity className="w-4 h-4 text-emerald-500" />
+            <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">
+              Integrations
+            </h2>
+          </div>
+          <p className="text-[10px] text-slate-500 ml-7">
+            Status checked every 5 minutes automatically
+          </p>
         </div>
         <Button
           onClick={handleAddNew}
@@ -148,6 +155,7 @@ export function IntegrationManagementSection({
       </div>
 
       <ConfigureIntegrationDialog
+        projectId={projectId}
         clientId={clientId}
         integration={selectedIntegration}
         open={dialogOpen}

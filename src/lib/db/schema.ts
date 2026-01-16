@@ -58,6 +58,7 @@ export const integrationServiceTypeEnum = pgEnum("integration_service_type", [
   "workato",
   "keypay",
   "adp",
+  "netsuite",
 ]);
 
 export const integrationStatusEnum = pgEnum("integration_status", [
@@ -363,29 +364,41 @@ export const ticketTimeEntries = pgTable(
   })
 );
 
-// Integration Monitors Table (Per-client integrations)
+// Integration Monitors Table (Per-project integrations)
 export const integrationMonitors = pgTable(
   "integration_monitors",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .references(() => projects.id, { onDelete: "cascade" })
+      .notNull(),
     clientId: uuid("client_id")
       .references(() => clients.id, { onDelete: "cascade" })
-      .notNull(),
+      .notNull(), // Kept for convenience in querying
     serviceType: integrationServiceTypeEnum("service_type").notNull(),
     serviceName: varchar("service_name", { length: 255 }).notNull(),
-    apiEndpoint: text("api_endpoint"),
-    credentials: text("credentials"), // Encrypted JSON
-    workatoRecipeIds: text("workato_recipe_ids"), // JSON array of recipe IDs
+    workatoCredentials: text("workato_credentials"), // Encrypted JSON for Workato only
+    workatoRecipeIds: text("workato_recipe_ids"), // JSON array of recipe IDs (kept for reference)
     isEnabled: boolean("is_enabled").default(true).notNull(),
     checkIntervalMinutes: integer("check_interval_minutes").default(5).notNull(),
     lastCheckedAt: timestamp("last_checked_at"),
     currentStatus: integrationStatusEnum("current_status").default("unknown"),
     lastErrorMessage: text("last_error_message"),
+    alertEnabled: boolean("alert_enabled").default(true).notNull(),
+    alertChannels: text("alert_channels"), // JSON: ["email", "in_app"]
+    alertThresholdMinutes: integer("alert_threshold_minutes").default(15).notNull(),
+    lastAlertSentAt: timestamp("last_alert_sent_at"),
+    platformStatusUrl: text("platform_status_url"), // e.g., https://status.hibob.io
+    checkPlatformStatus: boolean("check_platform_status").default(true).notNull(),
+    platformStatus: text("platform_status"), // "operational", "degraded", "major_outage", "maintenance"
+    platformIncidents: text("platform_incidents"), // JSON array of active incidents
+    platformLastChecked: timestamp("platform_last_checked"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
+    projectIdx: index("integration_monitors_project_idx").on(table.projectId),
     clientIdx: index("integration_monitors_client_idx").on(table.clientId),
     statusIdx: index("integration_monitors_status_idx").on(table.currentStatus),
   })
@@ -402,12 +415,59 @@ export const integrationMetrics = pgTable(
     status: integrationStatusEnum("status").notNull(),
     responseTimeMs: integer("response_time_ms"),
     errorMessage: text("error_message"),
-    recipeStatuses: text("recipe_statuses"), // JSON object for Workato recipe statuses
+    workatoRecipeCount: integer("workato_recipe_count"), // Simple count of total recipes
+    workatoRunningCount: integer("workato_running_count"), // Count of running recipes
+    workatoStoppedCount: integer("workato_stopped_count"), // Count of stopped recipes
     checkedAt: timestamp("checked_at").defaultNow().notNull(),
   },
   (table) => ({
     monitorIdx: index("integration_metrics_monitor_idx").on(table.monitorId),
     checkedAtIdx: index("integration_metrics_checked_at_idx").on(table.checkedAt),
+  })
+);
+
+// Integration Alerts Table (Alert history and tracking)
+export const integrationAlerts = pgTable(
+  "integration_alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    monitorId: uuid("monitor_id")
+      .references(() => integrationMonitors.id, { onDelete: "cascade" })
+      .notNull(),
+    alertType: text("alert_type").notNull(), // "down", "degraded", "recovered"
+    severity: text("severity").notNull(), // "critical", "warning", "info"
+    message: text("message").notNull(),
+    errorDetails: text("error_details"),
+    channels: text("channels").notNull(), // JSON: ["email", "in_app"]
+    sentAt: timestamp("sent_at").defaultNow().notNull(),
+    acknowledgedAt: timestamp("acknowledged_at"),
+    acknowledgedBy: uuid("acknowledged_by").references(() => users.id),
+  },
+  (table) => ({
+    monitorIdx: index("integration_alerts_monitor_idx").on(table.monitorId),
+    sentAtIdx: index("integration_alerts_sent_at_idx").on(table.sentAt),
+  })
+);
+
+// User Notifications Table (In-app notifications)
+export const userNotifications = pgTable(
+  "user_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    type: text("type").notNull(), // "integration_alert", "ticket_update", etc.
+    title: text("title").notNull(),
+    message: text("message").notNull(),
+    linkUrl: text("link_url"),
+    isRead: boolean("is_read").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("user_notifications_user_idx").on(table.userId),
+    isReadIdx: index("user_notifications_is_read_idx").on(table.isRead),
+    createdAtIdx: index("user_notifications_created_at_idx").on(table.createdAt),
   })
 );
 

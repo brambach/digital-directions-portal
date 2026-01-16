@@ -43,14 +43,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("✅✅✅ SERVER: Upload complete for userId:", metadata.userId);
-      console.log("✅✅✅ SERVER: File URL:", file.url);
-      console.log("✅✅✅ SERVER: File details:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
-
       return {
         uploadedBy: metadata.userId,
         url: file.url,

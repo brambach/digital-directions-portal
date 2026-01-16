@@ -1,15 +1,17 @@
 /**
- * KeyPay Health Check
+ * ADP Health Check
  * Uses status page only - no credential checking
+ * Note: ADP may not have a public status page in standard format
  */
 
 import { BaseHealthCheckResult } from "./types";
-import { checkKeyPayStatus } from "./status-pages";
+import { checkADPStatus } from "./status-pages";
 
-export async function checkKeyPayHealth(): Promise<BaseHealthCheckResult> {
+export async function checkADPHealth(): Promise<BaseHealthCheckResult> {
   try {
-    const statusResult = await checkKeyPayStatus();
+    const statusResult = await checkADPStatus();
 
+    // Map status page result to health check result
     const statusMap = {
       operational: "healthy",
       degraded: "degraded",

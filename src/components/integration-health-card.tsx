@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { IntegrationStatusBadge } from "./integration-status-badge";
-import { Clock, Activity, TrendingUp } from "lucide-react";
+import { Clock, Activity, TrendingUp, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Integration {
@@ -12,6 +12,7 @@ interface Integration {
   currentStatus: "healthy" | "degraded" | "down" | "unknown";
   lastCheckedAt: string | null;
   lastErrorMessage: string | null;
+  platformIncidents: string | null;
 }
 
 interface IntegrationHealthCardProps {
@@ -46,7 +47,6 @@ export function IntegrationHealthCard({
   };
 
   const getServiceIcon = (serviceType: string) => {
-    // You can customize these icons based on service type
     return <Activity className="w-5 h-5" />;
   };
 
@@ -127,6 +127,62 @@ export function IntegrationHealthCard({
           {integration.lastErrorMessage && (
             <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2 mt-2">
               {integration.lastErrorMessage}
+            </div>
+          )}
+
+          {/* Platform Incidents */}
+          {integration.platformIncidents && (() => {
+            try {
+              const incidents = JSON.parse(integration.platformIncidents);
+              return incidents.length > 0 ? (
+                <div className="bg-orange-50 border border-orange-100 rounded-lg p-3 mt-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-orange-800 mb-1">
+                        Active Incident
+                      </p>
+                      <p className="text-sm text-orange-900 font-medium">
+                        {incidents[0].name}
+                      </p>
+                      <p className="text-xs text-orange-700 mt-1">
+                        Status: {incidents[0].status} · Impact: {incidents[0].impact}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            } catch (e) {
+              return null;
+            }
+          })()}
+
+          {/* Workato Recipe Summary */}
+          {integration.serviceType === "workato" && metrics?.latestMetric && (
+            <div className="pt-3 border-t border-slate-100">
+              <div className="text-sm font-medium text-slate-700 mb-2">
+                Recipe Overview
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-2xl font-semibold text-slate-900">
+                    {metrics.latestMetric.workatoRecipeCount || 0}
+                  </div>
+                  <div className="text-xs text-slate-500">Total</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-emerald-600">
+                    {metrics.latestMetric.workatoRunningCount || 0}
+                  </div>
+                  <div className="text-xs text-slate-500">Running</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-orange-600">
+                    {metrics.latestMetric.workatoStoppedCount || 0}
+                  </div>
+                  <div className="text-xs text-slate-500">Stopped</div>
+                </div>
+              </div>
             </div>
           )}
         </div>

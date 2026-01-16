@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,6 +23,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 interface ConfigureIntegrationDialogProps {
+  projectId: string;
   clientId: string;
   integration?: any; // If editing existing integration
   open: boolean;
@@ -32,6 +32,7 @@ interface ConfigureIntegrationDialogProps {
 }
 
 export function ConfigureIntegrationDialog({
+  projectId,
   clientId,
   integration,
   open,
@@ -47,35 +48,41 @@ export function ConfigureIntegrationDialog({
   const [serviceName, setServiceName] = useState(
     integration?.serviceName || ""
   );
-  const [apiEndpoint, setApiEndpoint] = useState(
-    integration?.apiEndpoint || ""
-  );
-  const [credentials, setCredentials] = useState(
-    integration?.credentials ? JSON.stringify(integration.credentials, null, 2) : ""
-  );
-  const [workatoRecipeIds, setWorkatoRecipeIds] = useState(
-    integration?.workatoRecipeIds ? integration.workatoRecipeIds.join(", ") : ""
-  );
+  const [workatoApiToken, setWorkatoApiToken] = useState("");
+  const [workatoEmail, setWorkatoEmail] = useState("");
   const [isEnabled, setIsEnabled] = useState(
     integration?.isEnabled !== false
   );
   const [checkIntervalMinutes, setCheckIntervalMinutes] = useState(
     integration?.checkIntervalMinutes?.toString() || "5"
   );
+  const [alertEnabled, setAlertEnabled] = useState(
+    integration?.alertEnabled !== false
+  );
+  const [alertThresholdMinutes, setAlertThresholdMinutes] = useState(
+    integration?.alertThresholdMinutes?.toString() || "15"
+  );
 
   useEffect(() => {
     if (integration) {
       setServiceType(integration.serviceType || "hibob");
       setServiceName(integration.serviceName || "");
-      setApiEndpoint(integration.apiEndpoint || "");
-      setCredentials(
-        integration.credentials ? JSON.stringify(integration.credentials, null, 2) : ""
-      );
-      setWorkatoRecipeIds(
-        integration.workatoRecipeIds ? integration.workatoRecipeIds.join(", ") : ""
-      );
+
+      // Parse Workato credentials if editing
+      if (integration.workatoCredentials) {
+        try {
+          const creds = JSON.parse(integration.workatoCredentials);
+          setWorkatoApiToken(creds.apiToken || "");
+          setWorkatoEmail(creds.email || "");
+        } catch (e) {
+          console.warn("Failed to parse Workato credentials");
+        }
+      }
+
       setIsEnabled(integration.isEnabled !== false);
       setCheckIntervalMinutes(integration.checkIntervalMinutes?.toString() || "5");
+      setAlertEnabled(integration.alertEnabled !== false);
+      setAlertThresholdMinutes(integration.alertThresholdMinutes?.toString() || "15");
     }
   }, [integration]);
 
@@ -84,37 +91,25 @@ export function ConfigureIntegrationDialog({
     setLoading(true);
 
     try {
-      // Validate credentials JSON
-      let credentialsObj = null;
-      if (credentials.trim()) {
-        try {
-          credentialsObj = JSON.parse(credentials);
-        } catch (err) {
-          toast.error("Invalid JSON in credentials field");
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Parse Workato recipe IDs
-      let recipeIdsArray = null;
-      if (workatoRecipeIds.trim()) {
-        recipeIdsArray = workatoRecipeIds
-          .split(",")
-          .map((id: string) => id.trim())
-          .filter((id: string) => id.length > 0);
-      }
-
-      const body = {
+      const body: any = {
+        projectId,
         clientId,
         serviceType,
         serviceName: serviceName.trim(),
-        apiEndpoint: apiEndpoint.trim() || null,
-        credentials: credentialsObj,
-        workatoRecipeIds: recipeIdsArray,
         isEnabled,
         checkIntervalMinutes: parseInt(checkIntervalMinutes) || 5,
+        alertEnabled,
+        alertChannels: JSON.stringify(["email", "in_app"]),
+        alertThresholdMinutes: parseInt(alertThresholdMinutes) || 15,
       };
+
+      // Only add Workato credentials if it's a Workato integration
+      if (serviceType === "workato" && workatoApiToken && workatoEmail) {
+        body.workatoCredentials = JSON.stringify({
+          apiToken: workatoApiToken,
+          email: workatoEmail,
+        });
+      }
 
       const url = integration
         ? `/api/integrations/${integration.id}`
@@ -159,7 +154,7 @@ export function ConfigureIntegrationDialog({
             {integration ? "Edit Integration" : "Add Integration"}
           </DialogTitle>
           <DialogDescription>
-            Configure integration monitoring for this client.
+            Configure integration monitoring for this client. Status page monitoring tracks platform health without requiring credentials.
           </DialogDescription>
         </DialogHeader>
 
@@ -172,12 +167,18 @@ export function ConfigureIntegrationDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hibob">HiBob</SelectItem>
-                <SelectItem value="keypay">KeyPay</SelectItem>
-                <SelectItem value="workato">Workato</SelectItem>
-                <SelectItem value="adp">ADP</SelectItem>
+                <SelectItem value="hibob">HiBob (Status Page Only)</SelectItem>
+                <SelectItem value="keypay">KeyPay (Status Page Only)</SelectItem>
+                <SelectItem value="workato">Workato (Status + Recipe List)</SelectItem>
+                <SelectItem value="adp">ADP (Status Page Only)</SelectItem>
+                <SelectItem value="netsuite">NetSuite (Status Page Only)</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-slate-500">
+              {serviceType === "workato"
+                ? "Monitors Workato status page and basic recipe list (running/stopped counts)"
+                : "Monitors platform status page for service availability"}
+            </p>
           </div>
 
           {/* Service Name */}
@@ -192,53 +193,34 @@ export function ConfigureIntegrationDialog({
             />
           </div>
 
-          {/* API Endpoint */}
-          <div className="space-y-2">
-            <Label htmlFor="apiEndpoint">API Endpoint (Optional)</Label>
-            <Input
-              id="apiEndpoint"
-              value={apiEndpoint}
-              onChange={(e) => setApiEndpoint(e.target.value)}
-              placeholder="e.g., https://api.hibob.com/v1/company"
-            />
-            <p className="text-xs text-slate-500">
-              Leave empty to use default endpoint for this service type
-            </p>
-          </div>
-
-          {/* Credentials */}
-          <div className="space-y-2">
-            <Label htmlFor="credentials">Credentials (JSON)</Label>
-            <Textarea
-              id="credentials"
-              value={credentials}
-              onChange={(e) => setCredentials(e.target.value)}
-              placeholder={`{\n  "apiToken": "your-token-here"\n}`}
-              rows={6}
-              className="font-mono text-sm"
-            />
-            <p className="text-xs text-slate-500">
-              Enter credentials as JSON. For HiBob: {`{"apiToken": "..."}`}. For
-              KeyPay: {`{"apiKey": "..."}`}. For Workato: {`{"apiToken": "..."}`}.
-            </p>
-          </div>
-
-          {/* Workato Recipe IDs (only for Workato) */}
+          {/* Workato Credentials (only shown for Workato) */}
           {serviceType === "workato" && (
-            <div className="space-y-2">
-              <Label htmlFor="workatoRecipeIds">
-                Workato Recipe IDs (Optional)
-              </Label>
-              <Input
-                id="workatoRecipeIds"
-                value={workatoRecipeIds}
-                onChange={(e) => setWorkatoRecipeIds(e.target.value)}
-                placeholder="12345, 67890, 11111"
-              />
-              <p className="text-xs text-slate-500">
-                Comma-separated list of recipe IDs to monitor
-              </p>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="workatoApiToken">Workato API Token</Label>
+                <Input
+                  id="workatoApiToken"
+                  type="password"
+                  value={workatoApiToken}
+                  onChange={(e) => setWorkatoApiToken(e.target.value)}
+                  placeholder="Enter your Workato API token"
+                />
+                <p className="text-xs text-slate-500">
+                  Used to fetch basic recipe list (running/stopped status)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="workatoEmail">Workato Email</Label>
+                <Input
+                  id="workatoEmail"
+                  type="email"
+                  value={workatoEmail}
+                  onChange={(e) => setWorkatoEmail(e.target.value)}
+                  placeholder="your-email@company.com"
+                />
+              </div>
+            </>
           )}
 
           {/* Check Interval */}
@@ -253,7 +235,7 @@ export function ConfigureIntegrationDialog({
               onChange={(e) => setCheckIntervalMinutes(e.target.value)}
             />
             <p className="text-xs text-slate-500">
-              How often to check this integration (1-1440 minutes)
+              How often to check status page (1-1440 minutes, recommended: 5-10)
             </p>
           </div>
 
@@ -269,6 +251,41 @@ export function ConfigureIntegrationDialog({
             <Label htmlFor="isEnabled" className="cursor-pointer">
               Enable monitoring for this integration
             </Label>
+          </div>
+
+          {/* Alert Settings */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-sm font-semibold text-slate-900">Alert Settings</h3>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="alertEnabled"
+                checked={alertEnabled}
+                onChange={(e) => setAlertEnabled(e.target.checked)}
+                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              />
+              <Label htmlFor="alertEnabled" className="cursor-pointer">
+                Enable alerts for this integration
+              </Label>
+            </div>
+
+            {alertEnabled && (
+              <div className="space-y-2 pl-7">
+                <Label htmlFor="alertThreshold">Alert Threshold (Minutes)</Label>
+                <Input
+                  id="alertThreshold"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={alertThresholdMinutes}
+                  onChange={(e) => setAlertThresholdMinutes(e.target.value)}
+                />
+                <p className="text-xs text-slate-500">
+                  Send alert if integration is down for more than this many minutes
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
