@@ -17,9 +17,11 @@ export function FileUploader({ projectId }: { projectId: string }) {
       return files;
     },
     onClientUploadComplete: async (res) => {
+      console.log("Upload complete, saving files to database:", res);
       // Save each uploaded file to the database
       try {
         for (const file of res) {
+          console.log("Saving file:", file);
           const response = await fetch("/api/files", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -34,16 +36,20 @@ export function FileUploader({ projectId }: { projectId: string }) {
 
           if (!response.ok) {
             const errorText = await response.text();
+            console.error("API error response:", errorText);
             throw new Error(`Failed to save file: ${errorText}`);
           }
+
+          const result = await response.json();
+          console.log("File saved successfully:", result);
         }
 
-        router.refresh();
+        toast.success(`${res.length} file${res.length > 1 ? 's' : ''} uploaded successfully`);
         setIsUploading(false);
-        toast.success("Files uploaded successfully");
+        router.refresh();
       } catch (error) {
         console.error("Error saving files:", error);
-        toast.error("Files uploaded but failed to save to database. Please refresh the page.");
+        toast.error(error instanceof Error ? error.message : "Failed to save files. Please try again.");
         setIsUploading(false);
       }
     },

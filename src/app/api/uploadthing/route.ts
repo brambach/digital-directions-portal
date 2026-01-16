@@ -1,12 +1,8 @@
 import { createRouteHandler } from "uploadthing/next";
 import { ourFileRouter } from "./core";
 
-const handlers = createRouteHandler({
+// Export route handlers for UploadThing
+// UploadThing automatically uses UPLOADTHING_SECRET env var
+export const { GET, POST } = createRouteHandler({
   router: ourFileRouter,
-  config: {
-    token: process.env.UPLOADTHING_TOKEN,
-    isDev: process.env.NODE_ENV === "development",
-  },
 });
-
-export const { GET, POST } = handlers;
