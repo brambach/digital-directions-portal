@@ -43,13 +43,19 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return {
-        uploadedBy: metadata.userId,
-        url: file.url,
+      console.log("[UploadThing Server] onUploadComplete started");
+      console.log("[UploadThing Server] File data:", {
         name: file.name,
+        url: file.url,
         size: file.size,
-        type: file.type,
-      };
+        key: file.key
+      });
+
+      // Only return custom metadata, let UploadThing provide file properties
+      const response = { uploadedBy: metadata.userId };
+      console.log("[UploadThing Server] Returning:", response);
+
+      return response;
     }),
 
   agencyLogo: f({ image: { maxFileSize: "8MB", maxFileCount: 1 } })

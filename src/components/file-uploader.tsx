@@ -18,50 +18,52 @@ export function FileUploader({ projectId }: { projectId: string }) {
       return files;
     },
     onClientUploadComplete: async (res) => {
-      console.log("✅ UploadThing upload complete:", res);
-      console.log("Now saving to database...");
+      console.log("[Client] onClientUploadComplete called with:", res);
 
-      // Save each uploaded file to the database
       try {
+        if (!res || res.length === 0) {
+          throw new Error("No files in response");
+        }
+
         for (const file of res) {
-          console.log("Saving file to DB:", {
-            name: file.name,
-            url: file.url,
-            size: file.size,
-            type: file.type
-          });
+          console.log("[Client] Processing file:", file);
+
+          // Extract file properties from UploadThing response
+          const fileName = file.name;
+          const fileUrl = file.url;
+          const fileSize = file.size;
+          const fileType = file.type || "application/octet-stream";
+
+          console.log("[Client] Saving to database:", { fileName, fileUrl, fileSize, fileType });
 
           const response = await fetch("/api/files", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               projectId,
-              name: file.name,
-              fileUrl: file.url,
-              fileSize: file.size,
-              fileType: file.type,
+              name: fileName,
+              fileUrl: fileUrl,
+              fileSize: fileSize,
+              fileType: fileType,
             }),
           });
 
-          console.log("API response status:", response.status);
-
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("❌ API error response:", errorText);
+            console.error("[Client] API error:", errorText);
             throw new Error(`Failed to save file: ${errorText}`);
           }
 
           const result = await response.json();
-          console.log("✅ File saved to DB successfully:", result);
+          console.log("[Client] File saved successfully:", result);
         }
 
-        console.log("All files processed, refreshing page...");
         toast.success(`${res.length} file${res.length > 1 ? 's' : ''} uploaded successfully`);
         setIsUploading(false);
         router.refresh();
       } catch (error) {
-        console.error("❌ Error in onClientUploadComplete:", error);
-        toast.error(error instanceof Error ? error.message : "Failed to save files. Please try again.");
+        console.error("[Client] Error:", error);
+        toast.error(error instanceof Error ? error.message : "Failed to save files");
         setIsUploading(false);
       }
     },
