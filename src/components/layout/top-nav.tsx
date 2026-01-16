@@ -18,7 +18,7 @@ interface TopNavProps {
   isAdmin: boolean;
 }
 
-export function TopNav({ navItems, isAdmin }: TopNavProps) {
+export default function TopNav({ navItems, isAdmin }: TopNavProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
