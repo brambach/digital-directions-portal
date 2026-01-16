@@ -37,8 +37,9 @@ export const ourFileRouter = {
 
       return { userId: user.id };
     })
-    .onUploadComplete(async () => {
-      // Empty callback - just signal completion
+    .onUploadComplete(async ({ file, metadata }) => {
+      console.log("[Server] Upload complete:", file.name);
+      return { uploadedBy: metadata.userId };
     }),
 
   agencyLogo: f({ image: { maxFileSize: "8MB", maxFileCount: 1 } })

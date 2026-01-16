@@ -69,6 +69,7 @@ export function FileUploader({ projectId }: { projectId: string }) {
     },
     onUploadError: (error: Error) => {
       console.error("❌ UploadThing error:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       toast.error(`Upload failed: ${error.message}`);
       setIsUploading(false);
     },
