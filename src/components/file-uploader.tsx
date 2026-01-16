@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { uploadFiles } from "uploadthing/client";
+import { uploadFiles } from "@/lib/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -21,10 +21,9 @@ export function FileUploader({ projectId }: { projectId: string }) {
       const fileArray = Array.from(files);
       console.log("Uploading files:", fileArray.map(f => f.name));
 
-      // Upload directly to UploadThing
+      // Upload directly to UploadThing using our helper
       const uploadedFiles = await uploadFiles("projectFile", {
         files: fileArray,
-        skipPolling: false,
       });
 
       console.log("Upload complete:", uploadedFiles);
