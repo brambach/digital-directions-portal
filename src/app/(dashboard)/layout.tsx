@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import TopNav from "@/components/layout/top-nav";
+import TopNavWrapper from "@/components/layout/top-nav-wrapper";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -47,7 +47,7 @@ export default async function DashboardLayout({
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-purple-50/10 to-transparent pointer-events-none z-0"></div>
 
       {/* Top Navigation */}
-      <TopNav navItems={navItems} isAdmin={isAdmin} />
+      <TopNavWrapper navItems={navItems} isAdmin={isAdmin} />
 
       {/* Main Content */}
       <main className="relative z-10">{children}</main>
