@@ -74,7 +74,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
         <Button
           variant="outline"
           size="sm"
-          className="text-purple-600 border-purple-200 hover:bg-purple-50"
+          className="rounded-xl font-semibold text-gray-700 border-gray-200 hover:bg-gray-50"
         >
           <Pencil className="w-4 h-4 mr-2" />
           Edit Client

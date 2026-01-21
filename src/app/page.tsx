@@ -3,236 +3,171 @@ import Image from "next/image";
 import {
   ArrowRight,
   Sparkles,
-  FolderKanban,
-  MessageCircle,
-  ShieldCheck,
-  Activity,
   ChevronRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  AuraStatsCard,
+  AuraActivityChart,
+  AuraTaskList,
+  AuraDonutChart,
+} from "@/components/aura/hero-widgets";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] relative overflow-hidden">
-      {/* Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Gradient mesh */}
-        <div className="absolute inset-0 bg-gradient-page" />
-        {/* Soft orbs */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-200/25 rounded-full blur-[128px]" />
-        <div className="absolute top-1/4 right-1/3 w-[400px] h-[400px] bg-indigo-200/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-violet-100/30 rounded-full blur-[100px]" />
+    <main className="min-h-screen bg-[#F8FAFC] relative overflow-hidden font-sans selection:bg-[#6366F1]/20">
+      {/* Ambient Background - Aura Version */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Primary Aura Glows */}
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-[#6366F1]/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-violet-200/20 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-[10%] left-1/2 -translate-x-1/2 w-[60%] h-[40%] bg-[#6366F1]/5 rounded-full blur-[100px]" />
+
         {/* Subtle dot pattern */}
-        <div className="absolute inset-0 bg-dots" />
+        <div className="absolute inset-0 opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-screen">
         {/* Navigation */}
-        <header className="px-6 lg:px-8 py-5">
-          <div className="max-w-6xl mx-auto">
-            <nav className="flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-3 group">
+        <header className="px-6 lg:px-8 py-6 w-full max-w-[1440px] mx-auto z-50">
+          <nav className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3.5 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-[#6366F1]/20 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-500 opacity-0 group-hover:opacity-100" />
                 <Image
                   src="/images/dd-logo.png"
                   alt="Digital Directions"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 group-hover:scale-105 transition-transform"
+                  width={42}
+                  height={42}
+                  className="relative w-10.5 h-10.5 group-hover:scale-110 transition-all duration-500 ease-out drop-shadow-sm"
                   priority
                 />
-                <span className="text-heading text-lg text-slate-900 hidden sm:block">
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-900 tracking-tight leading-none mb-0.5">
                   Digital Directions
                 </span>
-              </Link>
+                <span className="text-[10px] font-bold text-[#6366F1] uppercase tracking-[0.2em] leading-none">
+                  Portal v2.0
+                </span>
+              </div>
+            </Link>
 
+            <div className="flex items-center gap-6">
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                className="hidden sm:block text-xs font-bold text-slate-500 hover:text-[#6366F1] transition-colors uppercase tracking-widest"
               >
-                Sign In
-                <ChevronRight className="w-4 h-4" />
+                Client Login
               </Link>
-            </nav>
-          </div>
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-[11px] font-bold text-white bg-slate-900 rounded-full hover:bg-[#6366F1] transition-all duration-300 shadow-sm hover:shadow-indigo-200 uppercase tracking-widest"
+              >
+                Access Portal
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </nav>
         </header>
 
         {/* Hero Section */}
-        <section className="px-6 lg:px-8 pt-20 pb-28 lg:pt-28 lg:pb-36">
-          <div className="max-w-4xl mx-auto text-center">
+        <section className="flex-1 flex flex-col justify-center items-center px-4 lg:px-8 py-12 relative w-full max-w-[1440px] mx-auto">
+
+          {/* Central Content */}
+          <div className="relative z-20 max-w-3xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm ring-1 ring-slate-200/60 shadow-sm mb-10 animate-fade-in-up opacity-0 stagger-1">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-white border border-slate-200/60 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] mb-8 animate-enter">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#6366F1] to-[#818CF8] flex items-center justify-center shadow-sm">
                 <Sparkles className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="text-sm font-medium text-slate-700">
-                Client Portal for HiBob Implementations
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                Premium Implementation Portal
               </span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-display text-[2.75rem] sm:text-5xl lg:text-6xl text-slate-900 mb-7 animate-fade-in-up opacity-0 stagger-2 leading-[1.08]">
-              Your project.{" "}
-              <span className="relative">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-violet-600 to-indigo-600">
-                  Always visible.
-                </span>
-                <svg
-                  className="absolute -bottom-1 left-0 w-full h-3 text-violet-300/50"
-                  viewBox="0 0 200 12"
-                  fill="none"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M2 8.5C50 2 150 2 198 8.5"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                </svg>
+            <h1 className="text-5xl sm:text-6xl lg:text-[5.5rem] leading-[1.05] font-bold text-slate-900 tracking-tight mb-8 animate-enter [animation-delay:100ms]">
+              Your project. <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366F1] to-[#4F46E5]">
+                Always visible.
               </span>
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up opacity-0 stagger-3">
-              Track progress, share files, and stay connected with your
-              Digital Directions consultant team—all in one place.
+            <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-medium animate-enter [animation-delay:200ms]">
+              A high-fidelity coordination hub.
+              Track velocity, manage assets, and sync with your specialists in real-time.
             </p>
 
-            {/* CTA Group */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 animate-fade-in-up opacity-0 stagger-4">
-              <Link href="/sign-in" className="glow-btn group">
-                <span>Access Your Portal</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-enter [animation-delay:300ms]">
+              <Link
+                href="/sign-in"
+                className="group relative px-8 py-4 bg-[#6366F1] rounded-2xl text-white font-bold text-[13px] uppercase tracking-widest hover:bg-[#4F46E5] transition-all duration-300 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 flex items-center gap-3 overflow-hidden"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <span className="text-sm text-slate-400 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-slate-300" />
-                Invite-only access
-              </span>
+
+              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                  System Operational
+                </span>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Features Section */}
-        <section className="px-6 lg:px-8 pb-28 lg:pb-36">
-          <div className="max-w-5xl mx-auto">
-            {/* Section Header */}
-            <div className="text-center mb-12 animate-fade-in-up opacity-0 stagger-4">
-              <p className="text-label text-violet-600 mb-3">Features</p>
-              <h2 className="text-heading text-2xl sm:text-3xl text-slate-900">
-                Everything you need to stay informed
-              </h2>
-            </div>
+          {/* Floating Widgets Layer */}
+          <div className="absolute inset-0 z-10 pointer-events-none hidden lg:block overflow-hidden">
+            <div className="relative w-full h-full max-w-[1600px] mx-auto">
 
-            {/* Feature Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                {
-                  icon: FolderKanban,
-                  title: "Track Progress",
-                  description:
-                    "Monitor every phase of your HiBob implementation in real-time.",
-                  gradient: "from-violet-500 to-violet-600",
-                  shadow: "shadow-violet-500/25",
-                  delay: "stagger-5",
-                },
-                {
-                  icon: MessageCircle,
-                  title: "Direct Messaging",
-                  description:
-                    "Communicate directly with your consultant team, all in context.",
-                  gradient: "from-sky-500 to-sky-600",
-                  shadow: "shadow-sky-500/25",
-                  delay: "stagger-5",
-                },
-                {
-                  icon: ShieldCheck,
-                  title: "Secure Files",
-                  description:
-                    "Share documents safely with encrypted storage and access controls.",
-                  gradient: "from-emerald-500 to-emerald-600",
-                  shadow: "shadow-emerald-500/25",
-                  delay: "stagger-6",
-                },
-                {
-                  icon: Activity,
-                  title: "Live Integrations",
-                  description:
-                    "Monitor your HiBob integration health with real-time status updates.",
-                  gradient: "from-amber-500 to-orange-500",
-                  shadow: "shadow-amber-500/25",
-                  delay: "stagger-6",
-                },
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  className={`group card-elevated p-6 animate-fade-in-up opacity-0 ${feature.delay} hover:border-slate-200 transition-all duration-300`}
-                >
-                  <div
-                    className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg ${feature.shadow} group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300`}
-                  >
-                    <feature.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-heading text-base text-slate-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Section */}
-        <section className="px-6 lg:px-8 pb-20 lg:pb-28">
-          <div className="max-w-3xl mx-auto">
-            <div className="card-elevated-lg p-8 text-center animate-fade-in-up opacity-0 stagger-7">
-              <div className="flex justify-center mb-5">
-                <div className="flex -space-x-3">
-                  {[
-                    { initials: "DD", gradient: "from-violet-500 to-violet-600" },
-                    { initials: "HB", gradient: "from-sky-500 to-sky-600" },
-                    { initials: "HR", gradient: "from-emerald-500 to-emerald-600" },
-                  ].map((avatar, i) => (
-                    <div
-                      key={i}
-                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatar.gradient} ring-3 ring-white flex items-center justify-center text-white text-xs font-semibold shadow-md`}
-                    >
-                      {avatar.initials}
-                    </div>
-                  ))}
+              {/* Left Top: Activity Chart */}
+              <div className="absolute top-[5%] -left-[2%] xl:left-[2%] w-[380px] animate-enter [animation-delay:400ms] lg:scale-90 xl:scale-100">
+                <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-slate-200/50 -rotate-6 transform hover:rotate-0 transition-transform duration-700">
+                  <AuraActivityChart />
                 </div>
               </div>
-              <p className="text-slate-600 mb-2">
-                Trusted by organizations implementing{" "}
-                <span className="font-semibold text-slate-900">HiBob HR</span>
-              </p>
-              <p className="text-sm text-slate-400">
-                Streamlined communication • Real-time updates • Secure file sharing
-              </p>
+
+              {/* Right Top: Donut Chart */}
+              <div className="absolute top-[8%] -right-[2%] xl:right-[2%] w-[340px] animate-enter [animation-delay:500ms] lg:scale-90 xl:scale-100">
+                <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-slate-200/50 rotate-6 transform hover:rotate-0 transition-transform duration-700">
+                  <AuraDonutChart />
+                </div>
+              </div>
+
+              {/* Left Bottom: Stats Card */}
+              <div className="absolute bottom-[5%] left-[2%] xl:left-[8%] w-[280px] animate-enter [animation-delay:600ms] lg:scale-90 xl:scale-100">
+                <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-slate-200/50 rotate-3 transform hover:rotate-0 transition-transform duration-700">
+                  <AuraStatsCard type="clients" />
+                </div>
+              </div>
+
+              {/* Right Bottom: Task List */}
+              <div className="absolute bottom-[8%] right-[2%] xl:right-[8%] w-[320px] animate-enter [animation-delay:700ms] lg:scale-90 xl:scale-100">
+                <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-slate-200/50 -rotate-3 transform hover:rotate-0 transition-transform duration-700">
+                  <AuraTaskList />
+                </div>
+              </div>
+
+              {/* Center Floating Elements (Sticky notes equiv) */}
+              <div className="absolute top-[25%] left-[25%] opacity-40 animate-pulse-slow hidden xl:block">
+                <div className="w-16 h-16 rounded-2xl bg-yellow-100 rotate-12 shadow-lg" />
+              </div>
+
             </div>
           </div>
+
         </section>
 
-        {/* Footer */}
-        <footer className="px-6 lg:px-8 py-8 border-t border-slate-100 bg-white/50 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <Image
-                src="/images/dd-logo.png"
-                alt="Digital Directions"
-                width={20}
-                height={20}
-                className="w-5 h-5 opacity-60"
-              />
-              <span>© {new Date().getFullYear()} Digital Directions</span>
-            </div>
-            <p className="text-sm text-slate-400">
-              HiBob Implementation Specialists
-            </p>
+        {/* Footer Minimal */}
+        <footer className="w-full py-8 text-center text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+          <div className="flex items-center justify-center gap-6">
+            <span>© 2026 Digital Directions</span>
+            <span>Privacy</span>
+            <span>Terms</span>
           </div>
         </footer>
+
       </div>
     </main>
   );

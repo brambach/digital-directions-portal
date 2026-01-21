@@ -10,10 +10,16 @@ import {
   FolderKanban,
   UserCircle,
   ArrowUpRight,
+  Plus,
+  Search,
+  MoreHorizontal,
+  ChevronDown
 } from "lucide-react";
 import dynamicImport from "next/dynamic";
 import { ClientStatusMenu } from "@/components/client-status-menu";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Lazy load dialog for better performance
 const AddClientDialog = dynamicImport(
@@ -30,36 +36,17 @@ export const dynamic = "force-dynamic";
 
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
-  const config = {
-    active: {
-      className: "badge-success",
-      label: "Active",
-      dot: true,
-    },
-    inactive: {
-      className: "badge-neutral",
-      label: "Inactive",
-      dot: false,
-    },
-    archived: {
-      className: "bg-slate-50 text-slate-400 ring-1 ring-inset ring-slate-200",
-      label: "Archived",
-      dot: false,
-    },
-  }[status] || {
-    className: "badge-neutral",
-    label: status,
-    dot: false,
+  const variants: any = {
+    active: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    inactive: 'bg-gray-50 text-gray-500 border-gray-100',
+    archived: 'bg-amber-50 text-amber-600 border-amber-100',
   };
-
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${config.className}`}
-    >
-      {config.dot && (
-        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-      )}
-      {config.label}
+    <span className={cn(
+      "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
+      variants[status] || variants.inactive
+    )}>
+      {status}
     </span>
   );
 }
@@ -133,169 +120,115 @@ export default async function ClientsPage() {
     };
   });
 
-  const activeCount = clientData.filter((c) => c.status === "active").length;
-  const totalUsers = clientData.reduce((sum, c) => sum + c.userCount, 0);
-
   return (
-    <div className="bg-[#FAFBFC]">
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-8 py-10">
-        {/* Page Header */}
-        <header className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-10 animate-fade-in-up opacity-0 stagger-1">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Building2 className="w-4 h-4 text-violet-500" />
-              <span className="text-label text-violet-600">Directory</span>
-            </div>
-            <h1 className="text-display text-3xl sm:text-4xl text-slate-900 mb-2">
-              Clients
-            </h1>
-            <p className="text-slate-500 max-w-lg">
-              Complete directory of all client accounts, projects, and team
-              members.
-            </p>
-          </div>
+    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Clients</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage and monitor all client organizations.</p>
+        </div>
+        <div className="flex items-center gap-3">
           <AddClientDialog />
-        </header>
+        </div>
+      </div>
 
-        {/* Table */}
-        <div className="card-elevated overflow-visible animate-fade-in-up opacity-0 stagger-2">
-          {/* Table Header */}
-          <div className="px-8 py-4 border-b border-slate-100 bg-slate-50/50">
-            <div className="grid gap-6 text-label text-slate-500" style={{ gridTemplateColumns: '2fr 2fr 1.5fr 1fr 1fr 0.75fr' }}>
-              <div className="min-w-0">Company</div>
-              <div className="min-w-0">Contact</div>
-              <div className="min-w-0 text-center">Projects</div>
-              <div className="min-w-0 text-center">Users</div>
-              <div className="min-w-0 text-center">Status</div>
-              <div className="min-w-0 text-right">Actions</div>
+      {/* Directory Table */}
+      <div className="animate-enter delay-200">
+        <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            {/* Changed from bg-gray-50/50 to bg-white for cleaner look */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-600 uppercase tracking-widest border-b-2 border-indigo-600 pb-4 mt-4 h-full cursor-pointer">
+                All Clients
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-4 mt-4 hover:text-gray-600 cursor-pointer transition-colors">
+                Internal Teams
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input type="text" placeholder="Search clients..." className="pl-9 pr-4 py-1.5 bg-gray-50 border border-transparent rounded-lg text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-200 focus:border-gray-200 w-64 transition-all" />
+              </div>
+              <Button variant="outline" size="sm" className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-widest text-gray-500 border-gray-200 hover:bg-gray-50">
+                <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                Filter
+              </Button>
             </div>
           </div>
-
-          {/* Table Body */}
-          <div className="divide-y divide-slate-100">
-            {clientData.length === 0 ? (
-              <div className="empty-state">
-                <Users className="empty-state-icon" />
-                <h3 className="empty-state-title">No clients yet</h3>
-                <p className="empty-state-description">
-                  Add your first client to get started.
-                </p>
-              </div>
-            ) : (
-              clientData.map((client, index) => (
-                <div
-                  key={client.id}
-                  className="px-8 py-6 table-row group animate-fade-in-up opacity-0 grid gap-6 items-center"
-                  style={{
-                    animationDelay: `${0.15 + index * 0.03}s`,
-                    gridTemplateColumns: '2fr 2fr 1.5fr 1fr 1fr 0.75fr'
-                  }}
-                >
-                    {/* Company Info */}
-                    <div className="min-w-0">
-                      <Link
-                        href={`/dashboard/admin/clients/${client.id}`}
-                        className="flex items-center gap-3 group/link"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm group-hover/link:scale-105 transition-transform flex-shrink-0">
-                          {client.companyName
-                            .split(" ")
-                            .map((word) => word[0])
-                            .join("")
-                            .toUpperCase()
-                            .slice(0, 2)}
+          <table className="w-full">
+            <thead>
+              <tr className="text-left border-b border-gray-50 bg-white">
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Company</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contact</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Projects</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Portal</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
+                <th className="w-10 px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="text-sm bg-white">
+              {clientData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-20 text-center">
+                    <Users className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+                    <p className="text-gray-400 italic text-sm font-medium uppercase tracking-widest">No clients found</p>
+                  </td>
+                </tr>
+              ) : (
+                clientData.map((client, idx) => (
+                  <tr key={client.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0 relative">
+                    <td className="px-6 py-5">
+                      <Link href={`/dashboard/admin/clients/${client.id}`} className="flex items-center gap-3 group/link">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-indigo-100 transition-transform group-hover/link:scale-110">
+                          {client.companyName.charAt(0)}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-slate-900 truncate group-hover/link:text-violet-700 transition-colors flex items-center gap-1.5">
+                        <div>
+                          <div className="font-semibold text-gray-900 flex items-center gap-1 group-hover/link:text-indigo-600 transition-colors">
                             {client.companyName}
-                            <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                          </h3>
-                          <p className="text-xs text-slate-400 truncate">
-                            Added{" "}
-                            {formatDistanceToNow(new Date(client.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </p>
+                          </div>
+                          <div className="text-[10px] text-gray-400 font-medium mt-0.5">Joined {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</div>
                         </div>
                       </Link>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="min-w-0">
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm text-slate-700 font-medium truncate">
-                          {client.contactName}
-                        </span>
-                        <a
-                          href={`mailto:${client.contactEmail}`}
-                          className="text-xs text-slate-400 hover:text-violet-600 truncate transition-colors flex items-center gap-1"
-                        >
-                          <Mail className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{client.contactEmail}</span>
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Projects */}
-                    <div className="min-w-0">
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="flex items-center gap-2">
-                          <FolderKanban className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm font-semibold text-slate-900">
-                            {client.totalProjects}
-                          </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-[10px] font-bold">
+                          {client.contactName.charAt(0)}
                         </div>
-                        {client.activeProjects > 0 && (
-                          <span className="text-xs text-emerald-600 font-medium">
-                            {client.activeProjects} active
-                          </span>
-                        )}
+                        <div>
+                          <div className="font-medium text-gray-900 text-xs">{client.contactName}</div>
+                          <div className="text-[10px] text-gray-400 font-medium">{client.contactEmail}</div>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Users */}
-                    <div className="min-w-0">
-                      <div className="flex items-center justify-center gap-2">
-                        <UserCircle className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-700">
-                          {client.userCount}
-                        </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3 w-24">
+                        <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(client.activeProjects / (client.totalProjects || 1)) * 100}%` }}></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-900">{client.totalProjects}</span>
                       </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="min-w-0 flex justify-center">
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{client.userCount} Users</span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
                       <StatusBadge status={client.status} />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="min-w-0 flex justify-end">
+                    </td>
+                    <td className="px-6 py-5 text-right">
                       <ClientStatusMenu
                         clientId={client.id}
                         currentStatus={client.status}
                         companyName={client.companyName}
                       />
-                    </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Stats Footer */}
-        <div className="mt-6 grid grid-cols-3 gap-4 animate-fade-in-up opacity-0 stagger-5">
-          <div className="stat-card text-center">
-            <div className="stat-value">{clientData.length}</div>
-            <div className="stat-label">Total Clients</div>
-          </div>
-          <div className="stat-card text-center">
-            <div className="stat-value text-emerald-600">{activeCount}</div>
-            <div className="stat-label">Active</div>
-          </div>
-          <div className="stat-card text-center">
-            <div className="stat-value">{totalUsers}</div>
-            <div className="stat-label">Portal Users</div>
-          </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

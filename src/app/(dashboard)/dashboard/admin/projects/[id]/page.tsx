@@ -1,57 +1,37 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clients, messages, users, integrationMonitors } from "@/lib/db/schema";
+import { projects, clients, users, integrationMonitors, messages } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, User, Building2, MessageSquare, Clock, LayoutGrid } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
-import dynamicImport from "next/dynamic";
 import { clerkClient } from "@clerk/nextjs/server";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import { ArrowLeft, Layout, User, Clock, MessageSquare, Mail, Link as LinkIcon } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import dynamicImport from "next/dynamic";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ProjectPhaseManager } from "@/components/project-phase-manager";
+import { Card } from "@/components/ui/card";
 import { IntegrationManagementSection } from "@/components/integration-management-section";
+import { AnimateOnScroll } from "@/components/animate-on-scroll";
 
-// Lazy load heavy components for better performance
-const MessageForm = dynamicImport(() => import("@/components/message-form").then(mod => ({ default: mod.MessageForm })), {
-  loading: () => <div className="h-32 bg-slate-50 animate-pulse rounded-lg" />,
-});
-const EditProjectDialog = dynamicImport(() => import("@/components/edit-project-dialog").then(mod => ({ default: mod.EditProjectDialog })), {
-  loading: () => null,
-});
-const UpdateStatusDialog = dynamicImport(() => import("@/components/update-status-dialog").then(mod => ({ default: mod.UpdateStatusDialog })), {
-  loading: () => null,
-});
-const MessageList = dynamicImport(() => import("@/components/message-list").then(mod => ({ default: mod.MessageList })), {
-  loading: () => <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-lg" />)}</div>,
-});
+// Lazy load dialogs
+const EditProjectDialog = dynamicImport(
+  () => import("@/components/edit-project-dialog").then((mod) => ({ default: mod.EditProjectDialog })),
+  { loading: () => null }
+);
+const UpdateStatusDialog = dynamicImport(
+  () => import("@/components/update-status-dialog").then((mod) => ({ default: mod.UpdateStatusDialog })),
+  { loading: () => null }
+);
 
 export const dynamic = "force-dynamic";
 
-// Helper function to get status badge styles
-function getStatusBadge(status: string): { bg: string; text: string; border: string; label: string } {
-  switch (status) {
-    case "in_progress":
-      return { bg: "bg-indigo-50", text: "text-indigo-600", border: "border-indigo-200", label: "In Progress" };
-    case "review":
-      return { bg: "bg-purple-50", text: "text-purple-600", border: "border-purple-200", label: "In Review" };
-    case "completed":
-      return { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200", label: "Completed" };
-    case "on_hold":
-      return { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200", label: "On Hold" };
-    case "planning":
-      return { bg: "bg-slate-100", text: "text-slate-600", border: "border-slate-200", label: "Planning" };
-    default:
-      return { bg: "bg-slate-100", text: "text-slate-500", border: "border-slate-200", label: status };
-  }
-}
-
-// Helper function to format file size
-export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
 
-  // Fetch project with client info
+  // Fetch project
   const project = await db
     .select({
       id: projects.id,
@@ -64,6 +44,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       clientId: projects.clientId,
       clientName: clients.companyName,
       clientContact: clients.contactName,
+      clientEmail: clients.contactEmail,
     })
     .from(projects)
     .leftJoin(clients, eq(projects.clientId, clients.id))
@@ -75,233 +56,174 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  // Fetch integrations for this project
+  // Fetch integrations
   const integrations = await db
     .select()
     .from(integrationMonitors)
     .where(and(eq(integrationMonitors.projectId, id), isNull(integrationMonitors.deletedAt)))
     .orderBy(desc(integrationMonitors.createdAt));
 
-  // Fetch project messages with sender info
-  const projectMessagesRaw = await db
-    .select({
-      id: messages.id,
-      content: messages.content,
-      read: messages.read,
-      createdAt: messages.createdAt,
-      senderId: messages.senderId,
-      senderClerkId: users.clerkId,
-      senderRole: users.role,
-    })
+  // Fetch recent messages count
+  const messagesCount = await db
+    .select({ id: messages.id })
     .from(messages)
-    .leftJoin(users, eq(messages.senderId, users.id))
     .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
-    .orderBy(desc(messages.createdAt))
-    .limit(10);
+    .then((rows) => rows.length);
 
-  // Fetch Clerk user info for senders
-  const clerkIds = [...new Set(projectMessagesRaw.map((m) => m.senderClerkId).filter(Boolean))] as string[];
-  const clerk = await clerkClient();
+  const statusColors: any = {
+    planning: 'bg-indigo-100/50 text-indigo-700',
+    in_progress: 'bg-emerald-100/50 text-emerald-700',
+    review: 'bg-amber-100/50 text-amber-700',
+    completed: 'bg-gray-100/50 text-gray-600',
+    on_hold: 'bg-rose-100/50 text-rose-700'
+  };
 
-  const clerkUsers = clerkIds.length > 0
-    ? await Promise.all(clerkIds.map(async (clerkId) => {
-        try {
-          return await clerk.users.getUser(clerkId);
-        } catch {
-          return null;
-        }
-      }))
-    : [];
-
-  const clerkUserMap = new Map(
-    clerkUsers
-      .filter((u): u is NonNullable<typeof u> => u !== null)
-      .map((u) => [u.id, u])
-  );
-
-  // Enrich messages with sender names
-  const projectMessages = projectMessagesRaw.map((message) => {
-    const clerkUser = message.senderClerkId ? clerkUserMap.get(message.senderClerkId) : null;
-    const senderName = clerkUser
-      ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User"
-      : "User";
-    const senderAvatar = clerkUser?.imageUrl || null;
-
-    return {
-      id: message.id,
-      content: message.content,
-      read: message.read,
-      createdAt: message.createdAt,
-      senderId: message.senderId,
-      senderName,
-      senderAvatar,
-      senderRole: message.senderRole,
-    };
-  });
-
-  const statusBadge = getStatusBadge(project.status);
   const now = new Date();
-  const isOverdue = project.dueDate && new Date(project.dueDate) < now && project.status !== "completed";
+  const daysLeft = project.dueDate ? differenceInDays(new Date(project.dueDate), now) : null;
 
   return (
-    <>
+    <div className="flex-1 overflow-y-auto bg-[#F2F4F7] p-6 lg:p-10 space-y-6 no-scrollbar relative font-geist">
       <AnimateOnScroll />
-      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-8 md:py-12">
-        {/* Back Button */}
-        <Link
-          href="/dashboard/admin/projects"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6 transition-colors [animation:animationIn_0.5s_ease-out_0s_both] animate-on-scroll"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Projects
-        </Link>
 
-        {/* Project Header */}
-        <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.1s_both] animate-on-scroll">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between animate-enter delay-100">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/admin/projects" className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm text-gray-500">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-xl font-bold text-gray-900">Project Details</h1>
+        </div>
+        <div className="flex gap-3">
+          <EditProjectDialog
+            project={{
+              id: project.id,
+              name: project.name,
+              description: project.description,
+              startDate: project.startDate,
+              dueDate: project.dueDate,
+            }}
+          />
+          <UpdateStatusDialog projectId={project.id} currentStatus={project.status} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6">
+        {/* Main Hero Card */}
+        <div className="col-span-12 lg:col-span-8 animate-enter delay-200">
+          <div className="bg-white rounded-xl p-8 lg:p-10 shadow-sm border border-gray-100 min-h-[400px] flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-white text-xl font-bold">
+                  {project.name.charAt(0)}
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{project.name}</h2>
+                  <p className="text-gray-500 font-medium text-sm">{project.clientName}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">{project.name}</h1>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}`}
-                >
-                  {statusBadge.label}
+              <p className="text-gray-500 text-base max-w-xl mb-6">
+                {project.description || "Track project progress and manage deliverables across all implementation phases."}
+              </p>
+
+              {/* Status Pills */}
+              <div className="flex flex-wrap gap-2">
+                <span className={cn("inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold", statusColors[project.status])}>
+                  {project.status.replace("_", " ")}
                 </span>
-              </div>
-
-              {project.description && (
-                <p className="text-slate-500 mb-4">{project.description}</p>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Building2 className="w-4 h-4" />
-                  <span className="font-medium text-slate-700">{project.clientName}</span>
-                  <span className="text-slate-300">•</span>
-                  <span>{project.clientContact}</span>
-                </div>
-
-                {project.startDate && (
-                  <div className="flex items-center gap-2 text-slate-500">
-                    <Calendar className="w-4 h-4" />
-                    <span>Started {format(new Date(project.startDate), "MMM d, yyyy")}</span>
-                  </div>
-                )}
-
-                {project.dueDate && (
-                  <div className={`flex items-center gap-2 ${isOverdue ? "text-red-600 font-medium" : "text-slate-500"}`}>
-                    <Clock className="w-4 h-4" />
-                    <span>
-                      {isOverdue ? "Overdue" : "Due"} {formatDistanceToNow(new Date(project.dueDate), { addSuffix: true })}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <EditProjectDialog
-                project={{
-                  id: project.id,
-                  name: project.name,
-                  description: project.description,
-                  startDate: project.startDate,
-                  dueDate: project.dueDate,
-                }}
-              />
-              <UpdateStatusDialog projectId={project.id} currentStatus={project.status} />
-            </div>
-          </div>
-        </div>
-
-        {/* Project Phases */}
-        <div className="mb-6 [animation:animationIn_0.5s_ease-out_0.15s_both] animate-on-scroll">
-          <ProjectPhaseManager projectId={id} isAdmin={true} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar */}
-          <div className="space-y-4 order-2 lg:order-1">
-            <div className="flex items-center gap-3 [animation:animationIn_0.5s_ease-out_0.2s_both] animate-on-scroll">
-              <LayoutGrid className="w-4 h-4 text-indigo-500" />
-              <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Details</h2>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] [animation:animationIn_0.5s_ease-out_0.3s_both] animate-on-scroll">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Client</p>
-                  <Link
-                    href={`/dashboard/admin/clients/${project.clientId}`}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                  >
-                    {project.clientName}
-                  </Link>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Status</p>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}`}
-                  >
-                    {statusBadge.label}
+                {daysLeft !== null && (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                    <Clock className="w-3 h-3 mr-1.5" />
+                    {daysLeft} Days Left
                   </span>
-                </div>
-
-                {project.startDate && (
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Start Date</p>
-                    <p className="text-sm text-slate-900">{format(new Date(project.startDate), "MMMM d, yyyy")}</p>
-                  </div>
                 )}
-
-                {project.dueDate && (
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Due Date</p>
-                    <p className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-slate-900"}`}>
-                      {format(new Date(project.dueDate), "MMMM d, yyyy")}
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-sm font-medium text-slate-500 mb-1">Created</p>
-                  <p className="text-sm text-slate-900">
-                    {formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Messages Section */}
-            <div className="[animation:animationIn_0.5s_ease-out_0.35s_both] animate-on-scroll">
-              <div className="flex items-center gap-3 mb-4">
-                <MessageSquare className="w-4 h-4 text-indigo-500" />
-                <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Messages</h2>
-              </div>
-
-              <MessageList projectId={id} initialMessages={projectMessages} />
-
-              {/* Message Input */}
-              <div className="mt-4">
-                <MessageForm projectId={id} />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-5 order-1 lg:order-2">
-            {/* Integrations Section */}
-            <div className="[animation:animationIn_0.5s_ease-out_0.25s_both] animate-on-scroll">
-              <IntegrationManagementSection
-                projectId={id}
-                clientId={project.clientId}
-                integrations={integrations}
-              />
+        {/* Sidebar Stats */}
+        <div className="col-span-12 lg:col-span-4 space-y-4 animate-enter delay-300">
+          {/* Status Card */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+                <Layout className="w-5 h-5" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>
             </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{project.status.replace("_", " ")}</h3>
+            <p className="text-sm text-gray-500">Current Phase</p>
+          </div>
+
+          {/* Messages Card */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Messages</p>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{messagesCount}</h3>
+            <p className="text-sm text-gray-500">Total communications</p>
+          </div>
+
+          {/* Integrations Card */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
+                <LinkIcon className="w-5 h-5" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Systems</p>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{integrations.length}</h3>
+            <p className="text-sm text-gray-500">Active integrations</p>
+          </div>
+
+          {/* Client Info Card */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                <User className="w-5 h-5" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client Contact</p>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">{project.clientContact}</h3>
+            <p className="text-sm text-gray-500">{project.clientEmail}</p>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Bottom Section: Phases & Integrations */}
+      <div className="grid grid-cols-12 gap-6 animate-enter delay-400">
+        {/* Phases */}
+        <div className="col-span-12 lg:col-span-7">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900">Roadmap</h3>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <ProjectPhaseManager projectId={id} isAdmin={true} />
+          </div>
+        </div>
+
+        {/* Integrations */}
+        <div className="col-span-12 lg:col-span-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900">Connected Systems</h3>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <IntegrationManagementSection
+              projectId={id}
+              clientId={project.clientId}
+              integrations={integrations}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

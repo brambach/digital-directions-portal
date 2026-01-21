@@ -4,9 +4,13 @@ import { tickets, clients, projects, users } from "@/lib/db/schema";
 import { eq, isNull, and, desc, or } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 import dynamicImport from "next/dynamic";
-import { Ticket, AlertTriangle, Zap, TrendingUp, Clock, User, Building2, ArrowUpRight } from "lucide-react";
+import { Ticket, Filter, MessageSquare, ShieldAlert, CheckCircle, Clock, Zap, Circle, User } from "lucide-react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { TicketStatusBadge } from "@/components/ticket-status-badge";
 
 const CreateTicketDialog = dynamicImport(
   () => import("@/components/create-ticket-dialog").then((mod) => ({ default: mod.CreateTicketDialog })),
@@ -15,39 +19,23 @@ const CreateTicketDialog = dynamicImport(
 
 export const dynamic = "force-dynamic";
 
-// Helper functions for status and priority badges
-function getStatusBadge(status: string) {
-  const styles = {
-    open: "badge-warning",
-    in_progress: "badge-primary",
-    waiting_on_client: "badge-info",
-    resolved: "badge-success",
-    closed: "badge-neutral",
-  }[status] || "badge-neutral";
-
-  const labels = {
-    open: "Open",
-    in_progress: "In Progress",
-    waiting_on_client: "Waiting",
-    resolved: "Resolved",
-    closed: "Closed",
-  }[status] || status;
-
-  return <span className={styles}>{labels}</span>;
+function getPriorityColor(priority: string) {
+  switch (priority) {
+    case "urgent": return "text-rose-600 bg-rose-50 border-rose-100";
+    case "high": return "text-orange-600 bg-orange-50 border-orange-100";
+    case "medium": return "text-blue-600 bg-blue-50 border-blue-100";
+    case "low": return "text-slate-600 bg-slate-50 border-slate-100";
+    default: return "text-slate-600 bg-slate-50 border-slate-100";
+  }
 }
 
-function getPriorityInfo(priority: string) {
-  switch (priority) {
-    case "urgent":
-      return { icon: AlertTriangle, color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200", label: "URGENT" };
-    case "high":
-      return { icon: Zap, color: "text-orange-600", bgColor: "bg-orange-50", borderColor: "border-orange-200", label: "HIGH" };
-    case "medium":
-      return { icon: TrendingUp, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200", label: "MEDIUM" };
-    case "low":
-      return { icon: Clock, color: "text-slate-500", bgColor: "bg-slate-50", borderColor: "border-slate-200", label: "LOW" };
-    default:
-      return { icon: Clock, color: "text-slate-500", bgColor: "bg-slate-50", borderColor: "border-slate-200", label: "NONE" };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "open": return "bg-emerald-500";
+    case "in_progress": return "bg-indigo-500";
+    case "resolved": return "bg-slate-400";
+    case "closed": return "bg-slate-300";
+    default: return "bg-slate-400";
   }
 }
 
@@ -99,9 +87,9 @@ export default async function AdminTicketsPage() {
 
   const dbUsers = userIds.length > 0
     ? await db
-        .select({ id: users.id, clerkId: users.clerkId })
-        .from(users)
-        .where(or(...userIds.map((id) => eq(users.id, id))))
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(or(...userIds.map((id) => eq(users.id, id))))
     : [];
 
   const dbUserMap = new Map(dbUsers.map((u) => [u.id, u.clerkId]));
@@ -110,12 +98,12 @@ export default async function AdminTicketsPage() {
   const clerkIds = [...new Set(dbUsers.map((u) => u.clerkId).filter(Boolean))];
   const clerkUsers = clerkIds.length > 0
     ? await Promise.all(clerkIds.map(async (id) => {
-        try {
-          return await clerk.users.getUser(id);
-        } catch {
-          return null;
-        }
-      }))
+      try {
+        return await clerk.users.getUser(id);
+      } catch {
+        return null;
+      }
+    }))
     : [];
 
   const clerkUserMap = new Map(
@@ -140,163 +128,275 @@ export default async function AdminTicketsPage() {
       assigneeName: assigneeClerk
         ? `${assigneeClerk.firstName || ""} ${assigneeClerk.lastName || ""}`.trim()
         : null,
+      assigneeAvatar: assigneeClerk?.imageUrl,
     };
   });
 
-  // Group by priority (urgent/high first)
-  const urgentTickets = enrichedTickets.filter((t) => t.priority === "urgent" && (t.status === "open" || t.status === "in_progress"));
-  const highPriorityTickets = enrichedTickets.filter((t) => t.priority === "high" && (t.status === "open" || t.status === "in_progress"));
-  const mediumPriorityTickets = enrichedTickets.filter((t) => t.priority === "medium" && (t.status === "open" || t.status === "in_progress"));
-  const lowPriorityTickets = enrichedTickets.filter((t) => t.priority === "low" && (t.status === "open" || t.status === "in_progress"));
-
-  // Active (open + in progress) tickets
-  const activeTickets = enrichedTickets.filter((t) => t.status === "open" || t.status === "in_progress" || t.status === "waiting_on_client");
+  const criticalTickets = enrichedTickets.filter((t) => (t.priority === "urgent" || t.priority === "high") && t.status !== "resolved" && t.status !== "closed");
+  const standardTickets = enrichedTickets.filter((t) => (t.priority !== "urgent" && t.priority !== "high") && (t.status === "open" || t.status === "in_progress"));
+  const resolvedTickets = enrichedTickets.filter((t) => t.status === "resolved" || t.status === "closed");
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-8 py-10">
-        {/* Page Header */}
-        <header className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-10 animate-fade-in-up opacity-0 stagger-1">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Ticket className="w-4 h-4 text-amber-500" />
-              <span className="text-label text-amber-600">Support</span>
-            </div>
-            <h1 className="text-display text-3xl sm:text-4xl text-slate-900 mb-2">
-              Support Queue
-            </h1>
-            <p className="text-slate-500 max-w-lg">
-              Priority-sorted ticket queue across all active clients.
-            </p>
-          </div>
+    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Support Queue</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage and resolve client support requests.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="rounded-xl font-semibold text-gray-500 border-gray-100 bg-white">
+            <Filter className="w-3.5 h-3.5 mr-2" />
+            Filter
+          </Button>
           <CreateTicketDialog clients={allClients} projects={allProjects} isAdmin />
-        </header>
-
-        {/* Priority Queue Sections */}
-        {urgentTickets.length > 0 && (
-          <section className="mb-8 animate-fade-in-up opacity-0 stagger-2">
-            <div className="section-divider mb-4 text-red-600">
-              <AlertTriangle className="w-4 h-4" />
-              <span>Urgent ({urgentTickets.length})</span>
-            </div>
-            <div className="space-y-3">
-              {urgentTickets.map((ticket, i) => (
-                <TicketRow key={ticket.id} ticket={ticket} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {highPriorityTickets.length > 0 && (
-          <section className="mb-8 animate-fade-in-up opacity-0 stagger-3">
-            <div className="section-divider mb-4 text-orange-600">
-              <Zap className="w-4 h-4" />
-              <span>High Priority ({highPriorityTickets.length})</span>
-            </div>
-            <div className="space-y-3">
-              {highPriorityTickets.map((ticket, i) => (
-                <TicketRow key={ticket.id} ticket={ticket} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {mediumPriorityTickets.length > 0 && (
-          <section className="mb-8 animate-fade-in-up opacity-0 stagger-4">
-            <div className="section-divider mb-4 text-blue-600">
-              <TrendingUp className="w-4 h-4" />
-              <span>Medium Priority ({mediumPriorityTickets.length})</span>
-            </div>
-            <div className="space-y-3">
-              {mediumPriorityTickets.map((ticket, i) => (
-                <TicketRow key={ticket.id} ticket={ticket} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {lowPriorityTickets.length > 0 && (
-          <section className="mb-8 animate-fade-in-up opacity-0 stagger-5">
-            <div className="section-divider mb-4 text-slate-500">
-              <Clock className="w-4 h-4" />
-              <span>Low Priority ({lowPriorityTickets.length})</span>
-            </div>
-            <div className="space-y-3">
-              {lowPriorityTickets.map((ticket, i) => (
-                <TicketRow key={ticket.id} ticket={ticket} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {activeTickets.length === 0 && (
-          <div className="card-elevated animate-fade-in-up opacity-0 stagger-2">
-            <div className="empty-state">
-              <Ticket className="empty-state-icon" />
-              <h3 className="empty-state-title">All caught up!</h3>
-              <p className="empty-state-description">
-                No active support tickets at the moment.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Ticket Row Component
-function TicketRow({ ticket, index }: { ticket: any; index: number }) {
-  const priorityInfo = getPriorityInfo(ticket.priority);
-  const PriorityIcon = priorityInfo.icon;
-
-  return (
-    <Link
-      href={`/dashboard/admin/tickets/${ticket.id}`}
-      className="card-elevated p-4 block group hover:border-violet-200 hover:shadow-md transition-all duration-200 animate-fade-in-up opacity-0"
-      style={{ animationDelay: `${0.1 + index * 0.03}s` }}
-    >
-      <div className="flex items-start gap-4">
-        {/* Priority Indicator */}
-        <div className={`w-10 h-10 rounded-xl ${priorityInfo.bgColor} border ${priorityInfo.borderColor} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-          <PriorityIcon className={`w-5 h-5 ${priorityInfo.color}`} />
         </div>
+      </div>
 
-        {/* Ticket Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-violet-700 transition-colors line-clamp-1">
-              {ticket.title}
-            </h3>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {getStatusBadge(ticket.status)}
-              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-100">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-indigo-100 transition-all">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Queue</p>
+            <p className="text-2xl font-bold text-gray-900">{criticalTickets.length + standardTickets.length}</p>
           </div>
-
-          <p className="text-xs text-slate-500 mb-3 line-clamp-1 leading-relaxed">
-            {ticket.description}
-          </p>
-
-          <div className="flex items-center gap-4 text-xs text-slate-400">
-            {ticket.clientName && (
-              <div className="flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span className="font-medium text-slate-600">{ticket.clientName}</span>
-              </div>
-            )}
-            {ticket.assigneeName ? (
-              <div className="flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" />
-                <span>{ticket.assigneeName}</span>
-              </div>
-            ) : (
-              <span className="text-orange-600 font-medium">Unassigned</span>
-            )}
-            <span>{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+          <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 group-hover:bg-indigo-100 transition-colors">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-rose-100 transition-all">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Critical & High</p>
+            <p className="text-2xl font-bold text-gray-900">{criticalTickets.length}</p>
+          </div>
+          <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-emerald-100 transition-all">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Resolved (Total)</p>
+            <p className="text-2xl font-bold text-gray-900">{resolvedTickets.length}</p>
+          </div>
+          <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors">
+            <CheckCircle className="w-5 h-5" />
           </div>
         </div>
       </div>
-    </Link>
+
+      {/* Priority Queue Section (Only shows if there are urgent/high tickets) */}
+      {criticalTickets.length > 0 && (
+        <div className="animate-enter delay-200 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <ShieldAlert className="w-4 h-4 text-rose-500" />
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Priority Attention Required</h2>
+          </div>
+          <Card className="rounded-xl border-rose-200 shadow-[0_4px_20px_rgba(225,29,72,0.1)] overflow-hidden bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-rose-50 bg-rose-50/50 text-left">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Ticket Subject</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client & Priority</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assignee</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pr-8 text-right">Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-rose-100">
+                  {criticalTickets.map((ticket) => (
+                    <tr key={ticket.id} className="group hover:bg-rose-50/20 transition-colors">
+                      <td className="px-6 py-4 pl-8">
+                        <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
+                          <div className="flex items-start gap-4">
+                            <div className="pt-1.5 flex flex-col items-center gap-1">
+                              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-rose-600 transition-colors">
+                                {ticket.title}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-sm font-bold text-gray-700">{ticket.clientName}</span>
+                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide w-fit border", getPriorityColor(ticket.priority))}>
+                            {ticket.priority}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <TicketStatusBadge status={ticket.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        {ticket.assigneeName ? (
+                          <div className="flex items-center gap-2 max-w-[150px]">
+                            {ticket.assigneeAvatar ? (
+                              <img src={ticket.assigneeAvatar} alt="" className="w-6 h-6 rounded-full border border-gray-200" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                                {ticket.assigneeName.charAt(0)}
+                              </div>
+                            )}
+                            <span className="text-xs text-gray-600 truncate">{ticket.assigneeName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 pr-8 text-right bg-transparent">
+                        <span className="text-xs text-gray-900 font-bold">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Standard Queue */}
+      <div className="animate-enter delay-300 space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Zap className="w-4 h-4 text-indigo-500" />
+          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Standard Queue</h2>
+        </div>
+        <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-white">
+          {standardTickets.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-bold text-gray-900">Queue Clear</p>
+              <p className="text-xs text-gray-400 mt-1">No standard priority tickets pending.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50 bg-indigo-50/10 text-left">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Ticket Subject</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client & Priority</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assignee</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pr-8 text-right">Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {standardTickets.map((ticket) => (
+                    <tr key={ticket.id} className="group hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 pl-8">
+                        <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
+                          <div className="flex items-start gap-4">
+                            <div className="pt-1.5 flex flex-col items-center gap-1">
+                              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500/20" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-indigo-600 transition-colors">
+                                {ticket.title}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-sm font-bold text-gray-700">{ticket.clientName}</span>
+                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide w-fit border", getPriorityColor(ticket.priority))}>
+                            {ticket.priority}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <TicketStatusBadge status={ticket.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        {ticket.assigneeName ? (
+                          <div className="flex items-center gap-2 max-w-[150px]">
+                            {ticket.assigneeAvatar ? (
+                              <img src={ticket.assigneeAvatar} alt="" className="w-6 h-6 rounded-full border border-gray-200" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                                {ticket.assigneeName.charAt(0)}
+                              </div>
+                            )}
+                            <span className="text-xs text-gray-600 truncate">{ticket.assigneeName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 pr-8 text-right bg-transparent">
+                        <span className="text-xs text-gray-600 font-medium">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {resolvedTickets.length > 0 && (
+        <div className="animate-enter delay-400 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Resolution Archive</h2>
+          </div>
+          <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-gray-50/30">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50 text-left">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest pl-8">Ticket Subject</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Client</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Resolved By</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest pr-8 text-right">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {resolvedTickets.map((ticket) => (
+                    <tr key={ticket.id} className="group hover:bg-white transition-colors">
+                      <td className="px-6 py-4 pl-8">
+                        <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
+                          <div className="opacity-60 group-hover:opacity-100 transition-opacity">
+                            <p className="font-bold text-gray-700 text-sm group-hover:text-indigo-600 transition-colors">
+                              {ticket.title}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[300px]">#{ticket.id.slice(-4)}</p>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-500 opacity-60 group-hover:opacity-100">{ticket.clientName}</span>
+                      </td>
+                      <td className="px-6 py-4 opacity-70 group-hover:opacity-100">
+                        <TicketStatusBadge status={ticket.status} size="sm" />
+                      </td>
+                      <td className="px-6 py-4 opacity-70 group-hover:opacity-100">
+                        {/* We didn't fetch resolver name in the list, so fallback to Assignee or User */}
+                        <span className="text-xs text-gray-400 italic">{ticket.assignedTo ? "Assigned Agent" : "System"}</span>
+                      </td>
+                      <td className="px-6 py-4 pr-8 text-right bg-transparent">
+                        <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
+
+    </div >
   );
 }

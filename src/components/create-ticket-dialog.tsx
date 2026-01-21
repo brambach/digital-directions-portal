@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { GlowButton } from "@/components/glow-button";
 
 interface Project {
   id: string;
@@ -108,10 +107,10 @@ export function CreateTicketDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <GlowButton>
-          <Plus className="w-4 h-4" />
-          <span>New Ticket</span>
-        </GlowButton>
+        <Button size="sm" className="rounded-xl font-semibold">
+          <Plus className="w-4 h-4 mr-2" />
+          New Ticket
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] bg-white border border-slate-200">
         <DialogHeader>

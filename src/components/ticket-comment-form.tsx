@@ -71,7 +71,7 @@ export function TicketCommentForm({ ticketId, isAdmin = false }: TicketCommentFo
 
         <button
           type="submit"
-          className="bg-indigo-600 text-white px-5 py-2 rounded-lg transition-all hover:bg-indigo-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="bg-gray-900 text-white px-5 py-2 rounded-lg transition-all hover:bg-gray-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           disabled={loading || !content.trim()}
         >
           {loading ? "Sending..." : "Add Comment"}

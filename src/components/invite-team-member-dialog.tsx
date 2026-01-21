@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { GlowButton } from "@/components/glow-button";
 
 export function InviteTeamMemberDialog() {
   const router = useRouter();
@@ -57,10 +56,10 @@ export function InviteTeamMemberDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <GlowButton>
-          <UserPlus className="w-4 h-4" />
-          <span>Invite Team Member</span>
-        </GlowButton>
+        <Button size="sm" className="rounded-xl font-semibold">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Invite Team Member
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white border border-slate-200">
         <DialogHeader>

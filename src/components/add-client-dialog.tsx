@@ -20,9 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { GlowButton } from "@/components/glow-button";
 
 export function AddClientDialog() {
   const router = useRouter();
@@ -100,10 +99,10 @@ export function AddClientDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <GlowButton>
-          <ArrowRight className="w-4 h-4" />
-          <span>Add Client</span>
-        </GlowButton>
+        <Button size="sm" className="rounded-xl font-semibold shadow-sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Client
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white border border-slate-200">
         <DialogHeader>

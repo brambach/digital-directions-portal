@@ -38,19 +38,19 @@ export function MessageForm({ projectId }: { projectId: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg p-4 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <textarea
         placeholder="Type a message..."
-        className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 placeholder:text-slate-400"
+        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 text-gray-900 placeholder:text-gray-400"
         rows={3}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         disabled={loading}
       />
-      <div className="flex justify-end mt-2">
+      <div className="flex justify-end">
         <button
           type="submit"
-          className="bg-indigo-600 text-white px-5 py-2 rounded-lg transition-all hover:bg-indigo-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="bg-gray-900 text-white px-5 py-2 rounded-xl transition-all hover:bg-gray-800 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           disabled={loading || !content.trim()}
         >
           {loading ? "Sending..." : "Send Message"}

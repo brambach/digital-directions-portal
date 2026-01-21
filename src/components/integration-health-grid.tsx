@@ -60,14 +60,14 @@ export function IntegrationHealthGrid({
 
   if (integrations.length === 0) {
     return (
-      <div className="card-elevated">
-        <div className="empty-state py-8">
-          <Activity className="empty-state-icon" />
-          <h3 className="empty-state-title">No integrations configured</h3>
-          <p className="empty-state-description">
-            Contact your Digital Directions consultant to set up integration monitoring
-          </p>
+      <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-12 text-center shadow-sm">
+        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3 text-gray-400">
+          <Activity className="w-6 h-6" />
         </div>
+        <h3 className="text-gray-900 font-bold text-base mb-1">No integrations configured</h3>
+        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+          Contact your Digital Directions consultant to set up integration monitoring
+        </p>
       </div>
     );
   }

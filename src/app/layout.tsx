@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Digital Directions Portal",
@@ -18,26 +18,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={geist.className}>
         <ClerkProvider
           appearance={{
             baseTheme: undefined,
             variables: {
-              colorPrimary: "#8B5CF6",
+              colorPrimary: "#6366F1",
               colorBackground: "#FFFFFF",
-              colorText: "#0F172A",
-              colorTextSecondary: "#64748B",
+              colorText: "#111827",
+              colorTextSecondary: "#6B7280",
               colorInputBackground: "#FFFFFF",
-              colorInputText: "#0F172A",
-              borderRadius: "0.5rem",
+              colorInputText: "#111827",
+              borderRadius: "1rem",
             },
             elements: {
-              card: "shadow-lg border-slate-200",
-              headerTitle: "text-slate-900",
-              headerSubtitle: "text-slate-600",
-              formButtonPrimary: "bg-purple-600 hover:bg-purple-700 text-sm font-semibold",
-              formFieldInput: "border-slate-300 text-slate-900 focus:border-purple-500",
-              footerActionLink: "text-purple-600 hover:text-purple-700",
+              card: "shadow-sm border-gray-100",
+              headerTitle: "text-gray-900",
+              headerSubtitle: "text-gray-500",
+              formButtonPrimary: "bg-[#6366F1] hover:bg-[#4F46E5] text-sm font-semibold transition-all duration-200",
+              formFieldInput: "border-gray-200 text-gray-900 focus:border-[#6366F1] focus:ring-[#6366F1]/10",
+              footerActionLink: "text-[#6366F1] hover:text-[#4F46E5]",
             },
           }}
         >

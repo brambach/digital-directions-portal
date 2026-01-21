@@ -3,7 +3,7 @@ import { CheckCircle, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
 
 interface IntegrationStatusBadgeProps {
   status: "healthy" | "degraded" | "down" | "unknown";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   showIcon?: boolean;
 }
 
@@ -15,35 +15,35 @@ export function IntegrationStatusBadge({
   const config = {
     healthy: {
       bg: "bg-emerald-50",
-      text: "text-emerald-700",
-      border: "border-emerald-200",
+      text: "text-emerald-600",
+      border: "border-emerald-100",
       label: "Healthy",
       icon: CheckCircle,
-      iconColor: "text-emerald-600",
+      iconColor: "text-emerald-500",
     },
     degraded: {
-      bg: "bg-orange-50",
-      text: "text-orange-700",
-      border: "border-orange-200",
+      bg: "bg-amber-50",
+      text: "text-amber-600",
+      border: "border-amber-100",
       label: "Degraded",
       icon: AlertTriangle,
-      iconColor: "text-orange-600",
+      iconColor: "text-amber-500",
     },
     down: {
-      bg: "bg-red-50",
-      text: "text-red-700",
-      border: "border-red-200",
-      label: "Down",
+      bg: "bg-rose-50",
+      text: "text-rose-600",
+      border: "border-rose-100",
+      label: "Critical",
       icon: XCircle,
-      iconColor: "text-red-600",
+      iconColor: "text-rose-500",
     },
     unknown: {
-      bg: "bg-slate-50",
-      text: "text-slate-600",
-      border: "border-slate-200",
+      bg: "bg-gray-50",
+      text: "text-gray-500",
+      border: "border-gray-100",
       label: "Unknown",
       icon: HelpCircle,
-      iconColor: "text-slate-500",
+      iconColor: "text-gray-400",
     },
   };
 
@@ -52,19 +52,21 @@ export function IntegrationStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full font-semibold border shadow-sm uppercase tracking-wider whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-md font-bold uppercase tracking-wider border",
         bg,
         text,
         border,
-        size === "sm" && "px-2 py-0.5 text-[10px]",
-        size === "md" && "px-2.5 py-1 text-xs",
-        size === "lg" && "px-3 py-1.5 text-sm"
+        size === "xs" && "px-1 py-0.5 text-[8px]",
+        size === "sm" && "px-1.5 py-0.5 text-[9px]",
+        size === "md" && "px-2 py-1 text-[10px]",
+        size === "lg" && "px-3 py-1.5 text-xs"
       )}
     >
       {showIcon && (
         <Icon
           className={cn(
             iconColor,
+            size === "xs" && "w-2 h-2",
             size === "sm" && "w-3 h-3",
             size === "md" && "w-3.5 h-3.5",
             size === "lg" && "w-4 h-4"

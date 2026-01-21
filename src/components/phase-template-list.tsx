@@ -150,7 +150,8 @@ export function PhaseTemplateList() {
         </div>
         <Button
           onClick={handleCreate}
-          className="bg-purple-600 hover:bg-purple-700 text-white"
+          size="sm"
+          className="rounded-xl font-semibold"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Template
@@ -166,8 +167,8 @@ export function PhaseTemplateList() {
           </p>
           <Button
             onClick={handleCreate}
-            variant="outline"
-            className="border-purple-200 text-purple-600 hover:bg-purple-50"
+            size="sm"
+            className="rounded-xl font-semibold"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create First Template

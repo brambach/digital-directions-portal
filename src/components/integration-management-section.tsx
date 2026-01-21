@@ -54,14 +54,14 @@ export function IntegrationManagementSection({
         <Button
           onClick={handleAddNew}
           size="sm"
-          className="bg-purple-600 hover:bg-purple-700 text-white h-8 px-3 text-xs"
+          className="bg-gray-900 hover:bg-gray-800 text-white h-8 px-3 text-xs"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           Add Integration
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
+      <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
         {integrations.length === 0 ? (
           <div className="text-center py-8">
             <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
@@ -87,15 +87,14 @@ export function IntegrationManagementSection({
                 className="flex items-start gap-3 p-4 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors group"
               >
                 <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    integration.currentStatus === "healthy"
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${integration.currentStatus === "healthy"
                       ? "bg-emerald-50 text-emerald-600"
                       : integration.currentStatus === "degraded"
-                      ? "bg-orange-50 text-orange-600"
-                      : integration.currentStatus === "down"
-                      ? "bg-red-50 text-red-600"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
+                        ? "bg-orange-50 text-orange-600"
+                        : integration.currentStatus === "down"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-slate-100 text-slate-500"
+                    }`}
                 >
                   <Activity className="w-5 h-5" />
                 </div>

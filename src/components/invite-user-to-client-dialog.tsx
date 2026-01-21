@@ -80,8 +80,8 @@ export function InviteUserToClientDialog({ clientId, companyName }: InviteUserTo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="w-4 h-4" strokeWidth={2.5} />
+        <Button size="sm" className="rounded-xl font-semibold shadow-sm h-8">
+          <UserPlus className="w-3.5 h-3.5 mr-2" strokeWidth={2.5} />
           <span>Invite User</span>
         </Button>
       </DialogTrigger>

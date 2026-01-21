@@ -1,17 +1,17 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { tickets, projects, users } from "@/lib/db/schema";
+import { tickets, projects, users, clients } from "@/lib/db/schema";
 import { eq, isNull, and, desc, or } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
-import { TicketList } from "@/components/ticket-card";
 import dynamicImport from "next/dynamic";
-import {
-  Ticket,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Headphones,
-} from "lucide-react";
+import { Ticket, Filter, MessageSquare, ShieldAlert, CheckCircle, Plus, Zap, Clock } from "lucide-react";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import { TicketStatusBadge } from "@/components/ticket-status-badge";
 
 const CreateTicketDialog = dynamicImport(
   () => import("@/components/create-ticket-dialog").then((mod) => ({ default: mod.CreateTicketDialog })),
@@ -20,30 +20,30 @@ const CreateTicketDialog = dynamicImport(
 
 export const dynamic = "force-dynamic";
 
+function getPriorityColor(priority: string) {
+  switch (priority) {
+    case "urgent": return "text-rose-600 bg-rose-50 border-rose-100";
+    case "high": return "text-orange-600 bg-orange-50 border-orange-100";
+    case "medium": return "text-blue-600 bg-blue-50 border-blue-100";
+    case "low": return "text-slate-600 bg-slate-50 border-slate-100";
+    default: return "text-slate-600 bg-slate-50 border-slate-100";
+  }
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case "open": return "bg-emerald-500";
+    case "in_progress": return "bg-indigo-500";
+    case "resolved": return "bg-slate-400";
+    case "closed": return "bg-slate-300";
+    default: return "bg-slate-400";
+  }
+}
+
 export default async function ClientTicketsPage() {
   const user = await requireAuth();
 
-  if (!user.clientId) {
-    return (
-      <div className="min-h-screen bg-[#FAFBFC]">
-        <div className="max-w-[1200px] mx-auto px-6 lg:px-8 py-10">
-          <div className="card-elevated p-8 text-center border-amber-100 bg-amber-50/50">
-            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-            <h2 className="text-heading text-lg text-slate-900 mb-2">
-              Access Restricted
-            </h2>
-            <p className="text-slate-500">
-              You don&apos;t have access to support tickets.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fetch client's tickets
+  // Fetch all tickets for this client
   const ticketList = await db
     .select({
       id: tickets.id,
@@ -61,217 +61,199 @@ export default async function ClientTicketsPage() {
     })
     .from(tickets)
     .leftJoin(projects, eq(tickets.projectId, projects.id))
-    .where(and(eq(tickets.clientId, user.clientId), isNull(tickets.deletedAt)))
+    .where(and(eq(tickets.clientId, user.clientId!), isNull(tickets.deletedAt)))
     .orderBy(desc(tickets.createdAt));
 
-  // Fetch client's projects for create dialog
+  // Projects for create dialog
   const clientProjects = await db
     .select({ id: projects.id, name: projects.name })
     .from(projects)
-    .where(
-      and(eq(projects.clientId, user.clientId), isNull(projects.deletedAt))
-    );
+    .where(and(eq(projects.clientId, user.clientId!), isNull(projects.deletedAt)));
 
-  // Fetch Clerk user info
-  const userIds = [
-    ...new Set(
-      [
-        ...ticketList.map((t) => t.createdBy),
-        ...ticketList.map((t) => t.assignedTo),
-      ].filter(Boolean)
-    ),
-  ] as string[];
-
-  const dbUsers =
-    userIds.length > 0
-      ? await db
-          .select({ id: users.id, clerkId: users.clerkId })
-          .from(users)
-          .where(or(...userIds.map((id) => eq(users.id, id))))
-      : [];
-
-  const dbUserMap = new Map(dbUsers.map((u) => [u.id, u.clerkId]));
-
-  const clerk = await clerkClient();
-  const clerkIds = [...new Set(dbUsers.map((u) => u.clerkId).filter(Boolean))];
-  const clerkUsers =
-    clerkIds.length > 0
-      ? await Promise.all(
-          clerkIds.map(async (id) => {
-            try {
-              return await clerk.users.getUser(id);
-            } catch {
-              return null;
-            }
-          })
-        )
-      : [];
-
-  const clerkUserMap = new Map(
-    clerkUsers
-      .filter((u): u is NonNullable<typeof u> => u !== null)
-      .map((u) => [u.id, u])
-  );
-
-  // Enrich tickets
-  const enrichedTickets = ticketList.map((ticket) => {
-    const creatorClerkId = ticket.createdBy
-      ? dbUserMap.get(ticket.createdBy)
-      : null;
-    const assigneeClerkId = ticket.assignedTo
-      ? dbUserMap.get(ticket.assignedTo)
-      : null;
-
-    const creatorClerk = creatorClerkId
-      ? clerkUserMap.get(creatorClerkId)
-      : null;
-    const assigneeClerk = assigneeClerkId
-      ? clerkUserMap.get(assigneeClerkId)
-      : null;
-
-    return {
-      ...ticket,
-      clientName: null, // Client doesn't need to see their own name
-      creatorName: creatorClerk
-        ? `${creatorClerk.firstName || ""} ${creatorClerk.lastName || ""}`.trim() ||
-          "You"
-        : "You",
-      assigneeName: assigneeClerk
-        ? `${assigneeClerk.firstName || ""} ${assigneeClerk.lastName || ""}`.trim()
-        : null,
-    };
+  // Mock 'client' object for the dialog prop
+  const clientObj = await db.query.clients.findFirst({
+    where: eq(clients.id, user.clientId!)
   });
 
-  // Group tickets
-  const activeTickets = enrichedTickets.filter(
-    (t) =>
-      t.status === "open" ||
-      t.status === "in_progress" ||
-      t.status === "waiting_on_client"
-  );
-  const resolvedTickets = enrichedTickets.filter(
-    (t) => t.status === "resolved" || t.status === "closed"
-  );
+  // Wrap in array for the dialog which expects list
+  const clientList = clientObj ? [{ id: clientObj.id, companyName: clientObj.companyName }] : [];
 
-  // Stats
-  const waitingOnClient = enrichedTickets.filter(
-    (t) => t.status === "waiting_on_client"
-  ).length;
-  const inProgress = enrichedTickets.filter(
-    (t) => t.status === "in_progress"
-  ).length;
+  const urgentTickets = ticketList.filter((t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed");
+  const openTickets = ticketList.filter((t) => t.status === "open" || t.status === "in_progress");
+  const resolvedTickets = ticketList.filter((t) => t.status === "resolved" || t.status === "closed");
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-10 animate-fade-in-up opacity-0 stagger-1">
+    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+      <AnimateOnScroll />
+
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Support Requests</h1>
+          <p className="text-sm text-gray-500 mt-1">Track the status of your inquiries and issues.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="rounded-xl font-semibold text-gray-500 border-gray-100 bg-white">
+            <Filter className="w-3.5 h-3.5 mr-2" />
+            Filter
+          </Button>
+          <CreateTicketDialog clients={clientList} projects={clientProjects} />
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-200">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-indigo-100 transition-all">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Headphones className="w-4 h-4 text-violet-500" />
-              <span className="text-label text-violet-600">Support</span>
-            </div>
-            <h1 className="text-display text-3xl sm:text-4xl text-slate-900 mb-2">
-              Support Tickets
-            </h1>
-            <p className="text-slate-500 max-w-lg">
-              Track your support requests and communicate with the Digital
-              Directions team.
-            </p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Open Tickets</p>
+            <p className="text-2xl font-bold text-gray-900">{openTickets.length}</p>
           </div>
-          <CreateTicketDialog
-            projects={clientProjects}
-            defaultClientId={user.clientId}
-          />
-        </header>
-
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 animate-fade-in-up opacity-0 stagger-2">
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-slate-600" />
-              </div>
-            </div>
-            <div className="stat-value">{ticketList.length}</div>
-            <div className="stat-label">Total Tickets</div>
-          </div>
-
-          <div className="stat-card relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 to-transparent pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-violet-600" />
-                </div>
-              </div>
-              <div className="stat-value text-violet-700">
-                {activeTickets.length}
-              </div>
-              <div className="stat-label">Active</div>
-            </div>
-          </div>
-
-          {waitingOnClient > 0 && (
-            <div className="stat-card relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent pointer-events-none" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <AlertCircle className="w-5 h-5 text-amber-600" />
-                  </div>
-                </div>
-                <div className="stat-value text-amber-700">{waitingOnClient}</div>
-                <div className="stat-label">Needs Response</div>
-              </div>
-            </div>
-          )}
-
-          <div className="stat-card relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-              <div className="stat-value text-emerald-700">
-                {resolvedTickets.length}
-              </div>
-              <div className="stat-label">Resolved</div>
-            </div>
+          <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 group-hover:bg-indigo-100 transition-colors">
+            <MessageSquare className="w-5 h-5" />
           </div>
         </div>
-
-        {/* Active Tickets */}
-        <section className="mb-10 animate-fade-in-up opacity-0 stagger-3">
-          <div className="section-divider mb-6">
-            <Clock className="w-4 h-4 text-violet-500" />
-            <span>Active Tickets ({activeTickets.length})</span>
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-rose-100 transition-all">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Critical Issues</p>
+            <p className="text-2xl font-bold text-gray-900">{urgentTickets.length}</p>
           </div>
-          <TicketList
-            tickets={activeTickets}
-            basePath="/dashboard/client/tickets"
-            showClient={false}
-            emptyMessage="No active tickets. Create one if you need help!"
-          />
-        </section>
-
-        {/* Resolved Tickets */}
-        {resolvedTickets.length > 0 && (
-          <section className="animate-fade-in-up opacity-0 stagger-4">
-            <div className="section-divider mb-6">
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
-              <span>Resolved ({resolvedTickets.length})</span>
-            </div>
-            <TicketList
-              tickets={resolvedTickets}
-              basePath="/dashboard/client/tickets"
-              showClient={false}
-            />
-          </section>
-        )}
+          <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-emerald-100 transition-all">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Resolved</p>
+            <p className="text-2xl font-bold text-gray-900">{resolvedTickets.length}</p>
+          </div>
+          <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors">
+            <CheckCircle className="w-5 h-5" />
+          </div>
+        </div>
       </div>
+
+      {/* Active Requests Section */}
+      <div className="animate-enter delay-300 space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Zap className="w-4 h-4 text-indigo-500" />
+          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Active Queue</h2>
+        </div>
+        <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-white">
+          {openTickets.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+              </div>
+              <p className="text-sm font-bold text-gray-900">All Caught Up!</p>
+              <p className="text-xs text-gray-400 mt-1">You have no pending requests.</p>
+              <div className="mt-4">
+                <CreateTicketDialog clients={clientList} projects={clientProjects} />
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50 bg-indigo-50/30 text-left">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Subject</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Project & Priority</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pr-8 text-right">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {openTickets.map((ticket) => (
+                    <tr key={ticket.id} className="group hover:bg-gray-50/80 transition-colors">
+                      <td className="px-6 py-4 pl-8">
+                        <Link href={`/dashboard/client/tickets/${ticket.id}`} className="block">
+                          <div className="flex items-start gap-4">
+                            <div className="pt-1.5 flex flex-col items-center gap-1">
+                              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-indigo-600 transition-colors flex items-center gap-2">
+                                {ticket.title}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-gray-300 bg-gray-50 px-1 rounded">#{ticket.id.slice(-4)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-sm font-bold text-gray-700">{ticket.projectName || "General Inquiry"}</span>
+                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide w-fit border", getPriorityColor(ticket.priority))}>
+                            {ticket.priority}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <TicketStatusBadge status={ticket.status} />
+                      </td>
+                      <td className="px-6 py-4 pr-8 text-right">
+                        <span className="text-xs text-gray-900 font-bold">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* History Section */}
+      {resolvedTickets.length > 0 && (
+        <div className="animate-enter delay-400 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Resident History</h2>
+          </div>
+          <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-gray-50/30">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50 text-left">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest pl-8">Subject</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Project</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest pr-8 text-right">Resolved</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {resolvedTickets.map((ticket) => (
+                    <tr key={ticket.id} className="group hover:bg-white transition-colors">
+                      <td className="px-6 py-4 pl-8">
+                        <Link href={`/dashboard/client/tickets/${ticket.id}`} className="block">
+                          <div className="opacity-60 group-hover:opacity-100 transition-opacity">
+                            <p className="font-bold text-gray-700 text-sm group-hover:text-indigo-600 transition-colors">
+                              {ticket.title}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-0.5 max-w-[300px] truncate">#{ticket.id.slice(-4)}</p>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-500 opacity-60 group-hover:opacity-100">{ticket.projectName || "General"}</span>
+                      </td>
+                      <td className="px-6 py-4 opacity-70 group-hover:opacity-100">
+                        <TicketStatusBadge status={ticket.status} size="sm" />
+                      </td>
+                      <td className="px-6 py-4 pr-8 text-right bg-transparent">
+                        <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )
+      }
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Settings } from "lucide-react";
+import { Clock, Settings, Zap } from "lucide-react";
 import { EditSupportHoursDialog } from "@/components/edit-support-hours-dialog";
+import { cn } from "@/lib/utils";
 
 interface SupportHoursData {
   allocatedHours: number;
@@ -48,12 +49,10 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div className="animate-pulse">
-          <div className="h-6 bg-slate-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
-          <div className="h-12 bg-slate-200 rounded w-full"></div>
-        </div>
+      <div className="bg-white rounded-xl p-6 border border-gray-50 shadow-sm animate-pulse">
+        <div className="h-6 bg-gray-50 rounded-lg w-1/3 mb-4"></div>
+        <div className="h-4 bg-gray-50 rounded-lg w-full mb-2"></div>
+        <div className="h-12 bg-gray-50 rounded-lg w-full"></div>
       </div>
     );
   }
@@ -68,29 +67,31 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
 
   return (
     <>
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div className="flex items-start justify-between mb-4">
+      <div className="bg-white rounded-xl p-6 border border-gray-50 shadow-sm transition-all hover-card">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-purple-600" />
-            <h3 className="text-lg font-semibold text-slate-900">Support Hours</h3>
+            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+              <Clock className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">Support Hours</h3>
           </div>
           {isAdmin && (
             <button
               onClick={() => setEditDialogOpen(true)}
-              className="text-slate-400 hover:text-purple-600 transition-colors"
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4" />
             </button>
           )}
         </div>
 
         {!hasHours ? (
           <div className="text-center py-6">
-            <p className="text-sm text-slate-500 mb-3">No support package configured</p>
+            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">No support package</p>
             {isAdmin && (
               <button
                 onClick={() => setEditDialogOpen(true)}
-                className="text-sm font-medium text-purple-600 hover:text-purple-700"
+                className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline"
               >
                 Set up support hours
               </button>
@@ -98,30 +99,31 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
           </div>
         ) : (
           <>
-            <div className="flex items-baseline justify-between mb-3">
-              <div>
-                <span className="text-3xl font-bold text-slate-900">
+            <div className="flex items-baseline justify-between mb-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">
                   {data.remainingHours}
                 </span>
-                <span className="text-sm text-slate-500 ml-2">hours remaining</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">hours left</span>
               </div>
               <div className="text-right">
-                <div className="text-sm text-slate-500">
-                  {data.usedHours} of {data.allocatedHours} hrs used
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  {data.usedHours} / {data.allocatedHours} hrs
                 </div>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+            <div className="relative w-full h-2 bg-gray-50 rounded-full overflow-hidden mb-4">
               <div
-                className={`h-full transition-all duration-500 rounded-full ${
+                className={cn(
+                  "h-full transition-all duration-700 ease-out rounded-full",
                   isOverUsed
-                    ? "bg-gradient-to-r from-rose-500 to-rose-600"
+                    ? "bg-rose-500"
                     : isNearLimit
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                    : "bg-gradient-to-r from-purple-500 to-purple-600"
-                }`}
+                      ? "bg-amber-500"
+                      : "bg-indigo-500"
+                )}
                 style={{
                   width: `${Math.min(data.percentageUsed, 100)}%`,
                 }}
@@ -129,22 +131,27 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
             </div>
 
             {/* Status Message */}
-            <div className="mt-3 flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between">
               {isOverUsed ? (
-                <span className="text-rose-600 font-medium">
-                  Over allocated hours by {Math.abs(data.remainingHours)} hrs
-                </span>
+                <div className="flex items-center gap-1.5 text-rose-600">
+                  <Zap className="w-3 h-3 fill-rose-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Limit Exceeded</span>
+                </div>
               ) : isNearLimit ? (
-                <span className="text-orange-600 font-medium">
-                  {data.percentageUsed}% used - Running low
-                </span>
+                <div className="flex items-center gap-1.5 text-amber-600">
+                  <Zap className="w-3 h-3 fill-amber-600 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Running Low</span>
+                </div>
               ) : (
-                <span className="text-slate-500">{data.percentageUsed}% used</span>
+                <div className="flex items-center gap-1.5 text-emerald-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{data.percentageUsed}% Plan Utility</span>
+                </div>
               )}
 
               {data.billingCycleStart && (
-                <span className="text-slate-400">
-                  Cycle started {new Date(data.billingCycleStart).toLocaleDateString()}
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                  Cycle: {new Date(data.billingCycleStart).toLocaleDateString()}
                 </span>
               )}
             </div>

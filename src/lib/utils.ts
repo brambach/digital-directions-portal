@@ -52,3 +52,15 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
+export function formatMinutesToHours(minutes: number): string {
+  if (minutes === 0) return "0h";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
+export function formatMinutesToDecimal(minutes: number): number {
+  return Number((minutes / 60).toFixed(1));
+}

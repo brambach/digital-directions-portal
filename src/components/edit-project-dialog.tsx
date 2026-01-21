@@ -64,9 +64,9 @@ export function EditProjectDialog({ project }: EditProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-slate-200">
+        <Button variant="outline" size="sm" className="rounded-xl font-semibold text-gray-600">
           Edit Project
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

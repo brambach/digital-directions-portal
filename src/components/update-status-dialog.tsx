@@ -55,7 +55,7 @@ export function UpdateStatusDialog({ projectId, currentStatus }: UpdateStatusDia
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm" className="rounded-xl font-semibold shadow-sm">
           Update Status
         </Button>
       </DialogTrigger>
@@ -72,11 +72,10 @@ export function UpdateStatusDialog({ projectId, currentStatus }: UpdateStatusDia
                   key={status.value}
                   type="button"
                   onClick={() => setSelectedStatus(status.value)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
-                    selectedStatus === status.value
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${selectedStatus === status.value
                       ? `${status.color} ring-2 ring-indigo-500`
                       : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"
-                  }`}
+                    }`}
                 >
                   <span className="font-medium">{status.label}</span>
                 </button>

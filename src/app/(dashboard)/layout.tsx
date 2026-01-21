@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import TopNavWrapper from "@/components/layout/top-nav-wrapper";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import AdminShell from "@/components/layout/admin-shell";
+import ClientShell from "@/components/layout/client-shell";
 
 export default async function DashboardLayout({
   children,
@@ -26,31 +27,9 @@ export default async function DashboardLayout({
 
   const isAdmin = user?.role === "admin";
 
-  // Define navigation items based on role
-  const navItems = isAdmin
-    ? [
-        { label: "Overview", href: "/dashboard/admin" },
-        { label: "Clients", href: "/dashboard/admin/clients" },
-        { label: "Projects", href: "/dashboard/admin/projects" },
-        { label: "Tickets", href: "/dashboard/admin/tickets" },
-        { label: "Settings", href: "/dashboard/admin/settings" },
-      ]
-    : [
-        { label: "Overview", href: "/dashboard/client" },
-        { label: "Projects", href: "/dashboard/client/projects" },
-        { label: "Tickets", href: "/dashboard/client/tickets" },
-      ];
+  if (isAdmin) {
+    return <AdminShell>{children}</AdminShell>;
+  }
 
-  return (
-    <div className="bg-[#F9FAFF] relative">
-      {/* Ambient Background Gradient */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-purple-50/10 to-transparent pointer-events-none z-0"></div>
-
-      {/* Top Navigation */}
-      <TopNavWrapper navItems={navItems} isAdmin={isAdmin} />
-
-      {/* Main Content */}
-      <main className="relative z-10 min-h-[calc(100vh-4rem)] pb-12">{children}</main>
-    </div>
-  );
+  return <ClientShell>{children}</ClientShell>;
 }
