@@ -22,9 +22,9 @@ export const dynamic = "force-dynamic";
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "urgent": return "text-rose-600 bg-rose-50 border-rose-100";
-    case "high": return "text-orange-600 bg-orange-50 border-orange-100";
-    case "medium": return "text-blue-600 bg-blue-50 border-blue-100";
+    case "urgent": return "text-red-600 bg-red-50 border-red-100";
+    case "high": return "text-amber-600 bg-amber-50 border-amber-100";
+    case "medium": return "text-sky-600 bg-sky-50 border-sky-100";
     case "low": return "text-slate-600 bg-slate-50 border-slate-100";
     default: return "text-slate-600 bg-slate-50 border-slate-100";
   }
@@ -33,7 +33,7 @@ function getPriorityColor(priority: string) {
 function getStatusColor(status: string) {
   switch (status) {
     case "open": return "bg-emerald-500";
-    case "in_progress": return "bg-indigo-500";
+    case "in_progress": return "bg-violet-700";
     case "resolved": return "bg-slate-400";
     case "closed": return "bg-slate-300";
     default: return "bg-slate-400";
@@ -108,7 +108,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   How do I track my project progress?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -125,7 +125,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   How do I access project files and documents?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -142,7 +142,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   What&apos;s the best way to communicate with my team?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -159,7 +159,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   How long does it take to get a response to my ticket?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -176,7 +176,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   Can I invite additional team members to the portal?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -193,7 +193,7 @@ export default async function ClientTicketsPage() {
                 <span className="text-sm font-medium text-gray-900">
                   What should I do if I notice an integration issue?
                 </span>
-                <svg className="w-6 h-6 text-gray-400 group-open:text-[#6366F1] group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 text-gray-400 group-open:text-violet-700 group-open:rotate-180 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -216,21 +216,21 @@ export default async function ClientTicketsPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-300">
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-indigo-100 transition-all">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-violet-100 transition-all">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Open Tickets</p>
             <p className="text-2xl font-bold text-gray-900">{openTickets.length}</p>
           </div>
-          <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 group-hover:bg-indigo-100 transition-colors">
+          <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-700 group-hover:bg-violet-100 transition-colors">
             <MessageSquare className="w-5 h-5" />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-rose-100 transition-all">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-red-100 transition-all">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Critical Issues</p>
             <p className="text-2xl font-bold text-gray-900">{urgentTickets.length}</p>
           </div>
-          <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+          <div className="h-10 w-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 group-hover:bg-red-100 transition-colors">
             <ShieldAlert className="w-5 h-5" />
           </div>
         </div>
@@ -248,7 +248,7 @@ export default async function ClientTicketsPage() {
       {/* Active Requests Section */}
       <div className="animate-enter delay-400 space-y-4">
         <div className="flex items-center gap-2 px-1">
-          <Zap className="w-4 h-4 text-indigo-500" />
+          <Zap className="w-4 h-4 text-violet-700" />
           <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Active Queue</h2>
         </div>
         <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-white">
@@ -267,7 +267,7 @@ export default async function ClientTicketsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-50 bg-indigo-50/30 text-left">
+                  <tr className="border-b border-gray-50 bg-violet-50/30 text-left">
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Subject</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Project & Priority</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -281,10 +281,10 @@ export default async function ClientTicketsPage() {
                         <Link href={`/dashboard/client/tickets/${ticket.id}`} className="block">
                           <div className="flex items-start gap-4">
                             <div className="pt-1.5 flex flex-col items-center gap-1">
-                              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-violet-700 animate-pulse" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 text-sm group-hover:text-indigo-600 transition-colors flex items-center gap-2">
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-violet-700 transition-colors flex items-center gap-2">
                                 {ticket.title}
                               </p>
                               <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
@@ -342,7 +342,7 @@ export default async function ClientTicketsPage() {
                       <td className="px-6 py-4 pl-8">
                         <Link href={`/dashboard/client/tickets/${ticket.id}`} className="block">
                           <div className="opacity-60 group-hover:opacity-100 transition-opacity">
-                            <p className="font-bold text-gray-700 text-sm group-hover:text-indigo-600 transition-colors">
+                            <p className="font-bold text-gray-700 text-sm group-hover:text-violet-700 transition-colors">
                               {ticket.title}
                             </p>
                             <p className="text-xs text-slate-400 mt-0.5 max-w-[300px] truncate">#{ticket.id.slice(-4)}</p>

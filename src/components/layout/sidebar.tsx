@@ -47,7 +47,7 @@ export async function Sidebar() {
     <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col py-6 px-5 z-20 flex-shrink-0 relative">
       {/* Logo */}
       <div className="flex items-center gap-3 px-2 mb-10 group cursor-default">
-        <div className="w-8 h-8 bg-[#6366F1] rounded-lg flex items-center justify-center text-white shadow-sm shadow-indigo-200 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:rotate-12 group-hover:scale-110">
+        <div className="w-8 h-8 bg-violet-700 rounded-lg flex items-center justify-center text-white shadow-sm shadow-violet-200 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:rotate-12 group-hover:scale-110">
           <Layers className="w-5 h-5" strokeWidth={2.5} />
         </div>
         <span className="text-xl font-semibold tracking-tight text-gray-900 font-geist">Nexus</span>
@@ -99,7 +99,7 @@ export async function Sidebar() {
                   {item.label}
                 </div>
                 {item.secondaryBadge && (
-                  <span className="text-[#6366F1] bg-[#6366F1]/10 text-[10px] font-semibold px-1.5 py-0.5 rounded animate-pulse-slow">{item.secondaryBadge}</span>
+                  <span className="text-violet-700 bg-violet-700/10 text-[10px] font-semibold px-1.5 py-0.5 rounded animate-pulse-slow">{item.secondaryBadge}</span>
                 )}
               </a>
             ))}
@@ -129,9 +129,9 @@ export async function Sidebar() {
 
       {/* Team / Plan section */}
       <div className="mt-auto pt-6">
-        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 hover:border-indigo-100 transition-colors duration-300">
+        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 hover:border-violet-100 transition-colors duration-300">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6366F1] to-[#818CF8] flex items-center justify-center text-white shadow-sm shadow-indigo-200">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-700 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-violet-200">
               <Gem className="w-4 h-4" />
             </div>
             <div className="flex flex-col">

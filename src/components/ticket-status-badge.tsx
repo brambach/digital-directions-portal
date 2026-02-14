@@ -5,21 +5,21 @@ interface TicketStatusBadgeProps {
 
 const statusStyles = {
   open: {
-    bg: "bg-yellow-50",
-    text: "text-yellow-600",
-    border: "border-yellow-200",
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    border: "border-amber-200",
     label: "Open",
   },
   in_progress: {
-    bg: "bg-indigo-50",
-    text: "text-indigo-600",
-    border: "border-indigo-200",
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    border: "border-violet-200",
     label: "In Progress",
   },
   waiting_on_client: {
-    bg: "bg-orange-50",
-    text: "text-orange-600",
-    border: "border-orange-200",
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    border: "border-amber-200",
     label: "Waiting on Client",
   },
   resolved: {
@@ -62,15 +62,15 @@ const priorityStyles = {
     label: "Low",
   },
   medium: {
-    bg: "bg-blue-50",
-    text: "text-blue-600",
-    border: "border-blue-200",
+    bg: "bg-sky-50",
+    text: "text-sky-600",
+    border: "border-sky-200",
     label: "Medium",
   },
   high: {
-    bg: "bg-orange-50",
-    text: "text-orange-600",
-    border: "border-orange-200",
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    border: "border-amber-200",
     label: "High",
   },
   urgent: {
@@ -101,13 +101,13 @@ interface TicketTypeBadgeProps {
 
 const typeStyles = {
   general_support: {
-    bg: "bg-indigo-50",
-    text: "text-indigo-600",
+    bg: "bg-violet-50",
+    text: "text-violet-700",
     label: "Support",
   },
   project_issue: {
-    bg: "bg-purple-50",
-    text: "text-purple-600",
+    bg: "bg-violet-50",
+    text: "text-violet-700",
     label: "Project Issue",
   },
   feature_request: {

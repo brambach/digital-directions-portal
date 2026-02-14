@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Directions Client Portal - Project Scope</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 1in;
+            color: #333;
+        }
+        h1 {
+            font-size: 24pt;
+            color: #7C3AED;
+            text-align: center;
+            margin-bottom: 0.5em;
+            border-bottom: 3px solid #7C3AED;
+            padding-bottom: 0.3em;
+        }
+        h2 {
+            font-size: 18pt;
+            color: #7C3AED;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.2em;
+        }
+        h3 {
+            font-size: 14pt;
+            color: #7C3AED;
+            margin-top: 1.2em;
+            margin-bottom: 0.4em;
+        }
+        h4 {
+            font-size: 12pt;
+            color: #7C3AED;
+            margin-top: 1em;
+            margin-bottom: 0.3em;
+        }
+        .title-page {
+            text-align: center;
+            margin-bottom: 2em;
+            page-break-after: always;
+        }
+        .title-page h1 {
+            font-size: 28pt;
+            margin-top: 2in;
+            border: none;
+        }
+        .title-page .subtitle {
+            font-size: 16pt;
+            color: #666;
+            margin-top: 0.5em;
+        }
+        .title-page .meta {
+            margin-top: 2em;
+            font-size: 12pt;
+        }
+        .title-page .meta p {
+            margin: 0.3em 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #7C3AED;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        ul, ol {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+        }
+        li {
+            margin: 0.3em 0;
+        }
+        code {
+            font-family: Consolas, 'Courier New', monospace;
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10pt;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 10pt;
+            border: 1px solid #ddd;
+        }
+        .highlight {
+            background-color: #FEF3C7;
+            padding: 0.5em 1em;
+            border-left: 4px solid #F59E0B;
+            margin: 1em 0;
+        }
+        .success {
+            background-color: #D1FAE5;
+            padding: 0.5em 1em;
+            border-left: 4px solid #10B981;
+            margin: 1em 0;
+        }
+        .info {
+            background-color: #EDE9FE;
+            padding: 0.5em 1em;
+            border-left: 4px solid #7C3AED;
+            margin: 1em 0;
+        }
+        .two-column {
+            display: flex;
+            gap: 2em;
+        }
+        .two-column > div {
+            flex: 1;
+        }
+        strong {
+            color: #333;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .toc {
+            background-color: #f9f9f9;
+            padding: 1em 2em;
+            border-radius: 5px;
+            margin: 1em 0;
+        }
+        .toc h3 {
+            margin-top: 0;
+        }
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 0.5em 0;
+        }
+        .toc a {
+            color: #7C3AED;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="title-page">
+    <h1>Digital Directions Client Portal</h1>
+    <p class="subtitle">Project Scope &amp; Technical Specification</p>
+    <div class="meta">
+        <p><strong>Prepared for:</strong> Jack Hewitt (CEO) &amp; Bryon (Integration Manager)</p>
+        <p><strong>Prepared by:</strong> Bryce Rambach</p>
+        <p><strong>Date:</strong> January 21, 2026</p>
+        <p><strong>Version:</strong> 1.0</p>
+    </div>
+</div>
+
+<div class="toc">
+    <h3>Table of Contents</h3>
+    <ul>
+        <li><strong>Part 1: Executive Summary</strong> (For Jack)</li>
+        <li style="padding-left: 1em;">What Is This? | The Problem It Solves | Business Value | Investment &amp; Timeline</li>
+        <li><strong>Part 2: Technical Specification</strong> (For Bryon)</li>
+        <li style="padding-left: 1em;">Architecture | Database Schema | Security | Feature Implementation | Deployment</li>
+        <li><strong>Part 3: Delivery &amp; Next Steps</strong></li>
+    </ul>
+</div>
+
+<!-- ==================== EXECUTIVE SUMMARY ==================== -->
+
+<h1>PART 1: EXECUTIVE SUMMARY</h1>
+
+<h2>What Is This?</h2>
+
+<p>A custom-branded client portal that gives Digital Directions' clients a professional hub to:</p>
+
+<ul>
+    <li>View their project status and timeline</li>
+    <li>Access project information and updates</li>
+    <li>Communicate with their project team</li>
+    <li>Submit and track support tickets</li>
+    <li>Monitor integration health in real-time</li>
+    <li>Track support hours usage</li>
+</ul>
+
+<p>Currently, DD clients juggle email threads and scattered communications. This portal consolidates everything into one clean, professional interface branded with Digital Directions' identity.</p>
+
+<h2>The Problem It Solves</h2>
+
+<div class="two-column">
+    <div>
+        <h4>Current State (What Clients Experience)</h4>
+        <ul>
+            <li><em>"What's my project status?"</em> - Emailing Jack/Tatiana for updates</li>
+            <li><em>"When is this due?"</em> - Unclear timelines</li>
+            <li><em>"How do I reach my team?"</em> - Email threads get lost</li>
+            <li><em>"Is my integration working?"</em> - No visibility into system health</li>
+            <li><em>"How many support hours do I have left?"</em> - Manual tracking</li>
+        </ul>
+        <p><strong>Result:</strong> Clients feel disorganized, DD looks less professional than competitors</p>
+    </div>
+    <div>
+        <h4>Future State (With Portal)</h4>
+        <ul>
+            <li>One login - see everything</li>
+            <li>Real-time project status and timeline</li>
+            <li>Direct team communication</li>
+            <li>Integration monitoring dashboard</li>
+            <li>Support ticket system with time tracking</li>
+            <li>Transparent support hours tracking</li>
+        </ul>
+        <p><strong>Result:</strong> DD looks like a premium, enterprise-grade consultancy</p>
+    </div>
+</div>
+
+<h2>Business Value</h2>
+
+<div class="two-column">
+    <div>
+        <h4>For Digital Directions</h4>
+        <ul>
+            <li>Save 10+ hours per week answering repetitive status questions</li>
+            <li>Improve client retention through better experience</li>
+            <li>Higher perceived value - justify premium pricing</li>
+            <li>Scalability - onboard new clients faster</li>
+            <li>Professional brand positioning - compete with larger firms</li>
+            <li>Automated support hours tracking and billing visibility</li>
+        </ul>
+    </div>
+    <div>
+        <h4>For DD's Clients</h4>
+        <ul>
+            <li><strong>Transparency</strong> - always know project status</li>
+            <li><strong>Convenience</strong> - one place for everything</li>
+            <li><strong>Confidence</strong> - feel taken care of, not lost in email chains</li>
+            <li><strong>Accountability</strong> - see exactly how support hours are used</li>
+        </ul>
+    </div>
+</div>
+
+<h2>Investment &amp; Timeline</h2>
+
+<table>
+    <tr>
+        <th>Item</th>
+        <th>Details</th>
+    </tr>
+    <tr>
+        <td>Development</td>
+        <td>Billed at agreed hourly rate as part of ongoing work</td>
+    </tr>
+    <tr>
+        <td>Timeline</td>
+        <td>2-3 weeks from approval to initial launch</td>
+    </tr>
+    <tr>
+        <td>Approach</td>
+        <td>Incremental delivery - core features first, enhancements added based on feedback</td>
+    </tr>
+</table>
+
+<h2>What's Included</h2>
+
+<h3>Admin Portal (DD Team View)</h3>
+<ul>
+    <li>Manage all clients from centralized dashboard</li>
+    <li>Create and update projects with phase tracking</li>
+    <li>Apply reusable phase templates to standardize implementations</li>
+    <li>Communicate with clients via messaging system</li>
+    <li>Monitor integration health across all projects</li>
+    <li>Manage support tickets with time tracking</li>
+    <li>Track and manage client support hour allocations</li>
+    <li>Invite new users via email (invite-only access model)</li>
+    <li>View project analytics and status reports</li>
+</ul>
+
+<h3>Client Portal (What Clients See)</h3>
+<ul>
+    <li>Clean, branded dashboard (DD purple colors and professional design)</li>
+    <li>Project status and timeline visibility with visual phase stepper</li>
+    <li>Direct messaging with DD team</li>
+    <li>Support ticket system with response tracking</li>
+    <li>Integration health monitoring (read-only view)</li>
+    <li>Support hours usage visibility</li>
+    <li>Mobile responsive design</li>
+</ul>
+
+<h3>Core Features</h3>
+<ul>
+    <li>Role-based access control (admins vs clients)</li>
+    <li>Invite-only user registration (no public signup)</li>
+    <li>Multi-user support per client (e.g., HR Director + Payroll Manager)</li>
+    <li>Real-time messaging system</li>
+    <li>Project phase tracking with visual progress and reusable templates</li>
+    <li>Support ticket management with priority levels</li>
+    <li>Time tracking on tickets with auto-deduction from support hours</li>
+    <li>Integration health monitoring for HiBob, KeyPay, NetSuite, ADP, Workato</li>
+    <li>In-app notifications</li>
+    <li>Mobile responsive interface</li>
+</ul>
+
+<h3>What's NOT Included (Future Phases)</h3>
+<p>These features are excluded from initial scope but can be added in future iterations:</p>
+<ul>
+    <li>File upload/download system (security review needed)</li>
+    <li>Workbook management</li>
+    <li>Invoice generation (use existing QuickBooks)</li>
+    <li>Advanced analytics and reporting dashboards</li>
+    <li>Mobile native applications</li>
+    <li>Video call integration (use Zoom/Meet)</li>
+    <li>Contract signing (use DocuSign)</li>
+</ul>
+
+<!-- ==================== TECHNICAL SPECIFICATION ==================== -->
+
+<h1 class="page-break">PART 2: TECHNICAL SPECIFICATION</h1>
+<p><em>For Bryon - Integration Manager</em></p>
+
+<h2>Architecture Overview</h2>
+
+<h3>Tech Stack</h3>
+
+<table>
+    <tr>
+        <th>Layer</th>
+        <th>Technology</th>
+        <th>Purpose</th>
+    </tr>
+    <tr>
+        <td><strong>Frontend Framework</strong></td>
+        <td>Next.js 15 (App Router)</td>
+        <td>Modern React framework with server-side rendering</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>TypeScript</td>
+        <td>Type safety and enhanced developer experience</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Tailwind CSS + Shadcn UI</td>
+        <td>Professional styling and component library</td>
+    </tr>
+    <tr>
+        <td><strong>Backend</strong></td>
+        <td>Next.js API Routes</td>
+        <td>Serverless API endpoints</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>PostgreSQL (Vercel Postgres)</td>
+        <td>Primary database</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Drizzle ORM</td>
+        <td>Type-safe database queries and migrations</td>
+    </tr>
+    <tr>
+        <td><strong>Authentication</strong></td>
+        <td>Clerk</td>
+        <td>Enterprise-grade auth with role-based access</td>
+    </tr>
+    <tr>
+        <td><strong>Hosting</strong></td>
+        <td>Vercel</td>
+        <td>Frontend, API, and edge network hosting</td>
+    </tr>
+    <tr>
+        <td><strong>Email</strong></td>
+        <td>Resend</td>
+        <td>Transactional emails for invites and notifications</td>
+    </tr>
+    <tr>
+        <td><strong>Notifications</strong></td>
+        <td>Slack (optional)</td>
+        <td>Real-time team notifications</td>
+    </tr>
+</table>
+
+<h3>Authentication Architecture</h3>
+
+<div class="info">
+    <p><strong>Key Design Decision:</strong> Clerk is the source of truth for user profile data (email, name, avatar). The database only stores: <code>clerkId</code>, <code>role</code>, and <code>agencyId</code>/<code>clientId</code>. This separation ensures user data stays synchronized and secure.</p>
+</div>
+
+<ul>
+    <li><strong>Invite-only access</strong> - No public signup; admins send email invitations</li>
+    <li><strong>Two roles:</strong> <code>admin</code> (DD staff) and <code>client</code> (client company users)</li>
+    <li><strong>Multi-user per client</strong> - Multiple portal users can access the same client's data</li>
+    <li><strong>JWT-based sessions</strong> - Secure cookie storage with automatic token refresh</li>
+</ul>
+
+<h2>Database Schema</h2>
+
+<h3>Core Tables</h3>
+
+<h4>users</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Internal identifier</td></tr>
+    <tr><td>clerkId</td><td>string, unique</td><td>Reference to Clerk user (source of truth for profile)</td></tr>
+    <tr><td>role</td><td>enum: 'admin', 'client'</td><td>Access level</td></tr>
+    <tr><td>agencyId</td><td>uuid, foreign key</td><td>Link to agency (for admins)</td></tr>
+    <tr><td>clientId</td><td>uuid, foreign key</td><td>Link to client company (for client users)</td></tr>
+    <tr><td>deletedAt</td><td>timestamp, nullable</td><td>Soft delete marker</td></tr>
+    <tr><td>createdAt, updatedAt</td><td>timestamps</td><td>Audit fields</td></tr>
+</table>
+
+<h4>agencies</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>name</td><td>string</td><td>"Digital Directions" (single-tenant)</td></tr>
+    <tr><td>logo</td><td>string, nullable</td><td>Logo URL</td></tr>
+    <tr><td>primaryColor</td><td>string</td><td>Brand color (#8B5CF6)</td></tr>
+</table>
+
+<h4>clients</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>agencyId</td><td>uuid, foreign key</td><td>Link to Digital Directions</td></tr>
+    <tr><td>companyName</td><td>string</td><td>Client company name</td></tr>
+    <tr><td>contactName</td><td>string</td><td>Primary contact</td></tr>
+    <tr><td>contactEmail</td><td>string</td><td>Primary contact email</td></tr>
+    <tr><td>status</td><td>enum: 'active', 'inactive', 'archived'</td><td>Client status</td></tr>
+    <tr><td>supportHoursPerMonth</td><td>integer</td><td>Allocated minutes per month</td></tr>
+    <tr><td>hoursUsedThisMonth</td><td>integer</td><td>Minutes used in current billing period</td></tr>
+    <tr><td>supportBillingCycleStart</td><td>date</td><td>When current billing period started</td></tr>
+    <tr><td>deletedAt</td><td>timestamp, nullable</td><td>Soft delete marker</td></tr>
+</table>
+
+<h4>projects</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>clientId</td><td>uuid, foreign key</td><td>Link to client</td></tr>
+    <tr><td>name</td><td>string</td><td>Project name</td></tr>
+    <tr><td>description</td><td>text</td><td>Project description</td></tr>
+    <tr><td>status</td><td>enum: 'planning', 'in_progress', 'review', 'completed', 'on_hold'</td><td>Current status</td></tr>
+    <tr><td>currentPhaseId</td><td>uuid, foreign key</td><td>Currently active phase</td></tr>
+    <tr><td>startDate</td><td>date</td><td>Project start</td></tr>
+    <tr><td>dueDate</td><td>date, nullable</td><td>Target completion</td></tr>
+    <tr><td>deletedAt</td><td>timestamp, nullable</td><td>Soft delete marker</td></tr>
+</table>
+
+<h4>projectPhases</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>projectId</td><td>uuid, foreign key</td><td>Link to project</td></tr>
+    <tr><td>name</td><td>string</td><td>Phase name (e.g., "Discovery")</td></tr>
+    <tr><td>description</td><td>text</td><td>Phase description</td></tr>
+    <tr><td>status</td><td>enum: 'pending', 'in_progress', 'completed', 'skipped'</td><td>Phase status</td></tr>
+    <tr><td>orderIndex</td><td>integer</td><td>Display order</td></tr>
+    <tr><td>dueDate</td><td>date, nullable</td><td>Phase deadline</td></tr>
+    <tr><td>completedAt</td><td>timestamp, nullable</td><td>When phase was completed</td></tr>
+</table>
+
+<h4>phaseTemplates &amp; templatePhases</h4>
+<p>Reusable phase definitions that can be applied to new projects (e.g., "Standard HiBob Implementation" template with Discovery → Build → Testing → UAT → Go Live phases).</p>
+
+<h4>messages</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>projectId</td><td>uuid, foreign key</td><td>Link to project</td></tr>
+    <tr><td>senderId</td><td>uuid, foreign key</td><td>Link to user who sent</td></tr>
+    <tr><td>content</td><td>text</td><td>Message content</td></tr>
+    <tr><td>createdAt</td><td>timestamp</td><td>When sent</td></tr>
+</table>
+
+<h4>tickets</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>clientId</td><td>uuid, foreign key</td><td>Link to client</td></tr>
+    <tr><td>projectId</td><td>uuid, foreign key, nullable</td><td>Optional link to project</td></tr>
+    <tr><td>createdById</td><td>uuid, foreign key</td><td>User who created ticket</td></tr>
+    <tr><td>assignedToId</td><td>uuid, foreign key, nullable</td><td>Admin assigned to ticket</td></tr>
+    <tr><td>title</td><td>string</td><td>Ticket title</td></tr>
+    <tr><td>description</td><td>text</td><td>Ticket description</td></tr>
+    <tr><td>type</td><td>enum: 'general_support', 'project_issue', 'feature_request', 'bug_report'</td><td>Ticket type</td></tr>
+    <tr><td>priority</td><td>enum: 'low', 'medium', 'high', 'urgent'</td><td>Priority level</td></tr>
+    <tr><td>status</td><td>enum: 'open', 'in_progress', 'waiting_on_client', 'resolved', 'closed'</td><td>Current status</td></tr>
+    <tr><td>timeSpentMinutes</td><td>integer</td><td>Total time logged</td></tr>
+    <tr><td>resolutionNotes</td><td>text, nullable</td><td>Resolution summary</td></tr>
+</table>
+
+<h4>ticketComments</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>ticketId</td><td>uuid, foreign key</td><td>Link to ticket</td></tr>
+    <tr><td>userId</td><td>uuid, foreign key</td><td>User who commented</td></tr>
+    <tr><td>content</td><td>text</td><td>Comment content</td></tr>
+    <tr><td>isInternal</td><td>boolean</td><td>If true, hidden from clients</td></tr>
+    <tr><td>createdAt</td><td>timestamp</td><td>When posted</td></tr>
+</table>
+
+<h4>ticketTimeEntries</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>ticketId</td><td>uuid, foreign key</td><td>Link to ticket</td></tr>
+    <tr><td>userId</td><td>uuid, foreign key</td><td>Admin who logged time</td></tr>
+    <tr><td>minutes</td><td>integer</td><td>Time spent</td></tr>
+    <tr><td>description</td><td>text</td><td>Work description</td></tr>
+    <tr><td>countTowardsSupportHours</td><td>boolean</td><td>Whether to deduct from client balance</td></tr>
+    <tr><td>createdAt</td><td>timestamp</td><td>When logged</td></tr>
+</table>
+
+<h4>integrationMonitors</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>projectId</td><td>uuid, foreign key</td><td>Link to project (not client - integrations vary per project)</td></tr>
+    <tr><td>integrationType</td><td>string: 'hibob', 'keypay', 'netsuite', 'adp', 'workato'</td><td>Integration being monitored</td></tr>
+    <tr><td>name</td><td>string</td><td>Display name</td></tr>
+    <tr><td>status</td><td>enum: 'healthy', 'degraded', 'down', 'unknown'</td><td>Current status</td></tr>
+    <tr><td>enabled</td><td>boolean</td><td>Whether monitoring is active</td></tr>
+    <tr><td>checkIntervalMinutes</td><td>integer</td><td>How often to check (default: 5)</td></tr>
+    <tr><td>lastCheckedAt</td><td>timestamp</td><td>Last health check time</td></tr>
+    <tr><td>workatoCredentials</td><td>text, nullable</td><td>Encrypted Workato API credentials</td></tr>
+</table>
+
+<h4>invites</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>email</td><td>string</td><td>Invited email address</td></tr>
+    <tr><td>token</td><td>string, unique</td><td>Secure invite token</td></tr>
+    <tr><td>role</td><td>enum: 'admin', 'client'</td><td>Role to assign</td></tr>
+    <tr><td>clientId</td><td>uuid, foreign key, nullable</td><td>Client to associate (for client invites)</td></tr>
+    <tr><td>expiresAt</td><td>timestamp</td><td>Token expiration (7 days)</td></tr>
+    <tr><td>acceptedAt</td><td>timestamp, nullable</td><td>When invite was accepted</td></tr>
+</table>
+
+<h4>userNotifications</h4>
+<table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td>id</td><td>uuid, primary key</td><td>Identifier</td></tr>
+    <tr><td>userId</td><td>uuid, foreign key</td><td>Recipient user</td></tr>
+    <tr><td>type</td><td>string</td><td>'integration_alert', 'ticket_update', 'message', etc.</td></tr>
+    <tr><td>title</td><td>string</td><td>Notification title</td></tr>
+    <tr><td>message</td><td>text</td><td>Notification content</td></tr>
+    <tr><td>linkUrl</td><td>string, nullable</td><td>URL to navigate on click</td></tr>
+    <tr><td>read</td><td>boolean</td><td>Read status</td></tr>
+    <tr><td>createdAt</td><td>timestamp</td><td>When created</td></tr>
+</table>
+
+<h3>Entity Relationships</h3>
+
+<pre>
+agencies (1) ──────────── (many) clients
+                              │
+clients (1) ──────────── (many) users (portal users)
+clients (1) ──────────── (many) projects
+clients (1) ──────────── (many) tickets
+clients (1) ──────────── (many) supportHourLogs
+                              │
+projects (1) ─────────── (many) projectPhases
+projects (1) ─────────── (many) messages
+projects (1) ─────────── (many) integrationMonitors
+                              │
+tickets (1) ──────────── (many) ticketComments
+tickets (1) ──────────── (many) ticketTimeEntries
+                              │
+users (1) ───────────── (many) userNotifications
+</pre>
+
+<h2>Security &amp; Access Control</h2>
+
+<h3>Authentication</h3>
+<ul>
+    <li>Clerk manages all session handling and token refresh</li>
+    <li>JWT-based authentication for API routes</li>
+    <li>Secure cookie storage (httpOnly, sameSite)</li>
+    <li>Password requirements enforced by Clerk</li>
+    <li>Account verification via email</li>
+    <li>Invite-only registration (no public signup)</li>
+</ul>
+
+<h3>Authorization</h3>
+<ul>
+    <li><strong>Admin users:</strong> Full access to all clients, projects, and data</li>
+    <li><strong>Client users:</strong> Restricted to their assigned clientId only</li>
+    <li>Enforced at both API route level and database query level</li>
+    <li>All queries include soft-delete filter (<code>deletedAt IS NULL</code>)</li>
+</ul>
+
+<h3>Data Protection</h3>
+<ul>
+    <li>HTTPS enforced on all connections (Vercel default)</li>
+    <li>Environment variables secured (never committed to repository)</li>
+    <li>SQL injection prevention via parameterized queries (Drizzle ORM)</li>
+    <li>XSS protection via React's built-in content escaping</li>
+    <li>CSRF protection on all state-changing operations</li>
+    <li>Workato credentials encrypted using AES-256-GCM</li>
+</ul>
+
+<h3>Access Control Implementation</h3>
+
+<pre>
+// API route protection pattern
+import { getCurrentUser, requireAdmin } from "@/lib/auth";
+
+// Get current user (returns null if not authenticated)
+const user = await getCurrentUser();
+if (!user) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+// Require admin role (throws if not admin)
+const admin = await requireAdmin();
+
+// Client data isolation - clients can only access their own data
+const projects = await db.query.projects.findMany({
+  where: and(
+    eq(projects.clientId, user.clientId),
+    isNull(projects.deletedAt)
+  )
+});
+</pre>
+
+<p>Row-level security ensures clients cannot access other clients' data even if they manipulate API requests.</p>
+
+<h2>Key Features Implementation</h2>
+
+<h3>1. Project Phase Tracking</h3>
+
+<h4>Visual Timeline</h4>
+<ul>
+    <li>Stepper component displays current project phase</li>
+    <li>Standard phases: Discovery → Build → Testing → UAT → Go Live</li>
+    <li>Reusable phase templates for standardized implementations</li>
+    <li>Custom phases can be added per project</li>
+    <li>Progress calculated as: (completed phases / total phases) × 100%</li>
+</ul>
+
+<h4>Status Updates</h4>
+<ul>
+    <li>Admin updates phase status in real-time</li>
+    <li>Client view reflects changes immediately</li>
+    <li>Notification sent when phase transitions</li>
+    <li>Phase completion timestamps tracked</li>
+</ul>
+
+<h3>2. Messaging System</h3>
+
+<h4>Architecture</h4>
+<ul>
+    <li>Thread-based conversations per project</li>
+    <li>Real-time updates via 30-second polling</li>
+    <li>Unread message indicators and counts</li>
+    <li>Message history persisted indefinitely</li>
+</ul>
+
+<h4>Functionality</h4>
+<ul>
+    <li>Admin can message any project</li>
+    <li>Client sees only their project messages</li>
+    <li>Automatic notification creation on new message</li>
+    <li>Timestamp display with relative formatting ("2 hours ago")</li>
+</ul>
+
+<h3>3. Integration Health Monitoring</h3>
+
+<div class="info">
+    <p><strong>Key Design Decision:</strong> Integration monitoring is at the <strong>project level</strong> (not client level) because integrations vary per project. A client might have HiBob for one project and KeyPay for another.</p>
+</div>
+
+<h4>Supported Integrations</h4>
+<table>
+    <tr><th>Integration</th><th>Monitoring Method</th></tr>
+    <tr><td>HiBob</td><td>Status page monitoring (status.hibob.io)</td></tr>
+    <tr><td>KeyPay</td><td>Status page monitoring (status.keypay.com.au)</td></tr>
+    <tr><td>NetSuite</td><td>Status page monitoring (status.netsuite.com)</td></tr>
+    <tr><td>ADP</td><td>Status page monitoring</td></tr>
+    <tr><td>Workato</td><td>Status page + optional API recipe monitoring</td></tr>
+</table>
+
+<h4>Health Check System</h4>
+<ul>
+    <li>Vercel Cron job runs every 5 minutes</li>
+    <li>Checks all enabled integration monitors</li>
+    <li>Status indicators: Healthy (green), Degraded (yellow), Down (red)</li>
+    <li>Historical metrics stored for trend analysis</li>
+    <li>Configurable alert thresholds (minimum downtime before alerting)</li>
+</ul>
+
+<h4>Alert System</h4>
+<ul>
+    <li>Email notifications to client contact and admin users</li>
+    <li>In-app notifications for all relevant users</li>
+    <li>Anti-flapping: Won't re-alert within threshold period</li>
+    <li>Recovery notifications when status returns to healthy</li>
+</ul>
+
+<h3>4. Support Hours Tracking</h3>
+
+<h4>How It Works</h4>
+<ol>
+    <li>Admin sets monthly support hour allocation per client</li>
+    <li>When logging time to a ticket, admin can choose to count it toward support hours</li>
+    <li>System automatically deducts from client's monthly balance</li>
+    <li>Visual progress bar shows usage vs. allocation</li>
+    <li>Historical logs maintained for each billing period</li>
+</ol>
+
+<h4>Client Visibility</h4>
+<ul>
+    <li>Clients can see their allocated hours</li>
+    <li>Clients can see hours used this month</li>
+    <li>Clients can see remaining hours</li>
+    <li>Overage alerts displayed when exceeding allocation</li>
+</ul>
+
+<h3>5. In-App Notifications</h3>
+
+<h4>Notification Types</h4>
+<ul>
+    <li><code>integration_alert</code> - Integration status changes</li>
+    <li><code>ticket_update</code> - Ticket assignments, comments, status changes</li>
+    <li><code>message</code> - New project messages</li>
+</ul>
+
+<h4>User Interface</h4>
+<ul>
+    <li>Bell icon in header with unread count badge</li>
+    <li>Dropdown shows recent notifications</li>
+    <li>Click notification to navigate to relevant item</li>
+    <li>"Mark all as read" functionality</li>
+    <li>Auto-refresh every 30 seconds</li>
+</ul>
+
+<h3>6. Support Ticket System</h3>
+
+<h4>Ticket Types</h4>
+<ul>
+    <li><code>general_support</code> - General help requests</li>
+    <li><code>project_issue</code> - Project-specific problems</li>
+    <li><code>feature_request</code> - Enhancement requests</li>
+    <li><code>bug_report</code> - Bug reports</li>
+</ul>
+
+<h4>Workflow</h4>
+<ol>
+    <li>Client submits ticket with priority selection</li>
+    <li>Notification sent to admin team (in-app + optional Slack)</li>
+    <li>Admin claims/assigns ticket</li>
+    <li>Admin responds via threaded comments</li>
+    <li>Admin logs time spent (optionally counting toward support hours)</li>
+    <li>Admin resolves and closes ticket with resolution notes</li>
+</ol>
+
+<h4>Features</h4>
+<ul>
+    <li>Priority-based queue (urgent first)</li>
+    <li>Internal comments (hidden from clients)</li>
+    <li>Time tracking per ticket</li>
+    <li>Resolution summaries</li>
+    <li>FAQ section to reduce ticket volume</li>
+</ul>
+
+<h2>Deployment Strategy</h2>
+
+<h3>Environments</h3>
+
+<table>
+    <tr><th>Environment</th><th>Purpose</th><th>URL Pattern</th></tr>
+    <tr><td>Development</td><td>Local development</td><td>localhost:3000</td></tr>
+    <tr><td>Preview</td><td>PR review &amp; testing</td><td>*.vercel.app (auto-generated)</td></tr>
+    <tr><td>Production</td><td>Live client access</td><td>portal.digitaldirections.com.au</td></tr>
+</table>
+
+<h3>Deployment Process</h3>
+<ul>
+    <li>Automatic deployments from GitHub on push</li>
+    <li>Preview deployments for every pull request</li>
+    <li>Production deployment on merge to main branch</li>
+    <li>Zero-downtime deployments</li>
+    <li>Instant rollback capability</li>
+</ul>
+
+<h3>Monitoring</h3>
+<ul>
+    <li>Vercel Analytics for performance tracking</li>
+    <li>Error tracking via Vercel logs</li>
+    <li>Database monitoring via Vercel Postgres dashboard</li>
+    <li>Cron job execution logs</li>
+</ul>
+
+<h2>Performance Considerations</h2>
+
+<h3>Frontend Optimization</h3>
+<ul>
+    <li>Server-side rendering for initial page load (target &lt; 2s)</li>
+    <li>Automatic code splitting (Next.js)</li>
+    <li>Image optimization via Next.js Image component</li>
+    <li>Lazy loading for heavy components</li>
+</ul>
+
+<h3>Backend Optimization</h3>
+<ul>
+    <li>Database indexes on foreign keys</li>
+    <li>Query optimization (select only needed columns)</li>
+    <li>Connection pooling for database efficiency</li>
+    <li>API route caching where appropriate</li>
+</ul>
+
+<h2>Maintenance &amp; Support</h2>
+
+<h3>Included in Monthly Retainer</h3>
+<ul>
+    <li>Bug fixes and patches</li>
+    <li>Security updates</li>
+    <li>Performance monitoring</li>
+    <li>Minor feature tweaks</li>
+    <li>Database maintenance</li>
+</ul>
+
+<h3>Not Included (Separate Quote)</h3>
+<ul>
+    <li>Major feature additions</li>
+    <li>Custom integrations beyond monitoring</li>
+    <li>Major redesigns</li>
+    <li>Additional user training beyond initial onboarding</li>
+</ul>
+
+<!-- ==================== DELIVERY & NEXT STEPS ==================== -->
+
+<h1 class="page-break">PART 3: DELIVERY &amp; NEXT STEPS</h1>
+
+<h2>Development Approach</h2>
+
+<h3>AI-Assisted Development</h3>
+<p>This portal is being developed using Claude Code, an AI-powered development assistant that significantly accelerates the development process:</p>
+<ul>
+    <li><strong>Faster iteration cycles</strong> - Features built, tested, and refined in hours instead of days</li>
+    <li><strong>Higher code quality</strong> - Automated best practices and consistent patterns</li>
+    <li><strong>Rapid bug fixes</strong> - Issues identified and resolved quickly</li>
+    <li><strong>Incremental delivery</strong> - Working features deployed as completed</li>
+</ul>
+
+<h2>Development Timeline</h2>
+
+<table>
+    <tr><th>Week</th><th>Focus</th><th>Deliverables</th></tr>
+    <tr>
+        <td><strong>Week 1</strong></td>
+        <td>Foundation &amp; Core Features</td>
+        <td>
+            <ul>
+                <li>Database setup and migrations</li>
+                <li>Authentication with Clerk</li>
+                <li>Admin and client layouts</li>
+                <li>Role-based routing</li>
+                <li>Project management</li>
+                <li>Dashboard statistics</li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Week 2</strong></td>
+        <td>Communication &amp; Monitoring</td>
+        <td>
+            <ul>
+                <li>Messaging system</li>
+                <li>Notification system</li>
+                <li>Support ticket system</li>
+                <li>Integration health monitoring</li>
+                <li>Support hours tracking</li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Week 3</strong></td>
+        <td>Polish, Testing &amp; Launch</td>
+        <td>
+            <ul>
+                <li>UI/UX refinements</li>
+                <li>Comprehensive testing</li>
+                <li>Bug fixes</li>
+                <li>Performance optimization</li>
+                <li>Client data seeding</li>
+                <li>Team training</li>
+                <li>Production deployment</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+
+<h2>Deliverables</h2>
+
+<p>Upon completion, DD will receive:</p>
+
+<ul>
+    <li>Fully functional portal (admin + client views)</li>
+    <li>Deployed to production with live URL</li>
+    <li>Database seeded with current DD clients</li>
+    <li>Team training session (1 hour)</li>
+    <li>Admin documentation</li>
+    <li>Client onboarding guide</li>
+    <li>Post-launch support (2 weeks intensive)</li>
+</ul>
+
+<h2>Implementation Process</h2>
+
+<ol>
+    <li><strong>Review &amp; Approve Scope</strong> - Jack &amp; Bryon review this document, provide feedback</li>
+    <li><strong>Kickoff Meeting</strong> - Align on priorities, gather current client list and project data</li>
+    <li><strong>Development Sprint</strong> - 2-3 weeks of building with regular progress updates</li>
+    <li><strong>Testing &amp; Training</strong> - DD team tests portal, provides feedback, receives training</li>
+    <li><strong>Launch</strong> - Deploy to production, begin onboarding first clients</li>
+    <li><strong>Support Period</strong> - 2 weeks of intensive support, then ongoing maintenance</li>
+</ol>
+
+<h2>Success Criteria</h2>
+
+<p>The portal will be considered successfully launched when:</p>
+
+<div class="success">
+    <ul>
+        <li>All core features are functional and tested</li>
+        <li>DD team can independently manage clients and projects</li>
+        <li>At least 3 clients successfully onboarded and using portal</li>
+        <li>No critical bugs or security issues identified</li>
+        <li>Team training completed</li>
+        <li>Documentation delivered</li>
+    </ul>
+</div>
+
+<h2>Future Roadmap</h2>
+
+<h3>Phase 2 (1-2 weeks after launch)</h3>
+<ul>
+    <li>Email notifications (in addition to in-app)</li>
+    <li>Advanced project filtering and search</li>
+    <li>Bulk operations for admin users</li>
+    <li>Client feedback surveys</li>
+    <li>Enhanced analytics dashboard</li>
+</ul>
+
+<h3>Phase 3 (1-2 months after launch)</h3>
+<ul>
+    <li>File upload/download system (pending security review)</li>
+    <li>Advanced file organization (folders, categories)</li>
+    <li>Custom reporting capabilities</li>
+    <li>API for third-party integrations</li>
+</ul>
+
+<h3>Phase 4 (3-6 months after launch)</h3>
+<ul>
+    <li>Mobile native applications (iOS/Android)</li>
+    <li>Advanced workflow automation</li>
+    <li>Client self-service features</li>
+    <li>Integration with additional DD tools</li>
+</ul>
+
+<hr style="margin-top: 3em; border: none; border-top: 2px solid #7C3AED;">
+
+<p style="text-align: center; color: #666; font-style: italic;">
+    Document prepared by Bryce Rambach | Digital Directions Portal v1.0 | January 2026
+</p>
+
+</body>
+</html>

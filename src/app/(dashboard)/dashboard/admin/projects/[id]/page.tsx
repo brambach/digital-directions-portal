@@ -72,11 +72,11 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
 
   // Status styling
   const statusConfig: any = {
-    planning: { color: "bg-indigo-50 text-indigo-600", label: "Planning Phase", icon: Layout },
+    planning: { color: "bg-violet-50 text-violet-700", label: "Planning Phase", icon: Layout },
     in_progress: { color: "bg-emerald-50 text-emerald-600", label: "In Active Development", icon: Activity },
     review: { color: "bg-amber-50 text-amber-600", label: "Under Review", icon: CheckCircle },
     completed: { color: "bg-gray-50 text-gray-600", label: "Project Completed", icon: CheckCircle },
-    on_hold: { color: "bg-rose-50 text-rose-600", label: "On Hold", icon: AlertCircle },
+    on_hold: { color: "bg-red-50 text-red-600", label: "On Hold", icon: AlertCircle },
   };
 
   const currentStatus = statusConfig[project.status] || statusConfig.planning;
@@ -116,7 +116,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
                   </p>
                 </div>
                 <div className="hidden sm:block">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6366F1] to-[#818cf8] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-indigo-200">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-700 to-violet-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-violet-200">
                     {project.name.charAt(0)}
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           {/* Due Date Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center text-violet-700">
                 <Calendar className="w-5 h-5" />
               </div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Delivery</p>
@@ -153,7 +153,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
               {project.dueDate ? format(new Date(project.dueDate), "MMM d, yyyy") : "TBD"}
             </h3>
             {daysLeft !== null && (
-              <p className={cn("text-xs font-semibold", daysLeft < 0 ? "text-rose-500" : "text-emerald-500")}>
+              <p className={cn("text-xs font-semibold", daysLeft < 0 ? "text-red-500" : "text-emerald-500")}>
                 {daysLeft < 0 ? `${Math.abs(daysLeft)} Days Overdue` : `${daysLeft} Days Remaining`}
               </p>
             )}
@@ -162,7 +162,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           {/* Messages Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center text-violet-700">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Team Updates</p>
@@ -186,7 +186,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           {/* Client Contact Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center text-violet-700">
                 <User className="w-5 h-5" />
               </div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client Contact</p>

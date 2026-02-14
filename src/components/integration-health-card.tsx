@@ -63,8 +63,8 @@ export function IntegrationHealthCard({
                 : integration.currentStatus === "degraded"
                   ? "bg-amber-50 text-amber-600"
                   : integration.currentStatus === "down"
-                    ? "bg-rose-50 text-rose-600"
-                    : "bg-gray-50 text-gray-400"
+                    ? "bg-red-50 text-red-600"
+                    : "bg-slate-50 text-slate-400"
             )}
           >
             {getServiceIcon(integration.serviceType)}
@@ -98,7 +98,7 @@ export function IntegrationHealthCard({
                   ? "text-emerald-500"
                   : metrics.uptimePercentage >= 95
                     ? "text-amber-500"
-                    : "text-rose-500"
+                    : "text-red-500"
               )}>
                 {metrics.uptimePercentage.toFixed(2)}%
               </div>
@@ -121,7 +121,7 @@ export function IntegrationHealthCard({
           )}
 
           {integration.lastErrorMessage && (
-            <div className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3 mt-2 uppercase tracking-tight">
+            <div className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 rounded-xl p-3 mt-2 uppercase tracking-tight">
               {integration.lastErrorMessage}
             </div>
           )}

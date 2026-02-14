@@ -253,16 +253,16 @@ export default async function AdminDashboard() {
         <StatCard
           label="Active Projects"
           value={projectStats.active.toString()}
-          icon={<Briefcase className="w-4 h-4 text-cyan-600" />}
+          icon={<Briefcase className="w-4 h-4 text-violet-600" />}
           period={`${projectStats.total} total`}
-          variant="cyan"
+          variant="violet"
         />
         <StatCard
           label="Open Tickets"
           value={ticketStats.open.toString()}
-          icon={<Ticket className="w-4 h-4 text-indigo-600" />}
+          icon={<Ticket className="w-4 h-4 text-violet-700" />}
           period={ticketStats.urgent > 0 ? `${ticketStats.urgent} urgent` : "All clear"}
-          variant="indigo"
+          variant="violet"
         />
       </div>
 
@@ -279,7 +279,7 @@ export default async function AdminDashboard() {
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{totalProjects} Projects</h2>
               </div>
-              <Link href="/dashboard/admin/projects" className="text-[10px] font-bold text-indigo-600 hover:underline uppercase tracking-widest">
+              <Link href="/dashboard/admin/projects" className="text-[10px] font-bold text-violet-700 hover:underline uppercase tracking-widest">
                 View All
               </Link>
             </div>
@@ -301,7 +301,7 @@ export default async function AdminDashboard() {
               ) : (
                 <>
                   <StatusBar label="Planning" count={projectsByStatus.planning} total={totalProjects} color="bg-gray-400" />
-                  <StatusBar label="In Progress" count={projectsByStatus.in_progress} total={totalProjects} color="bg-[#6366F1]" />
+                  <StatusBar label="In Progress" count={projectsByStatus.in_progress} total={totalProjects} color="bg-violet-700" />
                   <StatusBar label="Review" count={projectsByStatus.review} total={totalProjects} color="bg-amber-500" />
                   <StatusBar label="Completed" count={projectsByStatus.completed} total={totalProjects} color="bg-emerald-500" />
                   <StatusBar label="On Hold" count={projectsByStatus.on_hold} total={totalProjects} color="bg-red-400" />
@@ -317,7 +317,7 @@ export default async function AdminDashboard() {
                 <Ticket className="w-4 h-4 text-gray-400" />
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Tickets</span>
               </div>
-              <Link href="/dashboard/admin/tickets" className="text-[10px] font-bold text-indigo-600 hover:underline uppercase tracking-widest">View All</Link>
+              <Link href="/dashboard/admin/tickets" className="text-[10px] font-bold text-violet-700 hover:underline uppercase tracking-widest">View All</Link>
             </div>
             <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
@@ -342,8 +342,8 @@ export default async function AdminDashboard() {
                             <div className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs",
                               ticket.priority === "urgent" ? "bg-red-50 text-red-600" :
-                              ticket.priority === "high" ? "bg-orange-50 text-orange-600" :
-                              "bg-indigo-50 text-indigo-600"
+                              ticket.priority === "high" ? "bg-amber-50 text-amber-600" :
+                              "bg-violet-50 text-violet-700"
                             )}>
                               <Ticket className="w-4 h-4" />
                             </div>
@@ -355,9 +355,9 @@ export default async function AdminDashboard() {
                           <td className="px-6 py-4">
                             <span className={cn(
                               "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border",
-                              ticket.status === "open" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                              ticket.status === "in_progress" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                              "bg-gray-50 text-gray-500 border-gray-100"
+                              ticket.status === "open" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                              ticket.status === "in_progress" ? "bg-violet-50 text-violet-700 border-violet-100" :
+                              "bg-slate-50 text-slate-500 border-slate-100"
                             )}>
                               {ticket.status.replace("_", " ")}
                             </span>
@@ -366,16 +366,16 @@ export default async function AdminDashboard() {
                             <span className={cn(
                               "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border",
                               ticket.priority === "urgent" ? "bg-red-50 text-red-600 border-red-100" :
-                              ticket.priority === "high" ? "bg-orange-50 text-orange-600 border-orange-100" :
-                              ticket.priority === "medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                              "bg-gray-50 text-gray-500 border-gray-100"
+                              ticket.priority === "high" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                              ticket.priority === "medium" ? "bg-sky-50 text-sky-600 border-sky-100" :
+                              "bg-slate-50 text-slate-500 border-slate-100"
                             )}>
                               {ticket.priority}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right pr-8">
                             <Link href={`/dashboard/admin/tickets/${ticket.id}`}>
-                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-400 hover:text-violet-700 hover:bg-violet-50">
                                 View
                               </Button>
                             </Link>
@@ -403,7 +403,7 @@ export default async function AdminDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">{clientStats.active} Active</h2>
                 <p className={cn(
                   "text-[10px] font-bold uppercase tracking-widest mt-1",
-                  clientsNeedingAttention.length > 0 ? "text-orange-500" : "text-emerald-500"
+                  clientsNeedingAttention.length > 0 ? "text-amber-500" : "text-emerald-500"
                 )}>
                   {clientsNeedingAttention.length > 0
                     ? `${clientsNeedingAttention.length} need${clientsNeedingAttention.length === 1 ? 's' : ''} attention`
@@ -421,8 +421,8 @@ export default async function AdminDashboard() {
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
                       client.reason.includes('depleted') ? "bg-red-50 text-red-500 group-hover:bg-red-100" :
-                      client.reason.includes('Inactive') ? "bg-gray-100 text-gray-400 group-hover:bg-gray-200" :
-                      "bg-orange-50 text-orange-500 group-hover:bg-orange-100"
+                      client.reason.includes('Inactive') ? "bg-slate-100 text-slate-400 group-hover:bg-slate-200" :
+                      "bg-amber-50 text-amber-500 group-hover:bg-amber-100"
                     )}>
                       <AlertTriangle className="w-4 h-4" />
                     </div>
@@ -442,7 +442,7 @@ export default async function AdminDashboard() {
           <Card className="rounded-xl border-gray-100 shadow-sm p-6 bg-[#111827] text-white">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-indigo-400" />
+                <AlertCircle className="w-5 h-5 text-violet-400" />
               </div>
               <div>
                 <p className="text-sm font-bold">Action Required</p>
@@ -530,7 +530,7 @@ function StatusBar({ label, count, total, color }: { label: string; count: numbe
   const percentage = total > 0 ? Math.max((count / total) * 100, count > 0 ? 10 : 0) : 0;
   return (
     <div className="flex flex-col items-center gap-4 relative z-10 w-12 group">
-      <div className="w-full bg-[#E0E7FF] rounded-full relative overflow-hidden flex items-end opacity-50 hover:opacity-100 transition-opacity" style={{ height: '180px' }}>
+      <div className="w-full bg-slate-100 rounded-full relative overflow-hidden flex items-end opacity-50 hover:opacity-100 transition-opacity" style={{ height: '180px' }}>
         <div className={cn("w-full rounded-t-full transition-all duration-1000", color)} style={{ height: `${percentage}%` }}></div>
       </div>
       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label.split(' ')[0]}</span>

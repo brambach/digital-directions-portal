@@ -185,19 +185,19 @@ export function PhaseTemplateList() {
             return (
               <div
                 key={template.id}
-                className="bg-white rounded-2xl p-6 border border-slate-100 hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-200 group"
+                className="bg-white rounded-2xl p-6 border border-slate-100 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-200 group"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                      <Layers className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
+                      <Layers className="w-5 h-5 text-violet-700" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-slate-900 truncate">
                         {template.name}
                       </h3>
                       {template.isDefault && (
-                        <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium uppercase tracking-wider">
+                        <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium uppercase tracking-wider">
                           Default
                         </span>
                       )}

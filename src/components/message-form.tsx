@@ -41,7 +41,7 @@ export function MessageForm({ projectId }: { projectId: string }) {
     <form onSubmit={handleSubmit} className="space-y-3">
       <textarea
         placeholder="Type a message..."
-        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 text-gray-900 placeholder:text-gray-400"
+        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-100 focus:border-violet-400 text-gray-900 placeholder:text-gray-400"
         rows={3}
         value={content}
         onChange={(e) => setContent(e.target.value)}

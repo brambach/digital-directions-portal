@@ -90,7 +90,7 @@ export function IntegrationManagementSection({
                   className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${integration.currentStatus === "healthy"
                       ? "bg-emerald-50 text-emerald-600"
                       : integration.currentStatus === "degraded"
-                        ? "bg-orange-50 text-orange-600"
+                        ? "bg-amber-50 text-amber-600"
                         : integration.currentStatus === "down"
                           ? "bg-red-50 text-red-600"
                           : "bg-slate-100 text-slate-500"

@@ -85,7 +85,7 @@ export function EditSupportHoursDialog({
                 min="0"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent"
                 placeholder="e.g., 10"
                 required
               />
@@ -98,9 +98,9 @@ export function EditSupportHoursDialog({
             </p>
           </div>
 
-          <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-purple-900 mb-2">How it works</h4>
-            <ul className="text-xs text-purple-700 space-y-1">
+          <div className="bg-violet-50 border border-violet-100 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-violet-900 mb-2">How it works</h4>
+            <ul className="text-xs text-violet-700 space-y-1">
               <li>• Time logged on tickets deducts from this balance</li>
               <li>• Hours reset automatically at the end of each billing cycle</li>
               <li>• Client can see their remaining hours on their dashboard</li>

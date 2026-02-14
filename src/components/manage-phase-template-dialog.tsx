@@ -239,7 +239,7 @@ export function ManagePhaseTemplateDialog({
               id="is-default"
               checked={isDefault}
               onChange={(e) => setIsDefault(e.target.checked)}
-              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              className="w-4 h-4 text-violet-700 rounded focus:ring-violet-600"
             />
             <Label htmlFor="is-default" className="cursor-pointer">
               Set as default template (will be auto-selected when creating projects)
@@ -255,7 +255,7 @@ export function ManagePhaseTemplateDialog({
                 onClick={handleAddPhase}
                 size="sm"
                 variant="outline"
-                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                className="text-violet-700 border-violet-200 hover:bg-violet-50"
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Add Phase
@@ -297,7 +297,7 @@ export function ManagePhaseTemplateDialog({
                     </div>
 
                     {/* Phase Number Badge */}
-                    <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold text-sm shrink-0 mt-2">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-semibold text-sm shrink-0 mt-2">
                       {index + 1}
                     </div>
 
@@ -386,7 +386,7 @@ export function ManagePhaseTemplateDialog({
             <Button
               type="submit"
               disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-violet-700 hover:bg-violet-800"
             >
               {loading ? (
                 <>

@@ -126,9 +126,9 @@ export default async function ClientsPage() {
       <div className="animate-enter delay-200">
         <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
           <div className="bg-white px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-violet-700 uppercase tracking-widest">
               All Clients
-              <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">{clientData.length}</span>
+              <span className="bg-violet-50 text-violet-700 px-1.5 py-0.5 rounded-full">{clientData.length}</span>
             </div>
           </div>
           <table className="w-full">
@@ -155,11 +155,11 @@ export default async function ClientsPage() {
                   <tr key={client.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0 relative">
                     <td className="px-6 py-5">
                       <Link href={`/dashboard/admin/clients/${client.id}`} className="flex items-center gap-3 group/link">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-indigo-100 transition-transform group-hover/link:scale-110">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-700 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-violet-100 transition-transform group-hover/link:scale-110">
                           {client.companyName.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900 flex items-center gap-1 group-hover/link:text-indigo-600 transition-colors">
+                          <div className="font-semibold text-gray-900 flex items-center gap-1 group-hover/link:text-violet-700 transition-colors">
                             {client.companyName}
                           </div>
                           <div className="text-[10px] text-gray-400 font-medium mt-0.5">Joined {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</div>
@@ -180,7 +180,7 @@ export default async function ClientsPage() {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3 w-24">
                         <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(client.activeProjects / (client.totalProjects || 1)) * 100}%` }}></div>
+                          <div className="h-full bg-violet-700 rounded-full" style={{ width: `${(client.activeProjects / (client.totalProjects || 1)) * 100}%` }}></div>
                         </div>
                         <span className="text-[10px] font-bold text-gray-900">{client.totalProjects}</span>
                       </div>

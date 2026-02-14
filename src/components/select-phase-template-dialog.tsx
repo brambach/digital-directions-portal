@@ -134,21 +134,21 @@ export function SelectPhaseTemplateDialog({
                 type="button"
                 onClick={() => setSelectedTemplate(template.id)}
                 className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all hover:border-purple-300",
+                  "w-full text-left p-4 rounded-lg border-2 transition-all hover:border-violet-300",
                   selectedTemplate === template.id
-                    ? "border-purple-500 bg-purple-50 shadow-sm"
+                    ? "border-violet-600 bg-violet-50 shadow-sm"
                     : "border-slate-200 bg-white"
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Layers className="w-4 h-4 text-purple-600" />
+                      <Layers className="w-4 h-4 text-violet-700" />
                       <h3 className="font-semibold text-slate-900">
                         {template.name}
                       </h3>
                       {template.isDefault && (
-                        <span className="text-[10px] px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium">
+                        <span className="text-[10px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium">
                           DEFAULT
                         </span>
                       )}
@@ -182,7 +182,7 @@ export function SelectPhaseTemplateDialog({
                   </div>
 
                   {selectedTemplate === template.id && (
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-violet-700 flex-shrink-0" />
                   )}
                 </div>
               </button>

@@ -6,50 +6,50 @@
 
 @layer base {
   :root {
-    /* Nexus Color Palette */
-    --background: 210 20% 98%;
+    /* Professional Color Palette - Deep Purple Brand */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Nexus Primary: Indigo 600 - Precise #6366F1 */
-    --primary: 239 84% 67%;
+    /* Primary: Deep Purple - #6d28d9 (violet-700) */
+    --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Cool gray */
-    --secondary: 210 20% 96%;
+    /* Secondary: Slate neutrals */
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
 
     /* Muted */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 25% 47%;
 
-    /* Accent */
-    --accent: 239 84% 67%;
+    /* Accent: Same as primary */
+    --accent: 263 70% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Functional */
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 239 84% 67%;
+    --ring: 263 70% 50%;
 
     /* Radius */
     --radius: 1rem;
 
-    /* Chart Colors */
-    --chart-1: 239 84% 67%;
-    --chart-2: 188 86% 43%;
-    --chart-3: 161 64% 43%;
-    --chart-4: 35 92% 50%;
-    --chart-5: 350 89% 60%;
+    /* Chart Colors - Purple scale + semantic */
+    --chart-1: 263 70% 50%;
+    --chart-2: 263 60% 60%;
+    --chart-3: 160 84% 39%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 51%;
 
-    /* Premium Easing - Nexus Precise */
+    /* Premium Easing */
     --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -198,8 +198,8 @@
 
 /* Custom Checkbox Precise */
 .custom-checkbox input:checked+div {
-  background-color: #6366F1;
-  border-color: #6366F1;
+  background-color: #6d28d9;
+  border-color: #6d28d9;
   transform: scale(1);
 }
 
@@ -212,7 +212,7 @@
 }
 
 .custom-checkbox:hover div {
-  border-color: #818cf8;
+  border-color: #7c3aed;
 }
 
 /* ===== Animations ===== */

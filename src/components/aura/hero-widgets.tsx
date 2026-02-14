@@ -36,9 +36,9 @@ export function AuraStatsCard({
             value: "4,250",
             trend: "15.8%",
             trendUp: true,
-            color: "cyan",
-            bgClass: "bg-gradient-to-br from-[#06B6D4]/5 to-white border-[#06B6D4]/20",
-            iconBg: "bg-[#06B6D4]/10 border-[#06B6D4]/20 text-[#06B6D4]",
+            color: "violet",
+            bgClass: "bg-white border-slate-200",
+            iconBg: "bg-violet-50 border-violet-100 text-violet-700",
         },
         projects: {
             icon: Briefcase,
@@ -46,9 +46,9 @@ export function AuraStatsCard({
             value: "12",
             trend: "4.2%",
             trendUp: false,
-            color: "indigo",
-            bgClass: "bg-gradient-to-br from-[#6366F1]/5 to-white border-[#6366F1]/20",
-            iconBg: "bg-[#6366F1]/10 border-[#6366F1]/20 text-[#6366F1]",
+            color: "violet",
+            bgClass: "bg-white border-slate-200",
+            iconBg: "bg-violet-50 border-violet-100 text-violet-700",
         },
         tasks: {
             icon: CheckCircle,
@@ -57,17 +57,17 @@ export function AuraStatsCard({
             trend: "24.2%",
             trendUp: true,
             color: "emerald",
-            bgClass: "bg-white border-gray-100",
-            iconBg: "bg-emerald-50 border-emerald-100 text-emerald-500",
+            bgClass: "bg-white border-slate-200",
+            iconBg: "bg-emerald-50 border-emerald-100 text-emerald-600",
         },
     }[type];
 
     // Manual color overrides for the gradients if needed, but using styles for now
     const gradientColor =
         type === "clients"
-            ? "from-[#06B6D4]/10"
+            ? "from-violet-100/50"
             : type === "projects"
-                ? "from-[#6366F1]/10"
+                ? "from-violet-100/50"
                 : "from-emerald-50";
 
     return (
@@ -98,7 +98,7 @@ export function AuraStatsCard({
                             "text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1",
                             data.trendUp
                                 ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                : "bg-rose-50 text-rose-600 border-rose-100"
+                                : "bg-red-50 text-red-600 border-red-100"
                         )}
                     >
                         {data.trendUp ? (
@@ -148,30 +148,30 @@ export function AuraActivityChart({ className }: { className?: string }) {
                 {/* Bar 1 */}
                 <div className="flex flex-col items-center gap-3 w-full group cursor-pointer">
                     <div className="w-full max-w-[40px] flex flex-col gap-1 items-center h-[180px] justify-end">
-                        <div className="w-full h-[15%] bg-[#6366F1] rounded-md opacity-80" />
-                        <div className="w-full h-[25%] bg-[#818CF8] rounded-md opacity-80" />
-                        <div className="w-full h-[20%] bg-[#A5B4FC] rounded-md opacity-80" />
-                        <div className="w-full h-[10%] bg-[#C7D2FE] rounded-md opacity-80" />
+                        <div className="w-full h-[15%] bg-violet-700 rounded-md opacity-80" />
+                        <div className="w-full h-[25%] bg-violet-500 rounded-md opacity-80" />
+                        <div className="w-full h-[20%] bg-violet-400 rounded-md opacity-80" />
+                        <div className="w-full h-[10%] bg-violet-300 rounded-md opacity-80" />
                     </div>
                     <span className="text-xs text-gray-400 font-medium">Oct</span>
                 </div>
                 {/* Bar 2 */}
                 <div className="flex flex-col items-center gap-3 w-full group cursor-pointer">
                     <div className="w-full max-w-[40px] flex flex-col gap-1 items-center h-[180px] justify-end">
-                        <div className="w-full h-[10%] bg-[#06B6D4] rounded-md opacity-80" />
-                        <div className="w-full h-[15%] bg-[#22D3EE] rounded-md opacity-80" />
-                        <div className="w-full h-[10%] bg-[#67E8F9] rounded-md opacity-80" />
-                        <div className="w-full h-[12%] bg-[#A5F3FC] rounded-md opacity-80" />
+                        <div className="w-full h-[10%] bg-slate-600 rounded-md opacity-80" />
+                        <div className="w-full h-[15%] bg-slate-500 rounded-md opacity-80" />
+                        <div className="w-full h-[10%] bg-slate-400 rounded-md opacity-80" />
+                        <div className="w-full h-[12%] bg-slate-300 rounded-md opacity-80" />
                     </div>
                     <span className="text-xs text-gray-400 font-medium">Nov</span>
                 </div>
                 {/* Bar 3 */}
                 <div className="flex flex-col items-center gap-3 w-full group cursor-pointer">
                     <div className="w-full max-w-[40px] flex flex-col gap-1 items-center h-[180px] justify-end">
-                        <div className="w-full h-[20%] bg-[#6366F1] rounded-md shadow-lg shadow-indigo-200" />
-                        <div className="w-full h-[30%] bg-[#818CF8] rounded-md" />
-                        <div className="w-full h-[25%] bg-[#A5B4FC] rounded-md" />
-                        <div className="w-full h-[15%] bg-[#C7D2FE] rounded-md" />
+                        <div className="w-full h-[20%] bg-violet-700 rounded-md shadow-lg shadow-violet-200" />
+                        <div className="w-full h-[30%] bg-violet-500 rounded-md" />
+                        <div className="w-full h-[25%] bg-violet-400 rounded-md" />
+                        <div className="w-full h-[15%] bg-violet-300 rounded-md" />
                     </div>
                     <span className="text-xs text-gray-900 font-semibold scale-110">
                         Dec
@@ -199,7 +199,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
 
             <div className="flex justify-between items-end mb-8 z-10">
                 <div>
-                    <span className="text-[10px] text-[#6366F1] font-semibold tracking-wide uppercase">
+                    <span className="text-[10px] text-violet-700 font-semibold tracking-wide uppercase">
                         Ent
                     </span>
                     <div className="text-xl font-medium text-gray-900 mt-0.5">
@@ -207,7 +207,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
                     </div>
                 </div>
                 <div>
-                    <span className="text-[10px] text-[#06B6D4] font-semibold tracking-wide uppercase">
+                    <span className="text-[10px] text-slate-600 font-semibold tracking-wide uppercase">
                         Start
                     </span>
                     <div className="text-xl font-medium text-gray-900 mt-0.5">
@@ -215,7 +215,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
                     </div>
                 </div>
                 <div>
-                    <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase">
+                    <span className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">
                         Other
                     </span>
                     <div className="text-xl font-medium text-gray-900 mt-0.5">
@@ -230,7 +230,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
                         <path
                             d="M 10 50 A 40 40 0 0 1 90 50"
                             fill="none"
-                            stroke="#f3f4f6"
+                            stroke="#e2e8f0"
                             strokeWidth="12"
                             strokeLinecap="round"
                         />
@@ -238,7 +238,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
                             className="animate-stroke delay-300"
                             d="M 10 50 A 40 40 0 0 1 40 12"
                             fill="none"
-                            stroke="#6366F1"
+                            stroke="#6d28d9"
                             strokeWidth="12"
                             strokeDasharray="251"
                             strokeDashoffset="251"
@@ -248,7 +248,7 @@ export function AuraDonutChart({ className }: { className?: string }) {
                             className="animate-stroke delay-500"
                             d="M 42 11 A 40 40 0 0 1 75 25"
                             fill="none"
-                            stroke="#06B6D4"
+                            stroke="#64748b"
                             strokeWidth="12"
                             strokeDasharray="251"
                             strokeDashoffset="251"
@@ -283,7 +283,7 @@ export function AuraTaskList({ className }: { className?: string }) {
                         key={i}
                         className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-[#6366F1]/10 flex items-center justify-center text-[#6366F1]">
+                        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center text-violet-700">
                             <Layers className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">

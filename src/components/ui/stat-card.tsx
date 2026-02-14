@@ -10,24 +10,20 @@ export interface StatCardProps {
     trendUp?: boolean;
     icon?: React.ReactNode;
     period?: string;
-    variant?: "cyan" | "indigo" | "white" | "emerald" | "violet";
+    variant?: "white" | "emerald" | "violet";
 }
 
 export function StatCard({ label, value, trend, trendUp, icon, period = "vs last month", variant = "white" }: StatCardProps) {
     const variants: any = {
-        cyan: "bg-cyan-50/50 border-cyan-100/50",
-        indigo: "bg-indigo-50/50 border-indigo-100/50",
         emerald: "bg-emerald-50/50 border-emerald-100/50",
         violet: "bg-violet-50/50 border-violet-100/50",
-        white: "bg-white border-gray-100"
+        white: "bg-white border-slate-100"
     };
 
     const iconBgVariants: any = {
-        cyan: "bg-cyan-100/60 border-cyan-200/50 group-hover:bg-cyan-100",
-        indigo: "bg-indigo-100/60 border-indigo-200/50 group-hover:bg-indigo-100",
         emerald: "bg-emerald-100/60 border-emerald-200/50 group-hover:bg-emerald-100",
         violet: "bg-violet-100/60 border-violet-200/50 group-hover:bg-violet-100",
-        white: "bg-gray-50 border-gray-100 group-hover:bg-gray-100"
+        white: "bg-slate-50 border-slate-100 group-hover:bg-slate-100"
     };
 
     return (
@@ -54,7 +50,7 @@ export function StatCard({ label, value, trend, trendUp, icon, period = "vs last
                         {trend && (
                             <span className={cn(
                                 "text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1",
-                                trendUp ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"
+                                trendUp ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"
                             )}>
                                 {trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {trend}
                             </span>
@@ -67,11 +63,9 @@ export function StatCard({ label, value, trend, trendUp, icon, period = "vs last
             {/* Decorative Gradient Blob */}
             <div className={cn(
                 "absolute right-0 bottom-0 w-32 h-32 rounded-full translate-y-10 translate-x-10 transition-transform duration-500 group-hover:scale-125",
-                variant === 'cyan' ? "bg-gradient-to-tl from-cyan-100/50 to-transparent" :
-                    variant === 'indigo' ? "bg-gradient-to-tl from-indigo-100/50 to-transparent" :
-                        variant === 'emerald' ? "bg-gradient-to-tl from-emerald-100/50 to-transparent" :
-                            variant === 'violet' ? "bg-gradient-to-tl from-violet-100/50 to-transparent" :
-                                "bg-gradient-to-tl from-gray-50 to-transparent"
+                variant === 'emerald' ? "bg-gradient-to-tl from-emerald-100/50 to-transparent" :
+                    variant === 'violet' ? "bg-gradient-to-tl from-violet-100/50 to-transparent" :
+                        "bg-gradient-to-tl from-slate-50 to-transparent"
             )}></div>
         </Card>
     );

@@ -14,10 +14,10 @@ interface UpdateStatusDialogProps {
 
 const statuses = [
   { value: "planning", label: "Planning", color: "bg-slate-50 text-slate-600 border-slate-200" },
-  { value: "in_progress", label: "In Progress", color: "bg-indigo-50 text-indigo-600 border-indigo-200" },
-  { value: "review", label: "In Review", color: "bg-purple-50 text-purple-600 border-purple-200" },
+  { value: "in_progress", label: "In Progress", color: "bg-violet-50 text-violet-700 border-violet-200" },
+  { value: "review", label: "In Review", color: "bg-violet-50 text-violet-700 border-violet-200" },
   { value: "completed", label: "Completed", color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-  { value: "on_hold", label: "On Hold", color: "bg-orange-50 text-orange-600 border-orange-200" },
+  { value: "on_hold", label: "On Hold", color: "bg-amber-50 text-amber-600 border-amber-200" },
 ];
 
 export function UpdateStatusDialog({ projectId, currentStatus }: UpdateStatusDialogProps) {
@@ -73,7 +73,7 @@ export function UpdateStatusDialog({ projectId, currentStatus }: UpdateStatusDia
                   type="button"
                   onClick={() => setSelectedStatus(status.value)}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${selectedStatus === status.value
-                      ? `${status.color} ring-2 ring-indigo-500`
+                      ? `${status.color} ring-2 ring-violet-600`
                       : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"
                     }`}
                 >

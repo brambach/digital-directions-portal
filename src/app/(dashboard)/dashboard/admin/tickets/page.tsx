@@ -21,9 +21,9 @@ export const dynamic = "force-dynamic";
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "urgent": return "text-rose-600 bg-rose-50 border-rose-100";
-    case "high": return "text-orange-600 bg-orange-50 border-orange-100";
-    case "medium": return "text-blue-600 bg-blue-50 border-blue-100";
+    case "urgent": return "text-red-600 bg-red-50 border-red-100";
+    case "high": return "text-amber-600 bg-amber-50 border-amber-100";
+    case "medium": return "text-sky-600 bg-sky-50 border-sky-100";
     case "low": return "text-slate-600 bg-slate-50 border-slate-100";
     default: return "text-slate-600 bg-slate-50 border-slate-100";
   }
@@ -32,7 +32,7 @@ function getPriorityColor(priority: string) {
 function getStatusColor(status: string) {
   switch (status) {
     case "open": return "bg-emerald-500";
-    case "in_progress": return "bg-indigo-500";
+    case "in_progress": return "bg-violet-700";
     case "resolved": return "bg-slate-400";
     case "closed": return "bg-slate-300";
     default: return "bg-slate-400";
@@ -155,21 +155,21 @@ export default async function AdminTicketsPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-100">
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-indigo-100 transition-all">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-violet-100 transition-all">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Queue</p>
             <p className="text-2xl font-bold text-gray-900">{criticalTickets.length + standardTickets.length}</p>
           </div>
-          <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 group-hover:bg-indigo-100 transition-colors">
+          <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-700 group-hover:bg-violet-100 transition-colors">
             <MessageSquare className="w-5 h-5" />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-rose-100 transition-all">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-red-100 transition-all">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Critical & High</p>
             <p className="text-2xl font-bold text-gray-900">{criticalTickets.length}</p>
           </div>
-          <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+          <div className="h-10 w-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 group-hover:bg-red-100 transition-colors">
             <ShieldAlert className="w-5 h-5" />
           </div>
         </div>
@@ -188,14 +188,14 @@ export default async function AdminTicketsPage() {
       {criticalTickets.length > 0 && (
         <div className="animate-enter delay-200 space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <ShieldAlert className="w-4 h-4 text-rose-500" />
+            <ShieldAlert className="w-4 h-4 text-red-500" />
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Priority Attention Required</h2>
           </div>
-          <Card className="rounded-xl border-rose-200 shadow-[0_4px_20px_rgba(225,29,72,0.1)] overflow-hidden bg-white">
+          <Card className="rounded-xl border-red-200 shadow-[0_4px_20px_rgba(220,38,38,0.1)] overflow-hidden bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-rose-50 bg-rose-50/50 text-left">
+                  <tr className="border-b border-red-50 bg-red-50/50 text-left">
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Ticket Subject</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client & Priority</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -203,17 +203,17 @@ export default async function AdminTicketsPage() {
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pr-8 text-right">Updated</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rose-100">
+                <tbody className="divide-y divide-red-100">
                   {criticalTickets.map((ticket) => (
-                    <tr key={ticket.id} className="group hover:bg-rose-50/20 transition-colors">
+                    <tr key={ticket.id} className="group hover:bg-red-50/20 transition-colors">
                       <td className="px-6 py-4 pl-8">
                         <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
                           <div className="flex items-start gap-4">
                             <div className="pt-1.5 flex flex-col items-center gap-1">
-                              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 text-sm group-hover:text-rose-600 transition-colors">
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-red-600 transition-colors">
                                 {ticket.title}
                               </p>
                               <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
@@ -263,7 +263,7 @@ export default async function AdminTicketsPage() {
       {/* Main Standard Queue */}
       <div className="animate-enter delay-300 space-y-4">
         <div className="flex items-center gap-2 px-1">
-          <Zap className="w-4 h-4 text-indigo-500" />
+          <Zap className="w-4 h-4 text-violet-700" />
           <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Standard Queue</h2>
         </div>
         <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-white">
@@ -279,7 +279,7 @@ export default async function AdminTicketsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-50 bg-indigo-50/10 text-left">
+                  <tr className="border-b border-gray-50 bg-violet-50/10 text-left">
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Ticket Subject</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client & Priority</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -294,10 +294,10 @@ export default async function AdminTicketsPage() {
                         <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
                           <div className="flex items-start gap-4">
                             <div className="pt-1.5 flex flex-col items-center gap-1">
-                              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500/20" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-violet-700/20" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 text-sm group-hover:text-indigo-600 transition-colors">
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-violet-700 transition-colors">
                                 {ticket.title}
                               </p>
                               <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
@@ -368,7 +368,7 @@ export default async function AdminTicketsPage() {
                       <td className="px-6 py-4 pl-8">
                         <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
                           <div className="opacity-60 group-hover:opacity-100 transition-opacity">
-                            <p className="font-bold text-gray-700 text-sm group-hover:text-indigo-600 transition-colors">
+                            <p className="font-bold text-gray-700 text-sm group-hover:text-violet-700 transition-colors">
                               {ticket.title}
                             </p>
                             <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[300px]">#{ticket.id.slice(-4)}</p>

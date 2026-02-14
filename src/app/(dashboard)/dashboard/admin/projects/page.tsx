@@ -65,8 +65,8 @@ export default async function ProjectsPage() {
 
   const statusColumns = [
     { key: "planning", title: "Planning", icon: Clock, projects: groupedProjects.planning, color: 'text-gray-400' },
-    { key: "in_progress", title: "In Progress", icon: FolderKanban, projects: groupedProjects.in_progress, color: 'text-indigo-500' },
-    { key: "review", title: "Review", icon: FileSearch, projects: groupedProjects.review, color: 'text-cyan-500' },
+    { key: "in_progress", title: "In Progress", icon: FolderKanban, projects: groupedProjects.in_progress, color: 'text-violet-700' },
+    { key: "review", title: "Review", icon: FileSearch, projects: groupedProjects.review, color: 'text-amber-500' },
     { key: "completed", title: "Completed", icon: CheckCircle, projects: groupedProjects.completed, color: 'text-emerald-500' },
   ];
 
@@ -92,8 +92,8 @@ export default async function ProjectsPage() {
               <div className="flex items-center gap-2">
                 <div className={cn("w-1.5 h-1.5 rounded-full",
                   column.key === 'planning' ? 'bg-gray-400' :
-                    column.key === 'in_progress' ? 'bg-indigo-500' :
-                      column.key === 'review' ? 'bg-cyan-500' : 'bg-emerald-500'
+                    column.key === 'in_progress' ? 'bg-violet-700' :
+                      column.key === 'review' ? 'bg-amber-500' : 'bg-emerald-500'
                 )}></div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">{column.title}</span>
                 <span className="bg-gray-50 text-gray-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-gray-100">{column.projects.length}</span>
@@ -139,36 +139,36 @@ function ProjectCard({ project, index }: ProjectCardProps) {
 
   return (
     <Link href={`/dashboard/admin/projects/${project.id}`} className="block group">
-      <div className="bg-white border border-gray-100 rounded-[20px] p-5 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-indigo-100 transition-all duration-300">
+      <div className="bg-white border border-gray-100 rounded-[20px] p-5 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-violet-100 transition-all duration-300">
         {/* Status Label */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm shadow-indigo-100">
+            <div className="w-8 h-8 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-700 group-hover:bg-violet-700 group-hover:text-white transition-all duration-300 shadow-sm shadow-violet-100">
               {project.clientName?.charAt(0) || "P"}
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{project.clientName}</span>
+              <span className="text-[10px] font-bold text-gray-900 group-hover:text-violet-700 transition-colors uppercase tracking-tight">{project.clientName}</span>
               <span className="text-[10px] text-gray-500 font-medium">Active Project</span>
             </div>
           </div>
           <div className={cn(
             "px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border",
             isOverdue
-              ? "bg-rose-50 text-rose-600 border-rose-100"
+              ? "bg-red-50 text-red-600 border-red-100"
               : "bg-emerald-50 text-emerald-600 border-emerald-100"
           )}>
             {isOverdue ? "Overdue" : "On Track"}
           </div>
         </div>
 
-        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-tight group-hover:text-indigo-700 transition-colors line-clamp-2">{project.name}</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-tight group-hover:text-violet-700 transition-colors line-clamp-2">{project.name}</h3>
 
         <div className="flex items-center gap-4 mt-5 pt-4 border-t border-gray-50">
           <div className="flex items-center gap-1.5">
-            <Calendar className={cn("w-3 h-3", isOverdue ? "text-rose-400" : "text-gray-400")} />
+            <Calendar className={cn("w-3 h-3", isOverdue ? "text-red-400" : "text-gray-400")} />
             <span className={cn(
               "text-[10px] font-bold uppercase tracking-tight",
-              isOverdue ? "text-rose-500" : "text-gray-400"
+              isOverdue ? "text-red-500" : "text-gray-400"
             )}>
               {project.dueDate ? formatDistanceToNow(new Date(project.dueDate), { addSuffix: true }) : "No Date"}
             </span>

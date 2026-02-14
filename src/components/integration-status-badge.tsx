@@ -30,20 +30,20 @@ export function IntegrationStatusBadge({
       iconColor: "text-amber-500",
     },
     down: {
-      bg: "bg-rose-50",
-      text: "text-rose-600",
-      border: "border-rose-100",
+      bg: "bg-red-50",
+      text: "text-red-600",
+      border: "border-red-100",
       label: "Critical",
       icon: XCircle,
-      iconColor: "text-rose-500",
+      iconColor: "text-red-500",
     },
     unknown: {
-      bg: "bg-gray-50",
-      text: "text-gray-500",
-      border: "border-gray-100",
+      bg: "bg-slate-50",
+      text: "text-slate-500",
+      border: "border-slate-100",
       label: "Unknown",
       icon: HelpCircle,
-      iconColor: "text-gray-400",
+      iconColor: "text-slate-400",
     },
   };
 

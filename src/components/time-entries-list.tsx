@@ -101,13 +101,13 @@ export function TimeEntriesList({ ticketId, onUpdate }: TimeEntriesListProps) {
   return (
     <div className="space-y-4">
       {/* Total Time Header */}
-      <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+      <div className="bg-violet-50 border border-violet-100 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-purple-900">Total Time Logged</span>
+            <Clock className="w-5 h-5 text-violet-700" />
+            <span className="text-sm font-medium text-violet-900">Total Time Logged</span>
           </div>
-          <span className="text-2xl font-bold text-purple-900">{totalHours}h</span>
+          <span className="text-2xl font-bold text-violet-900">{totalHours}h</span>
         </div>
       </div>
 
@@ -122,8 +122,8 @@ export function TimeEntriesList({ ticketId, onUpdate }: TimeEntriesListProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center border border-purple-200">
-                      <User className="w-3.5 h-3.5 text-purple-600" />
+                    <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center border border-violet-200">
+                      <User className="w-3.5 h-3.5 text-violet-700" />
                     </div>
                     <span className="text-sm font-medium text-slate-700">
                       {entry.userRole === "admin" ? "Team Member" : "User"}
@@ -135,7 +135,7 @@ export function TimeEntriesList({ ticketId, onUpdate }: TimeEntriesListProps) {
                   </span>
 
                   {entry.countTowardsSupportHours && (
-                    <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full border border-purple-200">
+                    <span className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full border border-violet-200">
                       Support Hours
                     </span>
                   )}

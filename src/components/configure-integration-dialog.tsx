@@ -246,7 +246,7 @@ export function ConfigureIntegrationDialog({
               id="isEnabled"
               checked={isEnabled}
               onChange={(e) => setIsEnabled(e.target.checked)}
-              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              className="w-4 h-4 text-violet-700 rounded focus:ring-violet-600"
             />
             <Label htmlFor="isEnabled" className="cursor-pointer">
               Enable monitoring for this integration
@@ -263,7 +263,7 @@ export function ConfigureIntegrationDialog({
                 id="alertEnabled"
                 checked={alertEnabled}
                 onChange={(e) => setAlertEnabled(e.target.checked)}
-                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-violet-700 rounded focus:ring-violet-600"
               />
               <Label htmlFor="alertEnabled" className="cursor-pointer">
                 Enable alerts for this integration

@@ -181,14 +181,14 @@ export default async function ClientDashboard() {
         <StatCard
           label="Active Projects"
           value={activeProjectsCount.toString()}
-          icon={<FolderOpen className="w-4 h-4 text-[#06B6D4]" />}
-          variant="cyan"
+          icon={<FolderOpen className="w-4 h-4 text-violet-700" />}
+          variant="violet"
         />
         <StatCard
           label="Pending Tickets"
           value={openTicketsCount.toString()}
-          icon={<MessageSquare className="w-4 h-4 text-[#6366F1]" />}
-          variant="indigo"
+          icon={<MessageSquare className="w-4 h-4 text-violet-700" />}
+          variant="violet"
         />
         <StatCard
           label="Integrations"
@@ -225,8 +225,8 @@ export default async function ClientDashboard() {
 
               {activityData.length > 0 ? activityData.map((d, i) => (
                 <div key={i} className="flex flex-col items-center gap-4 relative z-10 w-12 group">
-                  <div className="w-full bg-[#E0E7FF] rounded-full relative overflow-hidden flex items-end opacity-50 hover:opacity-100 transition-opacity" style={{ height: '180px' }}>
-                    <div className="w-full bg-[#6366F1] rounded-t-full transition-all duration-1000" style={{ height: `${d.value}%` }}></div>
+                  <div className="w-full bg-violet-100 rounded-full relative overflow-hidden flex items-end opacity-50 hover:opacity-100 transition-opacity" style={{ height: '180px' }}>
+                    <div className="w-full bg-violet-700 rounded-t-full transition-all duration-1000" style={{ height: `${d.value}%` }}></div>
                   </div>
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{d.label}</span>
                   {i === activityData.length - 1 && (
@@ -250,7 +250,7 @@ export default async function ClientDashboard() {
                 <FolderOpen className="w-4 h-4 text-gray-400" />
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Projects</span>
               </div>
-              <Link href="/dashboard/client/projects" className="text-[10px] font-bold text-indigo-600 hover:underline uppercase tracking-widest">View All</Link>
+              <Link href="/dashboard/client/projects" className="text-[10px] font-bold text-violet-700 hover:underline uppercase tracking-widest">View All</Link>
             </div>
             <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
@@ -267,7 +267,7 @@ export default async function ClientDashboard() {
                     {clientProjects.slice(0, 3).map((project) => (
                       <tr key={project.id} className="group hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4 pl-8 font-medium text-sm text-gray-900 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                          <div className="w-8 h-8 rounded-lg bg-violet-50 text-violet-700 flex items-center justify-center font-bold text-xs">
                             {project.name.charAt(0)}
                           </div>
                           {project.name}
@@ -275,7 +275,7 @@ export default async function ClientDashboard() {
                         <td className="px-6 py-4">
                           <span className={cn(
                             "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border",
-                            project.status === 'in_progress' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+                            project.status === 'in_progress' ? "bg-violet-50 text-violet-700 border-violet-100" :
                               project.status === 'completed' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                 "bg-gray-50 text-gray-500 border-gray-100"
                           )}>
@@ -287,7 +287,7 @@ export default async function ClientDashboard() {
                         </td>
                         <td className="px-6 py-4 text-right pr-8">
                           <Link href={`/dashboard/client/projects/${project.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-400 hover:text-violet-700 hover:bg-violet-50">
                               View
                             </Button>
                           </Link>
@@ -324,14 +324,14 @@ export default async function ClientDashboard() {
               {recentMessages.length > 0 ? recentMessages.map((msg) => (
                 <Link key={msg.id} href={`/dashboard/client/messages`}>
                   <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer group">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-violet-50 group-hover:text-violet-700 transition-colors">
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-bold text-gray-900 truncate">{msg.projectName || 'Message'}</p>
                       <p className="text-[10px] text-gray-400 font-medium truncate">{msg.content.substring(0, 30)}...</p>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-300 group-hover:text-indigo-400">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
+                    <span className="text-[10px] font-bold text-gray-300 group-hover:text-violet-400">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
                   </div>
                 </Link>
               )) : (
@@ -344,7 +344,7 @@ export default async function ClientDashboard() {
           <Card className="rounded-xl border-gray-100 shadow-sm p-6 bg-[#111827] text-white">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-indigo-400" />
+                <AlertCircle className="w-5 h-5 text-violet-400" />
               </div>
               <div>
                 <p className="text-sm font-bold">Action Required</p>

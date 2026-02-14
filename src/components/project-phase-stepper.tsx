@@ -82,7 +82,7 @@ export function ProjectPhaseStepper({
   if (phases.length === 0) {
     return (
       <div className="p-12 text-center border border-gray-100 rounded-xl bg-white">
-        <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-500">
+        <div className="w-12 h-12 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4 text-violet-700">
           <Flag className="w-6 h-6" />
         </div>
         <h3 className="text-gray-900 font-bold text-base mb-2">Roadmap Coming Soon</h3>
@@ -101,7 +101,7 @@ export function ProjectPhaseStepper({
     <div className="w-full overflow-x-auto pb-4 pt-2 no-scrollbar px-4">
       {isAdmin && onManagePhases && (
         <div className="absolute top-0 right-0 z-10">
-          <Button variant="ghost" size="sm" onClick={onManagePhases} className="text-gray-400 hover:text-[#6366F1]">
+          <Button variant="ghost" size="sm" onClick={onManagePhases} className="text-gray-400 hover:text-violet-700">
             <Settings className="w-4 h-4" />
           </Button>
         </div>
@@ -109,11 +109,11 @@ export function ProjectPhaseStepper({
 
       <div className="min-w-[800px] relative mt-6">
         {/* Main Progress Bar Background */}
-        <div className="absolute top-[58px] left-0 w-full h-3 bg-[#EEF2FF] rounded-full -z-10"></div>
+        <div className="absolute top-[58px] left-0 w-full h-3 bg-slate-100 rounded-full -z-10"></div>
 
         {/* Active Progress Bar (Calculated width) */}
         <div
-          className="absolute top-[58px] left-0 h-3 bg-[#10B981] rounded-full -z-10 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-1000"
+          className="absolute top-[58px] left-0 h-3 bg-emerald-500 rounded-full -z-10 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-1000"
           style={{
             width: phases.length > 1
               ? `${(phases.filter(p => p.status === 'completed').length / (phases.length - 1)) * 100}%`
@@ -134,7 +134,7 @@ export function ProjectPhaseStepper({
                 {/* Top Date Label */}
                 <div className={cn(
                   "h-8 flex items-end justify-center mb-4 text-xs font-bold transition-colors duration-300 transform group-hover:-translate-y-1",
-                  isCompleted ? "text-[#10B981]" : isCurrent ? "text-[#6366F1]" : "text-gray-400"
+                  isCompleted ? "text-emerald-600" : isCurrent ? "text-violet-700" : "text-gray-400"
                 )}>
                   {phase.startedAt
                     ? format(new Date(phase.startedAt), "MMM d")
@@ -152,8 +152,8 @@ export function ProjectPhaseStepper({
                         disabled={!isAdmin}
                         className={cn(
                           "w-14 h-14 rounded-full flex items-center justify-center border-[4px] transition-all duration-300 relative z-10 bg-white",
-                          isCompleted ? "border-[#10B981] text-[#10B981] shadow-lg shadow-emerald-100 scale-100" :
-                            isCurrent ? "border-[#6366F1] text-[#6366F1] shadow-xl shadow-indigo-200 scale-110 ring-4 ring-indigo-50" :
+                          isCompleted ? "border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-100 scale-100" :
+                            isCurrent ? "border-violet-700 text-violet-700 shadow-xl shadow-violet-200 scale-110 ring-4 ring-violet-50" :
                               "border-gray-100 text-gray-300"
                         )}
                       >
@@ -182,13 +182,13 @@ export function ProjectPhaseStepper({
 
                 {/* Marker Line */}
                 {isCurrent && (
-                  <div className="absolute top-[80px] w-0.5 h-6 bg-[#6366F1]/30 rounded-full animate-bounce"></div>
+                  <div className="absolute top-[80px] w-0.5 h-6 bg-violet-700/30 rounded-full animate-bounce"></div>
                 )}
 
                 {/* Flag Marker (If 'Timeline for Accord' style) */}
                 {isCurrent && (
                   <div className="absolute top-[28px] -right-3">
-                    <div className="w-3 h-3 bg-[#6366F1] rounded-full border-2 border-white shadow-sm animate-ping"></div>
+                    <div className="w-3 h-3 bg-violet-700 rounded-full border-2 border-white shadow-sm animate-ping"></div>
                   </div>
                 )}
 
@@ -196,7 +196,7 @@ export function ProjectPhaseStepper({
                 <div className="mt-6 text-center max-w-[120px]">
                   <p className={cn(
                     "text-sm font-bold leading-tight mb-1 transition-colors",
-                    isCompleted ? "text-gray-900" : isCurrent ? "text-[#6366F1]" : "text-gray-400"
+                    isCompleted ? "text-gray-900" : isCurrent ? "text-violet-700" : "text-gray-400"
                   )}>
                     {phase.name}
                   </p>
@@ -205,7 +205,7 @@ export function ProjectPhaseStepper({
                   </p>
                   {isAdmin && (
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2">
-                      <span className="text-[10px] font-bold text-[#6366F1] cursor-pointer hover:underline">Edit Phase</span>
+                      <span className="text-[10px] font-bold text-violet-700 cursor-pointer hover:underline">Edit Phase</span>
                     </div>
                   )}
                 </div>

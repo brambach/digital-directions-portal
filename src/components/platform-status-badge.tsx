@@ -40,35 +40,35 @@ function getStatusConfig(status: string) {
       return {
         label: "Operational",
         variant: "default",
-        className: "bg-green-100 text-green-800 border-green-200",
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
         icon: CheckCircle,
       };
     case "degraded":
       return {
         label: "Degraded",
         variant: "warning",
-        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        className: "bg-amber-50 text-amber-700 border-amber-200",
         icon: AlertTriangle,
       };
     case "major_outage":
       return {
         label: "Major Outage",
         variant: "destructive",
-        className: "bg-red-100 text-red-800 border-red-200",
+        className: "bg-red-50 text-red-700 border-red-200",
         icon: AlertCircle,
       };
     case "maintenance":
       return {
         label: "Maintenance",
         variant: "secondary",
-        className: "bg-blue-100 text-blue-800 border-blue-200",
+        className: "bg-sky-50 text-sky-700 border-sky-200",
         icon: Wrench,
       };
     default:
       return {
         label: "Unknown",
         variant: "secondary",
-        className: "bg-slate-100 text-slate-800 border-slate-200",
+        className: "bg-slate-100 text-slate-600 border-slate-200",
         icon: AlertCircle,
       };
   }

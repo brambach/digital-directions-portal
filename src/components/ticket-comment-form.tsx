@@ -48,7 +48,7 @@ export function TicketCommentForm({ ticketId, isAdmin = false }: TicketCommentFo
     <form onSubmit={handleSubmit} className="bg-white rounded-lg p-4 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
       <textarea
         placeholder="Add a comment..."
-        className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 placeholder:text-slate-400"
+        className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-violet-600 text-slate-900 placeholder:text-slate-400"
         rows={3}
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -62,7 +62,7 @@ export function TicketCommentForm({ ticketId, isAdmin = false }: TicketCommentFo
               type="checkbox"
               checked={isInternal}
               onChange={(e) => setIsInternal(e.target.checked)}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-slate-300 text-violet-700 focus:ring-violet-600"
             />
             Internal note (client won&apos;t see this)
           </label>

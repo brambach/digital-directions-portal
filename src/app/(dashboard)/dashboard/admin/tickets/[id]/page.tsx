@@ -216,7 +216,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
               </div>
 
               {/* Reply Area */}
-              <div className="bg-gray-50/50 rounded-xl p-1 border border-transparent focus-within:border-indigo-100 focus-within:bg-white focus-within:shadow-md transition-all">
+              <div className="bg-gray-50/50 rounded-xl p-1 border border-transparent focus-within:border-violet-100 focus-within:bg-white focus-within:shadow-md transition-all">
                 <TicketCommentForm ticketId={id} isAdmin />
               </div>
             </div>
@@ -234,7 +234,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                     {author?.avatar ? (
                       <Image src={author.avatar} alt="" width={36} height={36} className="rounded-full border border-gray-100 shadow-sm" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-500">
+                      <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center border border-violet-100 text-violet-700">
                         <span className="font-bold text-xs">{author?.name?.charAt(0)}</span>
                       </div>
                     )}
@@ -308,7 +308,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-sm font-medium text-gray-500">Resolution Due</span>
-                  <span className="text-sm font-bold text-indigo-600 text-right">Draft</span>
+                  <span className="text-sm font-bold text-violet-700 text-right">Draft</span>
                 </div>
               </div>
             </Card>

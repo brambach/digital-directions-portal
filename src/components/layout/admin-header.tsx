@@ -9,7 +9,7 @@ export function AdminHeader() {
         <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white/80 backdrop-blur-md z-30 flex-shrink-0 sticky top-0">
             {/* Search */}
             <div className="relative group hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#6366F1] transition-colors duration-300" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-violet-700 transition-colors duration-300" />
                 <input
                     type="text"
                     placeholder="Search"

@@ -124,7 +124,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                             placeholder="Search projects..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all"
                         />
                     </div>
                 </div>
@@ -135,11 +135,11 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                             onClick={() => setSelectedProjectId(project.id)}
                             className={cn(
                                 "p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 flex gap-3",
-                                selectedProjectId === project.id ? "bg-indigo-50/40" : ""
+                                selectedProjectId === project.id ? "bg-violet-50/40" : ""
                             )}
                         >
                             <div className="relative">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-indigo-100">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-700 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-violet-100">
                                     {project.name.charAt(0)}
                                 </div>
                             </div>
@@ -169,7 +169,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                         {/* Chat Header */}
                         <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold shadow-sm">
+                                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-700 font-bold shadow-sm">
                                     {selectedProject.name.charAt(0)}
                                 </div>
                                 <div>
@@ -188,7 +188,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             {loadingMessages ? (
                                 <div className="flex items-center justify-center h-full">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-700"></div>
                                 </div>
                             ) : messages.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-2">
@@ -217,14 +217,14 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                                             )}
 
                                             {isMe && (
-                                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold self-end shrink-0">ME</div>
+                                                <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 text-[10px] font-bold self-end shrink-0">ME</div>
                                             )}
 
                                             <div>
                                                 <div className={cn(
                                                     "p-4 rounded-2xl shadow-sm text-sm leading-relaxed",
                                                     isMe
-                                                        ? "bg-indigo-600 text-white rounded-br-sm shadow-indigo-200"
+                                                        ? "bg-violet-700 text-white rounded-br-sm shadow-violet-200"
                                                         : "bg-white border border-gray-100 rounded-bl-sm text-gray-600"
                                                 )}>
                                                     {msg.content}
@@ -247,7 +247,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                         {/* Input Area */}
                         <div className="p-4 bg-white border-t border-gray-200">
                             <form onSubmit={handleSendMessage}>
-                                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-2 flex items-center gap-2 focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-200 transition-all">
+                                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-2 flex items-center gap-2 focus-within:ring-2 focus-within:ring-violet-100 focus-within:border-violet-200 transition-all">
                                     <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                                         <Paperclip className="w-4 h-4" />
                                     </button>
@@ -262,7 +262,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                                     <button
                                         type="submit"
                                         disabled={sending || !messageInput.trim()}
-                                        className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm hover:bg-indigo-700 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="p-2 bg-violet-700 text-white rounded-xl shadow-sm hover:bg-violet-800 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
