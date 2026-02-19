@@ -14,9 +14,9 @@ export function PhaseStatusBadge({ status, size = "sm" }: PhaseStatusBadgeProps)
       label: "Pending",
     },
     in_progress: {
-      bg: "bg-violet-50",
-      text: "text-violet-700",
-      border: "border-violet-200",
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
       label: "In Progress",
     },
     completed: {

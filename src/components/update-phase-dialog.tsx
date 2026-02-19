@@ -155,7 +155,7 @@ export function UpdatePhaseDialog({
 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "slate" },
-    { value: "in_progress", label: "In Progress", color: "violet" },
+    { value: "in_progress", label: "In Progress", color: "purple" },
     { value: "completed", label: "Completed", color: "emerald" },
     { value: "skipped", label: "Skipped", color: "slate" },
   ];
@@ -224,15 +224,15 @@ export function UpdatePhaseDialog({
 
                 {/* Phase Dates Info */}
                 {(phase.startedAt || phase.completedAt) && (
-                  <div className="bg-violet-50 border border-violet-100 rounded-lg p-4 space-y-1">
-                    <p className="text-xs font-semibold text-violet-900 mb-2">Phase Timeline</p>
+                  <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 space-y-1">
+                    <p className="text-xs font-semibold text-purple-900 mb-2">Phase Timeline</p>
                     {phase.startedAt && (
-                      <p className="text-xs text-violet-700">
+                      <p className="text-xs text-purple-700">
                         Started: {new Date(phase.startedAt).toLocaleDateString()}
                       </p>
                     )}
                     {phase.completedAt && (
-                      <p className="text-xs text-violet-700">
+                      <p className="text-xs text-purple-700">
                         Completed: {new Date(phase.completedAt).toLocaleDateString()}
                       </p>
                     )}
@@ -241,8 +241,8 @@ export function UpdatePhaseDialog({
 
                 {/* Status Change Info */}
                 {status !== phase.status && (
-                  <div className="bg-violet-50 border border-violet-100 rounded-lg p-3">
-                    <p className="text-xs text-violet-900">
+                  <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
+                    <p className="text-xs text-purple-900">
                       {status === "in_progress" &&
                         "This phase will be marked as the current active phase"}
                       {status === "completed" &&

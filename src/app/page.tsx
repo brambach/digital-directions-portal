@@ -35,10 +35,10 @@ export default function Home() {
             socialButtonsBlockButton:
               "border-slate-200 hover:bg-slate-50 text-slate-700",
             formFieldInput:
-              "border-slate-200 focus:border-violet-500 focus:ring-violet-500",
+              "border-slate-200 focus:border-purple-500 focus:ring-purple-500",
             formButtonPrimary:
-              "bg-violet-600 hover:bg-violet-700 text-white rounded-lg",
-            footerActionLink: "text-violet-600 hover:text-violet-700",
+              "bg-purple-600 hover:bg-purple-700 text-white rounded-lg",
+            footerActionLink: "text-purple-600 hover:text-purple-700",
           },
         }}
         routing="hash"

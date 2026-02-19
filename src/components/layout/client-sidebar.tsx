@@ -27,13 +27,13 @@ export function ClientSidebar() {
     const navItemClass = (href: string) => cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group relative",
         isActive(href)
-            ? "bg-violet-50 text-violet-700 shadow-sm shadow-violet-100/50"
+            ? "bg-purple-50 text-purple-700 shadow-sm shadow-purple-100/50"
             : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
     );
 
     const iconClass = (href: string) => cn(
         "w-4 h-4 transition-colors duration-200",
-        isActive(href) ? "text-violet-700" : "text-gray-400 group-hover:text-gray-900"
+        isActive(href) ? "text-purple-700" : "text-gray-400 group-hover:text-gray-900"
     );
 
     return (
@@ -85,7 +85,7 @@ export function ClientSidebar() {
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-3 mb-4">
                         <div
-                            className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-700 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-violet-200">
+                            className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-700 to-purple-500 flex items-center justify-center text-white shadow-sm shadow-purple-200">
                             <Gem className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col">

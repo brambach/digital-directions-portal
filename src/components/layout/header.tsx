@@ -10,7 +10,7 @@ export async function Header() {
     <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white/80 backdrop-blur-md z-30 flex-shrink-0 sticky top-0">
       {/* Search */}
       <div className="relative group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-violet-700 transition-colors" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-purple-700 transition-colors" />
         <input
           type="text"
           placeholder="Search"
@@ -32,7 +32,7 @@ export async function Header() {
             <div className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></div>
             <Bell className="w-5 h-5 stroke-[1.5]" />
           </button>
-          <button className="btn-press text-gray-400 hover:text-violet-700 transition-colors p-2 rounded-full hover:bg-violet-50">
+          <button className="btn-press text-gray-400 hover:text-purple-700 transition-colors p-2 rounded-full hover:bg-purple-50">
             <PlusCircle className="w-5 h-5 stroke-[1.5]" />
           </button>
         </div>

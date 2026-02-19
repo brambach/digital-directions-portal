@@ -158,7 +158,7 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
               </div>
 
               {/* Reply Input */}
-              <div className="bg-gray-50/50 rounded-xl p-1 border border-transparent focus-within:border-violet-100 focus-within:bg-white focus-within:shadow-md transition-all">
+              <div className="bg-gray-50/50 rounded-xl p-1 border border-transparent focus-within:border-purple-100 focus-within:bg-white focus-within:shadow-md transition-all">
                 <TicketCommentForm ticketId={id} isAdmin={false} />
               </div>
             </div>
@@ -176,7 +176,7 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
                     {author.avatar ? (
                       <Image src={author.avatar} alt="" width={36} height={36} className="rounded-full border border-gray-100 shadow-sm" />
                     ) : (
-                      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center border text-xs font-bold", isStaff ? "bg-violet-50 border-violet-100 text-violet-700" : "bg-gray-100 border-gray-200 text-gray-500")}>
+                      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center border text-xs font-bold", isStaff ? "bg-purple-50 border-purple-100 text-purple-700" : "bg-gray-100 border-gray-200 text-gray-500")}>
                         {author.name.charAt(0)}
                       </div>
                     )}
@@ -186,12 +186,12 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-gray-900">{author.name}</span>
                         {isStaff && (
-                          <span className="text-[9px] bg-violet-50 text-violet-700 px-1.5 py-0.5 rounded-full font-bold border border-violet-100 uppercase tracking-wide">Support Team</span>
+                          <span className="text-[9px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-full font-bold border border-purple-100 uppercase tracking-wide">Support Team</span>
                         )}
                       </div>
                       <span className="text-xs text-gray-400 font-medium">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
                     </div>
-                    <Card className={cn("p-5 rounded-xl border-gray-100 shadow-sm relative", isStaff ? "bg-violet-50/10" : "bg-white")}>
+                    <Card className={cn("p-5 rounded-xl border-gray-100 shadow-sm relative", isStaff ? "bg-purple-50/10" : "bg-white")}>
                       <div className="prose prose-sm max-w-none text-gray-700">
                         <p className="whitespace-pre-wrap">{comment.content}</p>
                       </div>

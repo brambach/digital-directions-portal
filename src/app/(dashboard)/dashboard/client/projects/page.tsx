@@ -88,8 +88,8 @@ function ProjectCard({ project, index }: any) {
   };
 
   const statusColors: any = {
-    planning: 'bg-violet-50 text-violet-700 border-violet-100',
-    in_progress: 'bg-violet-700/5 text-violet-700 border-violet-700/10',
+    planning: 'bg-purple-50 text-purple-700 border-purple-100',
+    in_progress: 'bg-purple-700/5 text-purple-700 border-purple-700/10',
     review: 'bg-amber-50 text-amber-600 border-amber-100',
     completed: 'bg-gray-50 text-gray-500 border-gray-100',
     on_hold: 'bg-red-50 text-red-600 border-red-100',
@@ -97,14 +97,14 @@ function ProjectCard({ project, index }: any) {
 
   return (
     <Link href={`/dashboard/client/projects/${project.id}`}>
-      <div className="group bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-violet-100 transition-all duration-300">
+      <div className="group bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-purple-100 transition-all duration-300">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-700 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-100 group-hover:scale-110 transition-transform duration-500">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-700 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-100 group-hover:scale-110 transition-transform duration-500">
               {project.name.charAt(0)}
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-violet-700 transition-colors leading-tight">{project.name}</h3>
+              <h3 className="text-sm font-bold text-gray-900 group-hover:text-purple-700 transition-colors leading-tight">{project.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <span className={cn(
                   "px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border",
@@ -117,8 +117,8 @@ function ProjectCard({ project, index }: any) {
               </div>
             </div>
           </div>
-          <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-violet-50 transition-colors">
-            <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-violet-700 transition-colors" />
+          <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-purple-50 transition-colors">
+            <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-purple-700 transition-colors" />
           </div>
         </div>
 

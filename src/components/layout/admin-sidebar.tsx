@@ -8,111 +8,132 @@ import {
     LayoutDashboard,
     Users,
     FolderKanban,
+    Ticket,
     MessageSquare,
     Settings,
+    Shield,
     HelpCircle,
-    Gem,
+    ChevronDown,
+    ChevronLeft,
+    ShieldCheck,
 } from "lucide-react";
 
 export function AdminSidebar() {
     const pathname = usePathname();
 
     const isActive = (href: string) => {
-        // Exact match for dashboard home
         if (href === "/dashboard/admin" && pathname === "/dashboard/admin") return true;
-        // Partial match for sub-routes
-        if (href !== "/dashboard/admin" && pathname.startsWith(href)) return true;
+        if (href !== "/dashboard/admin" && pathname !== "/dashboard/admin" && pathname.startsWith(href)) return true;
         return false;
     };
 
-    const navItemClass = (href: string) => cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group relative",
-        isActive(href)
-            ? "bg-violet-50 text-violet-700 shadow-sm shadow-violet-100/50"
-            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-    );
+    const navGroups = [
+        {
+            title: "GENERAL",
+            items: [
+                { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
+                { label: "Clients", href: "/dashboard/admin/clients", icon: Users },
+                { label: "Projects", href: "/dashboard/admin/projects", icon: FolderKanban },
+                { label: "Tickets", href: "/dashboard/admin/tickets", icon: Ticket },
+                { label: "Messages", href: "/dashboard/admin/messages", icon: MessageSquare, badge: "8" },
+            ]
+        },
+        {
+            title: "SYSTEM",
+            items: [
+                { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
+                { label: "Security", href: "/dashboard/admin/security", icon: Shield },
+                { label: "Help Center", href: "/dashboard/admin/help", icon: HelpCircle },
+            ]
+        }
+    ];
 
-    const iconClass = (href: string) => cn(
-        "w-4 h-4 transition-colors duration-200",
-        isActive(href) ? "text-violet-700" : "text-gray-400 group-hover:text-gray-900"
-    );
+    const renderNavItem = (item: any) => {
+        const active = isActive(item.href);
+        return (
+            <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-[12px] text-[14px] font-medium transition-all duration-200 group",
+                    active
+                        ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(124,28,255,0.1)]"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
+                )}
+            >
+                <item.icon
+                    strokeWidth={active ? 2 : 1.5}
+                    className={cn(
+                        "w-[18px] h-[18px] flex-shrink-0 transition-colors",
+                        active ? "text-primary" : "text-slate-500 group-hover:text-slate-300"
+                    )}
+                />
+                <span className="flex-1">{item.label}</span>
+                {item.badge && (
+                    <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                        item.badge === "BETA"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-primary/10 text-primary"
+                    )}>
+                        {item.badge}
+                    </span>
+                )}
+            </Link>
+        );
+    };
 
     return (
-        <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col py-6 px-5 z-20 flex-shrink-0 relative h-full">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-2 mb-10 group cursor-pointer">
-                <Image
-                    src="/images/dd-logo.png"
-                    alt="Digital Directions"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-lg transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-110"
-                />
-                <span className="text-xl font-semibold tracking-tight text-gray-900">Digital Directions</span>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-8">
-
-                {/* General Section */}
-                <div>
-                    <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">General</div>
-                    <nav className="space-y-1">
-                        <Link href="/dashboard/admin" className={navItemClass("/dashboard/admin")}>
-                            <LayoutDashboard className={iconClass("/dashboard/admin")} />
-                            Dashboard
-                        </Link>
-                        <Link href="/dashboard/admin/clients" className={navItemClass("/dashboard/admin/clients")}>
-                            <Users className={iconClass("/dashboard/admin/clients")} />
-                            Clients
-                        </Link>
-                        <Link href="/dashboard/admin/projects" className={navItemClass("/dashboard/admin/projects")}>
-                            <FolderKanban className={iconClass("/dashboard/admin/projects")} />
-                            Projects
-                        </Link>
-                        <Link href="/dashboard/admin/messages" className={navItemClass("/dashboard/admin/messages")}>
-                            <div className="flex items-center gap-3">
-                                <MessageSquare className={iconClass("/dashboard/admin/messages")} />
-                                Messages
-                            </div>
-                        </Link>
-                    </nav>
-                </div>
-
-                {/* Support Section */}
-                <div>
-                    <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Support</div>
-                    <nav className="space-y-1">
-                        <Link href="/dashboard/admin/settings" className={navItemClass("/dashboard/admin/settings")}>
-                            <Settings className={iconClass("/dashboard/admin/settings")} />
-                            Settings
-                        </Link>
-                        <Link href="/dashboard/admin/tickets" className={navItemClass("/dashboard/admin/tickets")}>
-                            <HelpCircle className={iconClass("/dashboard/admin/help")} />
-                            Help Center
-                        </Link>
-                    </nav>
-                </div>
-            </div>
-
-            {/* Team Info */}
-            <div className="mt-auto pt-6">
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-700 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-violet-200">
-                            <Gem className="w-4 h-4" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-medium">Team</span>
-                            <span className="text-sm font-semibold text-gray-900">Digital Directions</span>
-                        </div>
+        <aside className="w-[260px] bg-[#0F1219] flex flex-col flex-shrink-0 h-full border-r border-white/[0.05]">
+            {/* Digital Directions Brand Header */}
+            <div className="px-6 py-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="relative h-8 w-40">
+                        <Image
+                            src="/images/logos/long_form_white_text.png"
+                            alt="Digital Directions"
+                            fill
+                            className="object-contain"
+                        />
                     </div>
                 </div>
-                <div className="mt-4 text-center">
-                    <span className="text-[10px] text-gray-400">© 2026 Digital Directions</span>
+                <button className="w-7 h-7 rounded-md border border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
+                    <ChevronLeft className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Navigation Groups */}
+            <div className="flex-1 overflow-y-auto no-scrollbar px-4 space-y-8 pt-2">
+                {navGroups.map((group) => (
+                    <div key={group.title} className="space-y-2">
+                        <h3 className="px-3 text-[11px] font-bold text-slate-600 tracking-[0.08em] uppercase">
+                            {group.title}
+                        </h3>
+                        <nav className="space-y-1">
+                            {group.items.map(renderNavItem)}
+                        </nav>
+                    </div>
+                ))}
+            </div>
+
+            {/* Account Section */}
+            <div className="p-4 mx-4 mb-4 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-slate-500">Account Type</p>
+                        <p className="text-sm font-bold text-white truncate">Administrator</p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-600" />
                 </div>
             </div>
-        </aside >
+
+            {/* Version / Copyright */}
+            <div className="px-6 py-4 border-t border-white/[0.05]">
+                <p className="text-[11px] text-slate-600">@ 2024 Digital Directions</p>
+            </div>
+        </aside>
     );
 }

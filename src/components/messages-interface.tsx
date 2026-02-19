@@ -168,7 +168,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                             placeholder="Search messages"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-100 focus:border-violet-200 transition-all placeholder:text-gray-400"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200 transition-all placeholder:text-gray-400"
                         />
                     </div>
                 </div>
@@ -188,14 +188,14 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                         >
                             {/* Selection Indicator Line */}
                             {selectedProjectId === project.id && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-violet-700 rounded-r-full" />
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-purple-700 rounded-r-full" />
                             )}
 
                             <div className="flex gap-3 pl-2">
                                 <div className="relative flex-shrink-0">
                                     <div className={cn(
                                         "w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white",
-                                        selectedProjectId === project.id ? "bg-violet-700" : "bg-gray-900"
+                                        selectedProjectId === project.id ? "bg-purple-700" : "bg-gray-900"
                                     )}>
                                         {project.name.charAt(0)}
                                     </div>
@@ -216,7 +216,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-xs text-violet-700 font-medium truncate">@{project.clientName.replace(/\s+/g, '').toLowerCase()}</span>
+                                        <span className="text-xs text-purple-700 font-medium truncate">@{project.clientName.replace(/\s+/g, '').toLowerCase()}</span>
                                     </div>
                                     <p className="text-xs text-gray-500 truncate mt-0.5">
                                         {project.id === selectedProjectId ? "View conversation..." : "Click to view messages"}
@@ -240,7 +240,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                         <div className="h-20 border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0 bg-white">
                             <div className="flex items-center gap-4">
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold text-lg">
+                                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-lg">
                                         {selectedProject.name.charAt(0)}
                                     </div>
                                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
@@ -269,7 +269,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 bg-white">
                             {loadingMessages ? (
                                 <div className="flex items-center justify-center h-full">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-700"></div>
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
                                 </div>
                             ) : messages.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
@@ -298,7 +298,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                                                     {/* Avatar */}
                                                     <div className="flex-shrink-0 self-end">
                                                         {isMe ? (
-                                                            <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 text-[10px] font-bold">ME</div>
+                                                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-[10px] font-bold">ME</div>
                                                         ) : (
                                                             msg.senderAvatar ? (
                                                                 <Image src={msg.senderAvatar} alt={msg.senderName} width={32} height={32} className="rounded-full object-cover w-8 h-8 border border-gray-100" />
@@ -321,7 +321,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                                                         <div className={cn(
                                                             "px-5 py-3.5 rounded-2xl text-sm leading-relaxed shadow-sm",
                                                             isMe
-                                                                ? "bg-violet-700 text-white rounded-tr-sm"
+                                                                ? "bg-purple-700 text-white rounded-tr-sm"
                                                                 : "bg-white border border-gray-200 text-gray-700 rounded-tl-sm"
                                                         )}>
                                                             {msg.content}
@@ -339,7 +339,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                         {/* Input Area */}
                         <div className="p-6 bg-white border-t border-gray-100">
                             <form onSubmit={handleSendMessage} className="relative">
-                                <div className="border border-gray-200 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-violet-100 focus-within:border-violet-300 transition-all bg-white overflow-hidden">
+                                <div className="border border-gray-200 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-purple-100 focus-within:border-purple-300 transition-all bg-white overflow-hidden">
                                     <textarea
                                         value={messageInput}
                                         onChange={(e) => setMessageInput(e.target.value)}
@@ -370,7 +370,7 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                                         <Button
                                             type="submit"
                                             disabled={sending || !messageInput.trim()}
-                                            className="bg-violet-700 hover:bg-violet-800 text-white font-semibold rounded-lg px-4 h-9 shadow-sm transition-all disabled:opacity-50"
+                                            className="bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded-lg px-4 h-9 shadow-sm transition-all disabled:opacity-50"
                                         >
                                             {sending ? "Sending..." : "Send"}
                                         </Button>
@@ -387,8 +387,8 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                 ) : (
                     <div className="flex-1 flex items-center justify-center bg-gray-50/30">
                         <div className="text-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-sm">
-                            <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-violet-100">
-                                <Search className="w-7 h-7 text-violet-700" />
+                            <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-purple-100">
+                                <Search className="w-7 h-7 text-purple-700" />
                             </div>
                             <h3 className="text-gray-900 font-bold text-lg mb-2">Select a Conversation</h3>
                             <p className="text-sm text-gray-500 leading-relaxed">Choose a project from the sidebar to start messaging with the team or viewing project updates.</p>

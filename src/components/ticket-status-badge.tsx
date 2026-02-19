@@ -11,9 +11,9 @@ const statusStyles = {
     label: "Open",
   },
   in_progress: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
-    border: "border-violet-200",
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
     label: "In Progress",
   },
   waiting_on_client: {
@@ -101,13 +101,13 @@ interface TicketTypeBadgeProps {
 
 const typeStyles = {
   general_support: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
+    bg: "bg-purple-50",
+    text: "text-purple-700",
     label: "Support",
   },
   project_issue: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
+    bg: "bg-purple-50",
+    text: "text-purple-700",
     label: "Project Issue",
   },
   feature_request: {

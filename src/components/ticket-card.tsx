@@ -25,7 +25,7 @@ interface TicketCardProps {
 export function StatusPill({ status }: { status: string }) {
   const variants: any = {
     open: 'bg-amber-50 text-amber-600 border-amber-100',
-    in_progress: 'bg-violet-50 text-violet-700 border-violet-100',
+    in_progress: 'bg-purple-50 text-purple-700 border-purple-100',
     waiting_on_client: 'bg-amber-50 text-amber-600 border-amber-100',
     resolved: 'bg-emerald-50 text-emerald-600 border-emerald-100',
     closed: 'bg-slate-50 text-slate-500 border-slate-100',
@@ -53,12 +53,12 @@ export function TicketCard({ ticket, href, showClient = true, urgent = false }: 
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
-              isUrgent ? "bg-red-100 text-red-600" : "bg-violet-50 text-violet-700"
+              isUrgent ? "bg-red-100 text-red-600" : "bg-purple-50 text-purple-700"
             )}>
               {isUrgent ? <ShieldAlert className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors leading-tight">{ticket.title}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-tight">{ticket.title}</h3>
               <div className="text-[10px] text-gray-400 font-medium mt-1 uppercase tracking-tight">
                 {showClient && ticket.clientName ? `${ticket.clientName} • ` : ''}
                 {ticket.projectName || 'General Support'}
@@ -89,7 +89,7 @@ export function TicketCard({ ticket, href, showClient = true, urgent = false }: 
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tight hidden sm:inline">Assignee:</span>
             <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-              <div className="w-4 h-4 rounded-full bg-violet-700 flex items-center justify-center text-[8px] font-bold text-white uppercase">
+              <div className="w-4 h-4 rounded-full bg-purple-700 flex items-center justify-center text-[8px] font-bold text-white uppercase">
                 {ticket.assigneeName?.substring(0, 2) || '??'}
               </div>
               <span className="text-[9px] font-bold text-gray-700 uppercase tracking-tight">

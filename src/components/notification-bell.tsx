@@ -25,14 +25,14 @@ interface Notification {
 function getNotificationIcon(type: string) {
   switch (type) {
     case "message":
-      return <MessageSquare className="w-4 h-4 text-violet-700" />;
+      return <MessageSquare className="w-4 h-4 text-purple-700" />;
     case "project_update":
       return <FolderKanban className="w-4 h-4 text-emerald-600" />;
     case "ticket":
     case "ticket_response":
       return <Ticket className="w-4 h-4 text-amber-600" />;
     case "client_added":
-      return <UserPlus className="w-4 h-4 text-violet-600" />;
+      return <UserPlus className="w-4 h-4 text-purple-600" />;
     case "integration_alert":
       return <AlertCircle className="w-4 h-4 text-red-600" />;
     default:
@@ -167,7 +167,7 @@ export function NotificationBell() {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${
-                    !notification.isRead ? "bg-violet-50/50" : ""
+                    !notification.isRead ? "bg-purple-50/50" : ""
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -180,7 +180,7 @@ export function NotificationBell() {
                           {notification.title}
                         </p>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 rounded-full bg-violet-700 flex-shrink-0" />
+                          <div className="w-2 h-2 rounded-full bg-purple-700 flex-shrink-0" />
                         )}
                       </div>
                       <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">

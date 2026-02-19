@@ -63,7 +63,7 @@ export function ClaimTicketButton({ ticketId }: { ticketId: string }) {
     <button
       onClick={handleClaim}
       disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-lg transition-all disabled:opacity-50"
+      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all disabled:opacity-50"
     >
       <UserPlus className="w-4 h-4" />
       {loading ? "Claiming..." : "Claim Ticket"}
@@ -179,7 +179,7 @@ export function UpdateStatusButton({ ticketId, currentStatus }: { ticketId: stri
             <button
               onClick={handleUpdate}
               disabled={loading}
-              className="px-5 py-2 text-sm font-medium text-white bg-violet-700 rounded-lg transition-all hover:bg-violet-800 disabled:opacity-50 shadow-sm"
+              className="px-5 py-2 text-sm font-medium text-white bg-purple-700 rounded-lg transition-all hover:bg-purple-800 disabled:opacity-50 shadow-sm"
             >
               {loading ? "Updating..." : "Update"}
             </button>
@@ -258,7 +258,7 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
               type="checkbox"
               checked={closeTicket}
               onChange={(e) => setCloseTicket(e.target.checked)}
-              className="rounded border-slate-300 text-violet-700 focus:ring-violet-600"
+              className="rounded border-slate-300 text-purple-700 focus:ring-purple-600"
             />
             Close ticket (mark as fully completed)
           </label>
@@ -275,7 +275,7 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
             <button
               onClick={handleResolve}
               disabled={loading || !resolution.trim()}
-              className="px-5 py-2 text-sm font-medium text-white bg-violet-700 rounded-lg transition-all hover:bg-violet-800 disabled:opacity-50 shadow-sm"
+              className="px-5 py-2 text-sm font-medium text-white bg-purple-700 rounded-lg transition-all hover:bg-purple-800 disabled:opacity-50 shadow-sm"
             >
               {loading ? "Resolving..." : closeTicket ? "Close Ticket" : "Mark Resolved"}
             </button>
@@ -298,7 +298,7 @@ export function LogTimeButton({ ticketId }: { ticketId: string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-lg transition-all"
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all"
       >
         <Clock className="w-4 h-4" />
         Log Time

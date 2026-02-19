@@ -10,19 +10,19 @@ export interface StatCardProps {
     trendUp?: boolean;
     icon?: React.ReactNode;
     period?: string;
-    variant?: "white" | "emerald" | "violet";
+    variant?: "white" | "emerald" | "purple";
 }
 
 export function StatCard({ label, value, trend, trendUp, icon, period = "vs last month", variant = "white" }: StatCardProps) {
     const variants: any = {
         emerald: "bg-emerald-50/50 border-emerald-100/50",
-        violet: "bg-violet-50/50 border-violet-100/50",
+        purple: "bg-purple-50/50 border-purple-100/50",
         white: "bg-white border-slate-100"
     };
 
     const iconBgVariants: any = {
         emerald: "bg-emerald-100/60 border-emerald-200/50 group-hover:bg-emerald-100",
-        violet: "bg-violet-100/60 border-violet-200/50 group-hover:bg-violet-100",
+        purple: "bg-purple-100/60 border-purple-200/50 group-hover:bg-purple-100",
         white: "bg-slate-50 border-slate-100 group-hover:bg-slate-100"
     };
 
@@ -64,7 +64,7 @@ export function StatCard({ label, value, trend, trendUp, icon, period = "vs last
             <div className={cn(
                 "absolute right-0 bottom-0 w-32 h-32 rounded-full translate-y-10 translate-x-10 transition-transform duration-500 group-hover:scale-125",
                 variant === 'emerald' ? "bg-gradient-to-tl from-emerald-100/50 to-transparent" :
-                    variant === 'violet' ? "bg-gradient-to-tl from-violet-100/50 to-transparent" :
+                    variant === 'purple' ? "bg-gradient-to-tl from-purple-100/50 to-transparent" :
                         "bg-gradient-to-tl from-slate-50 to-transparent"
             )}></div>
         </Card>

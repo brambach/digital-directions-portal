@@ -59,7 +59,7 @@ const MessageListComponent = ({ projectId, initialMessages }: MessageListProps) 
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center p-8">
-          <div className="w-12 h-12 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4 text-violet-700">
+          <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-700">
             <MessageSquare className="w-6 h-6" />
           </div>
           <h3 className="text-gray-900 font-bold text-base mb-2">Start a Conversation</h3>
@@ -94,7 +94,7 @@ const MessageListComponent = ({ projectId, initialMessages }: MessageListProps) 
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-slate-900">{message.senderName}</span>
                   {message.senderRole === "admin" && (
-                    <span className="text-xs px-1.5 py-0.5 bg-violet-50 text-violet-700 rounded-full border border-violet-200">
+                    <span className="text-xs px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded-full border border-purple-200">
                       Team
                     </span>
                   )}
@@ -114,7 +114,7 @@ const MessageListComponent = ({ projectId, initialMessages }: MessageListProps) 
           <button
             onClick={loadMore}
             disabled={loading}
-            className="text-sm text-violet-700 hover:text-violet-800 font-medium disabled:opacity-50 inline-flex items-center gap-2 transition-colors"
+            className="text-sm text-purple-700 hover:text-purple-800 font-medium disabled:opacity-50 inline-flex items-center gap-2 transition-colors"
           >
             {loading ? (
               <>

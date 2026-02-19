@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"] });
@@ -17,27 +18,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={geist.className}>
+    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+      <body className={cn(geist.className, "antialiased")}>
         <ClerkProvider
           appearance={{
             baseTheme: undefined,
             variables: {
-              colorPrimary: "#6d28d9",
-              colorBackground: "#FFFFFF",
-              colorText: "#111827",
-              colorTextSecondary: "#6B7280",
-              colorInputBackground: "#FFFFFF",
-              colorInputText: "#111827",
-              borderRadius: "1rem",
+              colorPrimary: "#7C3AED",
+              colorBackground: "#151921",
+              colorText: "white",
+              colorTextSecondary: "#94a3b8",
+              colorInputBackground: "#0B0E14",
+              colorInputText: "white",
+              borderRadius: "0.75rem",
             },
             elements: {
-              card: "shadow-sm border-gray-100",
-              headerTitle: "text-gray-900",
-              headerSubtitle: "text-gray-500",
-              formButtonPrimary: "bg-violet-700 hover:bg-violet-800 text-sm font-semibold transition-all duration-200",
-              formFieldInput: "border-gray-200 text-gray-900 focus:border-violet-600 focus:ring-violet-600/10",
-              footerActionLink: "text-violet-700 hover:text-violet-800",
+              card: "shadow-none border border-white/10",
+              headerTitle: "text-white",
+              headerSubtitle: "text-slate-400",
+              formButtonPrimary: "bg-purple-600 hover:bg-purple-700 text-sm font-semibold transition-all duration-200",
+              formFieldInput: "border-white/10 bg-slate-950 text-white focus:border-purple-600 focus:ring-purple-600/10",
+              footerActionLink: "text-purple-400 hover:text-purple-500",
             },
           }}
         >

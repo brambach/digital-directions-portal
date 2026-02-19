@@ -65,7 +65,7 @@ export default async function ProjectsPage() {
 
   const statusColumns = [
     { key: "planning", title: "Planning", icon: Clock, projects: groupedProjects.planning, color: 'text-gray-400' },
-    { key: "in_progress", title: "In Progress", icon: FolderKanban, projects: groupedProjects.in_progress, color: 'text-violet-700' },
+    { key: "in_progress", title: "In Progress", icon: FolderKanban, projects: groupedProjects.in_progress, color: 'text-purple-700' },
     { key: "review", title: "Review", icon: FileSearch, projects: groupedProjects.review, color: 'text-amber-500' },
     { key: "completed", title: "Completed", icon: CheckCircle, projects: groupedProjects.completed, color: 'text-emerald-500' },
   ];
@@ -92,7 +92,7 @@ export default async function ProjectsPage() {
               <div className="flex items-center gap-2">
                 <div className={cn("w-1.5 h-1.5 rounded-full",
                   column.key === 'planning' ? 'bg-gray-400' :
-                    column.key === 'in_progress' ? 'bg-violet-700' :
+                    column.key === 'in_progress' ? 'bg-purple-700' :
                       column.key === 'review' ? 'bg-amber-500' : 'bg-emerald-500'
                 )}></div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">{column.title}</span>
@@ -139,15 +139,15 @@ function ProjectCard({ project, index }: ProjectCardProps) {
 
   return (
     <Link href={`/dashboard/admin/projects/${project.id}`} className="block group">
-      <div className="bg-white border border-gray-100 rounded-[20px] p-5 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-violet-100 transition-all duration-300">
+      <div className="bg-white border border-gray-100 rounded-[20px] p-5 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-purple-100 transition-all duration-300">
         {/* Status Label */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-700 group-hover:bg-violet-700 group-hover:text-white transition-all duration-300 shadow-sm shadow-violet-100">
+            <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 group-hover:bg-purple-700 group-hover:text-white transition-all duration-300 shadow-sm shadow-purple-100">
               {project.clientName?.charAt(0) || "P"}
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-900 group-hover:text-violet-700 transition-colors uppercase tracking-tight">{project.clientName}</span>
+              <span className="text-[10px] font-bold text-gray-900 group-hover:text-purple-700 transition-colors uppercase tracking-tight">{project.clientName}</span>
               <span className="text-[10px] text-gray-500 font-medium">Active Project</span>
             </div>
           </div>
@@ -161,7 +161,7 @@ function ProjectCard({ project, index }: ProjectCardProps) {
           </div>
         </div>
 
-        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-tight group-hover:text-violet-700 transition-colors line-clamp-2">{project.name}</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-tight group-hover:text-purple-700 transition-colors line-clamp-2">{project.name}</h3>
 
         <div className="flex items-center gap-4 mt-5 pt-4 border-t border-gray-50">
           <div className="flex items-center gap-1.5">

@@ -127,13 +127,11 @@ function generateAlertMessage(
 ): string {
   switch (alertType) {
     case "down":
-      return `Integration "${monitor.serviceName}" (${monitor.serviceType}) is currently down. ${
-        monitor.lastErrorMessage || "No error details available."
-      }`;
+      return `Integration "${monitor.serviceName}" (${monitor.serviceType}) is currently down. ${monitor.lastErrorMessage || "No error details available."
+        }`;
     case "degraded":
-      return `Integration "${monitor.serviceName}" (${monitor.serviceType}) is experiencing degraded performance. ${
-        monitor.lastErrorMessage || "No error details available."
-      }`;
+      return `Integration "${monitor.serviceName}" (${monitor.serviceType}) is experiencing degraded performance. ${monitor.lastErrorMessage || "No error details available."
+        }`;
     case "recovered":
       return `Integration "${monitor.serviceName}" (${monitor.serviceType}) has recovered and is now operational.`;
     default:
@@ -204,7 +202,7 @@ async function sendEmailAlert(
               <p>${message}</p>
 
               <div style="margin-top: 30px;">
-                <a href="${detailsUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">View Integration Details</a>
+                <a href="${detailsUrl}" style="display: inline-block; background: #45079a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">View Integration Details</a>
               </div>
 
               <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">

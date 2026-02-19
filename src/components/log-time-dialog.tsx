@@ -101,7 +101,7 @@ export function LogTimeDialog({
                     min="0"
                     value={hours}
                     onChange={(e) => setHours(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                     placeholder="0"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
@@ -118,7 +118,7 @@ export function LogTimeDialog({
                     max="59"
                     value={minutes}
                     onChange={(e) => setMinutes(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                     placeholder="0"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
@@ -145,22 +145,22 @@ export function LogTimeDialog({
           </div>
 
           {/* Count towards support hours */}
-          <div className="flex items-start gap-3 p-4 bg-violet-50 border border-violet-100 rounded-lg">
+          <div className="flex items-start gap-3 p-4 bg-purple-50 border border-purple-100 rounded-lg">
             <input
               type="checkbox"
               id="countTowardsSupportHours"
               checked={countTowardsSupportHours}
               onChange={(e) => setCountTowardsSupportHours(e.target.checked)}
-              className="mt-0.5 rounded border-violet-300 text-violet-700 focus:ring-violet-600"
+              className="mt-0.5 rounded border-purple-300 text-purple-700 focus:ring-purple-600"
             />
             <div className="flex-1">
               <label
                 htmlFor="countTowardsSupportHours"
-                className="text-sm font-medium text-violet-900 cursor-pointer"
+                className="text-sm font-medium text-purple-900 cursor-pointer"
               >
                 Count towards support hours
               </label>
-              <p className="text-xs text-violet-700 mt-1">
+              <p className="text-xs text-purple-700 mt-1">
                 This time will be deducted from the client&apos;s monthly support hour balance
               </p>
             </div>

@@ -169,7 +169,7 @@ export function AddClientDialog() {
               id="sendInvite"
               checked={formData.sendInvite}
               onChange={(e) => setFormData({ ...formData, sendInvite: e.target.checked })}
-              className="h-4 w-4 rounded border-white/10 bg-white/5 text-violet-700 focus:ring-violet-600"
+              className="h-4 w-4 rounded border-white/10 bg-white/5 text-purple-700 focus:ring-purple-600"
             />
             <label htmlFor="sendInvite" className="text-sm text-slate-400 cursor-pointer">
               Send portal invite email to contact

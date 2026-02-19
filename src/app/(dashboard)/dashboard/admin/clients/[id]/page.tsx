@@ -49,9 +49,9 @@ function getStatusBadge(status: string): { bg: string; text: string; border: str
 function getProjectStatusBadge(status: string): { bg: string; text: string; dot: string; label: string } {
   switch (status) {
     case "in_progress":
-      return { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500", label: "In Progress" };
+      return { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500", label: "In Progress" };
     case "review":
-      return { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500", label: "In Review" };
+      return { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500", label: "In Review" };
     case "completed":
       return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", label: "Completed" };
     case "on_hold":
@@ -204,7 +204,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Mail className="w-4 h-4 text-gray-400" />
-              <a href={`mailto:${client.contactEmail}`} className="hover:text-violet-700 transition-colors">
+              <a href={`mailto:${client.contactEmail}`} className="hover:text-purple-700 transition-colors">
                 {client.contactEmail}
               </a>
             </div>
@@ -235,8 +235,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             value={totalProjects}
             trend="Stable"
             trendUp={true}
-            icon={<FolderOpen className="w-4 h-4 text-violet-700" />}
-            variant="violet"
+            icon={<FolderOpen className="w-4 h-4 text-purple-700" />}
+            variant="purple"
           />
         </div>
         <div className="col-span-12 md:col-span-4">
@@ -245,8 +245,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             value={activeProjects}
             trend={activeProjectsTrend}
             trendUp={true}
-            icon={<Briefcase className="w-4 h-4 text-violet-700" />}
-            variant="violet"
+            icon={<Briefcase className="w-4 h-4 text-purple-700" />}
+            variant="purple"
           />
         </div>
         <div className="col-span-12 md:col-span-4">
@@ -304,7 +304,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         <tr key={project.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0">
                           <td className="px-6 py-5 pl-8">
                             <div className="flex flex-col">
-                              <span className="font-bold text-gray-900 group-hover:text-violet-700 transition-colors">{project.name}</span>
+                              <span className="font-bold text-gray-900 group-hover:text-purple-700 transition-colors">{project.name}</span>
                               <span className="text-xs text-slate-400 truncate max-w-[200px]">{project.description || "No description"}</span>
                             </div>
                           </td>
@@ -376,7 +376,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <div className="space-y-4">
               {portalUsersWithDetails.map((user) => (
                 <div key={user.id} className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-50 to-white border border-violet-100 flex items-center justify-center text-violet-700 font-bold text-xs shadow-sm">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-50 to-white border border-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs shadow-sm">
                     {user.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -426,7 +426,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 time={activity?.lastLogin ? formatDistanceToNow(new Date(activity.lastLogin), { addSuffix: true }) : "Never"}
               />
               <ActivityItem
-                color="bg-violet-500"
+                color="bg-purple-500"
                 title="Last Message Sent"
                 time={activity?.lastMessageSent ? formatDistanceToNow(new Date(activity.lastMessageSent), { addSuffix: true }) : "No messages"}
               />

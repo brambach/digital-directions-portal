@@ -84,7 +84,7 @@ export default function TopNav({ navItems, isAdmin }: TopNavProps) {
                 appearance={{
                   elements: {
                     avatarBox:
-                      "w-9 h-9 rounded-lg ring-2 ring-white shadow-sm hover:ring-violet-100 transition-all",
+                      "w-9 h-9 rounded-lg ring-2 ring-white shadow-sm hover:ring-purple-100 transition-all",
                   },
                 }}
               />
@@ -119,7 +119,7 @@ export default function TopNav({ navItems, isAdmin }: TopNavProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     active
-                      ? "bg-violet-50 text-violet-700"
+                      ? "bg-purple-50 text-purple-700"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >

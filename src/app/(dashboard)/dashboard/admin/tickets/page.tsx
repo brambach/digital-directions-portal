@@ -32,7 +32,7 @@ function getPriorityColor(priority: string) {
 function getStatusColor(status: string) {
   switch (status) {
     case "open": return "bg-emerald-500";
-    case "in_progress": return "bg-violet-700";
+    case "in_progress": return "bg-purple-700";
     case "resolved": return "bg-slate-400";
     case "closed": return "bg-slate-300";
     default: return "bg-slate-400";
@@ -155,12 +155,12 @@ export default async function AdminTicketsPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-100">
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-violet-100 transition-all">
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-purple-100 transition-all">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Queue</p>
             <p className="text-2xl font-bold text-gray-900">{criticalTickets.length + standardTickets.length}</p>
           </div>
-          <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-700 group-hover:bg-violet-100 transition-colors">
+          <div className="h-10 w-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-700 group-hover:bg-purple-100 transition-colors">
             <MessageSquare className="w-5 h-5" />
           </div>
         </div>
@@ -263,7 +263,7 @@ export default async function AdminTicketsPage() {
       {/* Main Standard Queue */}
       <div className="animate-enter delay-300 space-y-4">
         <div className="flex items-center gap-2 px-1">
-          <Zap className="w-4 h-4 text-violet-700" />
+          <Zap className="w-4 h-4 text-purple-700" />
           <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Standard Queue</h2>
         </div>
         <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden bg-white">
@@ -279,7 +279,7 @@ export default async function AdminTicketsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-50 bg-violet-50/10 text-left">
+                  <tr className="border-b border-gray-50 bg-purple-50/10 text-left">
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Ticket Subject</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client & Priority</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -294,10 +294,10 @@ export default async function AdminTicketsPage() {
                         <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
                           <div className="flex items-start gap-4">
                             <div className="pt-1.5 flex flex-col items-center gap-1">
-                              <div className="w-2.5 h-2.5 rounded-full bg-violet-700/20" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-purple-700/20" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 text-sm group-hover:text-violet-700 transition-colors">
+                              <p className="font-bold text-gray-900 text-sm group-hover:text-purple-700 transition-colors">
                                 {ticket.title}
                               </p>
                               <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[300px]">{ticket.description}</p>
@@ -368,7 +368,7 @@ export default async function AdminTicketsPage() {
                       <td className="px-6 py-4 pl-8">
                         <Link href={`/dashboard/admin/tickets/${ticket.id}`} className="block">
                           <div className="opacity-60 group-hover:opacity-100 transition-opacity">
-                            <p className="font-bold text-gray-700 text-sm group-hover:text-violet-700 transition-colors">
+                            <p className="font-bold text-gray-700 text-sm group-hover:text-purple-700 transition-colors">
                               {ticket.title}
                             </p>
                             <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[300px]">#{ticket.id.slice(-4)}</p>

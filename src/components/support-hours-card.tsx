@@ -70,15 +70,15 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
       <div className="bg-white rounded-xl p-6 border border-gray-50 shadow-sm transition-all hover-card">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-violet-50 text-violet-700">
+            <div className="p-2 rounded-xl bg-purple-50 text-purple-700">
               <Clock className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">Support Hours</h3>
+            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">Support Hours</h3>
           </div>
           {isAdmin && (
             <button
               onClick={() => setEditDialogOpen(true)}
-              className="p-1.5 text-gray-400 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -91,7 +91,7 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
             {isAdmin && (
               <button
                 onClick={() => setEditDialogOpen(true)}
-                className="text-[10px] font-bold text-violet-700 uppercase tracking-widest hover:underline"
+                className="text-[10px] font-bold text-purple-700 uppercase tracking-widest hover:underline"
               >
                 Set up support hours
               </button>
@@ -122,7 +122,7 @@ export function SupportHoursCard({ clientId, isAdmin = false }: SupportHoursCard
                     ? "bg-red-500"
                     : isNearLimit
                       ? "bg-amber-500"
-                      : "bg-violet-700"
+                      : "bg-purple-700"
                 )}
                 style={{
                   width: `${Math.min(data.percentageUsed, 100)}%`,
