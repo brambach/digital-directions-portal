@@ -1,34 +1,30 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, messages, clients, tickets, integrationMonitors, projectPhases } from "@/lib/db/schema";
-import { eq, isNull, and, desc, count, sql, gte, inArray } from "drizzle-orm";
+import { projects, messages, clients, tickets, integrationMonitors } from "@/lib/db/schema";
+import { eq, isNull, and, desc, count, inArray } from "drizzle-orm";
 import Link from "next/link";
 import {
-  FolderOpen,
-  MessageSquare,
-  Clock,
+  FolderKanban,
+  Ticket,
   Activity,
-  Zap,
-  TrendingUp,
-  Layout,
-  CheckCircle,
+  Clock,
+  ArrowUpRight,
+  ChevronRight,
+  MessageSquare,
   AlertCircle,
-  MoreHorizontal,
-  HelpCircle
+  CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn, formatMinutesToHours } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/ui/stat-card";
-import { Card } from "@/components/ui/card";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import { DijiMascot } from "@/components/diji-mascot";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientDashboard() {
   const user = await requireAuth();
 
-  // Get client info
   const client = await db
     .select()
     .from(clients)
@@ -38,86 +34,49 @@ export default async function ClientDashboard() {
 
   if (!client) return null;
 
-  // Fetch projects
   const clientProjects = await db
     .select()
     .from(projects)
     .where(and(eq(projects.clientId, client.id), isNull(projects.deletedAt)))
     .orderBy(desc(projects.createdAt));
 
-  // Fetch ticket stats
   const openTicketsCount = await db
     .select({ count: count() })
     .from(tickets)
-    .where(and(eq(tickets.clientId, client.id), isNull(tickets.deletedAt), eq(tickets.status, 'open')))
-    .then(r => r[0]?.count || 0);
+    .where(and(eq(tickets.clientId, client.id), isNull(tickets.deletedAt), inArray(tickets.status, ["open", "in_progress", "waiting_on_client"])))
+    .then((r) => r[0]?.count || 0);
 
-  const activeProjectsCount = clientProjects.filter(p => !['completed', 'on_hold'].includes(p.status)).length;
+  const activeProjectsCount = clientProjects.filter((p) => !["completed", "on_hold"].includes(p.status)).length;
+
   const integrationsCount = await db
     .select({ count: count() })
     .from(integrationMonitors)
     .where(and(eq(integrationMonitors.clientId, client.id), isNull(integrationMonitors.deletedAt)))
-    .then(r => r[0]?.count || 0);
+    .then((r) => r[0]?.count || 0);
 
-  // Calculate date ranges
-  const now = new Date();
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-
-  // Project velocity: Calculate % of completed phases per month
-  const projectIds = clientProjects.map(p => p.id);
-
-  // Calculate dynamic month names for last 3 months
-  const getRecentMonths = (count: number = 3): string[] => {
-    const months = [];
-    for (let i = count - 1; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(date.toLocaleString('default', { month: 'short' }).toUpperCase());
-    }
-    return months;
-  };
-  const monthNames = getRecentMonths(3);
-  const currentMonth = now.getMonth();
-
-  let activityData: { label: string; value: number }[] = [];
-
-  if (projectIds.length > 0) {
-    const phaseCompletion = await db
-      .select({
-        month: sql<string>`TO_CHAR(${projectPhases.completedAt}, 'Mon')`,
-        monthNum: sql<number>`EXTRACT(MONTH FROM ${projectPhases.completedAt})`,
-        completed: sql<number>`COUNT(*) FILTER (WHERE ${projectPhases.status} = 'completed')`,
-        total: sql<number>`COUNT(*)`,
-      })
-      .from(projectPhases)
-      .where(
-        and(
-          inArray(projectPhases.projectId, projectIds),
-          gte(projectPhases.createdAt, threeMonthsAgo)
-        )
-      )
-      .groupBy(sql`TO_CHAR(${projectPhases.completedAt}, 'Mon')`, sql`EXTRACT(MONTH FROM ${projectPhases.completedAt})`);
-
-    activityData = monthNames.map((monthName, index) => {
-      const targetMonth = currentMonth - 2 + index;
-      const normalizedMonth = ((targetMonth % 12) + 12) % 12 + 1;
-
-      const existing = phaseCompletion.find(m => Number(m.monthNum) === normalizedMonth);
-      const percentage = existing && Number(existing.total) > 0
-        ? Math.round((Number(existing.completed) / Number(existing.total)) * 100)
-        : 0;
-
-      return {
-        label: monthName,
-        value: Math.min(percentage, 100),
-      };
-    });
-  }
-
-  // Support hours calculations
   const remainingMinutes = (client.supportHoursPerMonth || 0) - (client.hoursUsedThisMonth || 0);
 
-  // Recent activity items (messages or ticket updates)
+  const projectIds = clientProjects.map((p) => p.id);
+
+  const pendingTickets = await db
+    .select({
+      id: tickets.id,
+      title: tickets.title,
+      status: tickets.status,
+      priority: tickets.priority,
+      createdAt: tickets.createdAt,
+    })
+    .from(tickets)
+    .where(
+      and(
+        eq(tickets.clientId, client.id),
+        isNull(tickets.deletedAt),
+        inArray(tickets.status, ["open", "waiting_on_client"])
+      )
+    )
+    .orderBy(desc(tickets.createdAt))
+    .limit(4);
+
   const recentMessages = await db
     .select({
       id: messages.id,
@@ -130,252 +89,291 @@ export default async function ClientDashboard() {
     .where(
       and(
         isNull(messages.deletedAt),
-        projectIds.length > 0 ? inArray(messages.projectId, projectIds) : sql`false`
+        projectIds.length > 0 ? inArray(messages.projectId, projectIds) : eq(messages.id, "")
       )
     )
     .orderBy(desc(messages.createdAt))
-    .limit(3);
+    .limit(5);
 
-  // Pending action items (open tickets + unread messages)
-  const pendingTickets = await db
-    .select({
-      id: tickets.id,
-      title: tickets.title,
-      status: tickets.status,
-      createdAt: tickets.createdAt,
-      priority: tickets.priority,
-    })
-    .from(tickets)
-    .where(
-      and(
-        eq(tickets.clientId, client.id),
-        isNull(tickets.deletedAt),
-        inArray(tickets.status, ['open', 'waiting_on_client'])
-      )
-    )
-    .orderBy(desc(tickets.createdAt))
-    .limit(2);
+  const STATS = [
+    {
+      label: "Active Projects",
+      value: activeProjectsCount.toString(),
+      sub: `${clientProjects.length} total`,
+      icon: FolderKanban,
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+      href: "/dashboard/client/projects",
+    },
+    {
+      label: "Open Tickets",
+      value: openTicketsCount.toString(),
+      sub: pendingTickets.length > 0 ? `${pendingTickets.filter((t) => t.status === "waiting_on_client").length} awaiting you` : "All clear",
+      icon: Ticket,
+      iconBg: "bg-rose-100",
+      iconColor: "text-rose-600",
+      href: "/dashboard/client/tickets",
+    },
+    {
+      label: "System Health",
+      value: integrationsCount > 0 ? `${integrationsCount} Active` : "—",
+      sub: integrationsCount > 0 ? "Integrations monitored" : "No monitors configured",
+      icon: Activity,
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-600",
+      href: "/dashboard/client/projects",
+    },
+    {
+      label: "Support Hours",
+      value: formatMinutesToHours(remainingMinutes),
+      sub: remainingMinutes > 0 ? "Available this month" : "Hours depleted",
+      icon: Clock,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      href: "/dashboard/client/tickets",
+    },
+  ];
+
+  const statusLabels: Record<string, string> = {
+    planning: "Planning",
+    in_progress: "In Progress",
+    review: "In Review",
+    completed: "Completed",
+    on_hold: "On Hold",
+  };
+
+  const statusColors: Record<string, string> = {
+    planning: "text-violet-700 bg-violet-50",
+    in_progress: "text-violet-700 bg-violet-50",
+    review: "text-amber-700 bg-amber-50",
+    completed: "text-emerald-700 bg-emerald-50",
+    on_hold: "text-slate-600 bg-slate-100",
+  };
+
+  const priorityConfig: Record<string, { dot: string; label: string }> = {
+    urgent: { dot: "bg-red-500", label: "Urgent" },
+    high: { dot: "bg-orange-500", label: "High" },
+    medium: { dot: "bg-sky-500", label: "Medium" },
+    low: { dot: "bg-slate-400", label: "Low" },
+  };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
-      <AnimateOnScroll />
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">Welcome back, {client.contactName.split(' ')[0]}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard/client/tickets">
-            <Button size="sm" className="rounded-xl font-semibold shadow-sm">
-              <HelpCircle className="w-3.5 h-3.5 mr-2" />
-              Get Support
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-enter delay-200">
-        <StatCard
-          label="Active Projects"
-          value={activeProjectsCount.toString()}
-          icon={<FolderOpen className="w-4 h-4 text-purple-700" />}
-          variant="purple"
-        />
-        <StatCard
-          label="Pending Tickets"
-          value={openTicketsCount.toString()}
-          icon={<MessageSquare className="w-4 h-4 text-purple-700" />}
-          variant="purple"
-        />
-        <StatCard
-          label="Integrations"
-          value={`${integrationsCount} Active`}
-          icon={<Activity className="w-4 h-4 text-emerald-500" />}
-          variant="emerald"
-        />
-      </div>
-
-      <div className="grid grid-cols-12 gap-8">
-        {/* Main Chart / Activity Area (Col 8) */}
-        <div className="col-span-12 lg:col-span-8 space-y-8 animate-enter delay-300">
-          {/* Activity / Progress Chart Mimic */}
-          <Card className="p-8 rounded-xl border-gray-100 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Activity className="w-4 h-4 text-gray-400" />
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Project Progress</span>
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{activeProjectsCount} Active</h2>
-              </div>
-            </div>
-
-            {/* Progress Chart */}
-            <div className="flex items-end justify-around h-[200px] px-8 pb-4 relative">
-              {/* Dotted lines background */}
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-                <div className="w-full border-t border-dashed border-gray-400"></div>
-                <div className="w-full border-t border-dashed border-gray-400"></div>
-                <div className="w-full border-t border-dashed border-gray-400"></div>
-                <div className="w-full border-t border-dashed border-gray-400"></div>
-              </div>
-
-              {activityData.length > 0 ? activityData.map((d, i) => (
-                <div key={i} className="flex flex-col items-center gap-4 relative z-10 w-12 group">
-                  <div className="w-full bg-purple-100 rounded-full relative overflow-hidden flex items-end opacity-50 hover:opacity-100 transition-opacity" style={{ height: '180px' }}>
-                    <div className="w-full bg-purple-700 rounded-t-full transition-all duration-1000" style={{ height: `${d.value}%` }}></div>
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{d.label}</span>
-                  {i === activityData.length - 1 && (
-                    <div className="absolute -top-10 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">
-                      Now
-                    </div>
-                  )}
-                </div>
-              )) : (
-                <div className="flex items-center justify-center w-full h-full text-gray-400 text-sm">
-                  No phase data available
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Priority Projects Table */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-2">
-                <FolderOpen className="w-4 h-4 text-gray-400" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Projects</span>
-              </div>
-              <Link href="/dashboard/client/projects" className="text-[10px] font-bold text-purple-700 hover:underline uppercase tracking-widest">View All</Link>
-            </div>
-            <Card className="rounded-xl border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-50 bg-gray-50/30 text-left">
-                      <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-8">Project Name</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Due Date</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right pr-8">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {clientProjects.slice(0, 3).map((project) => (
-                      <tr key={project.id} className="group hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 pl-8 font-medium text-sm text-gray-900 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-xs">
-                            {project.name.charAt(0)}
-                          </div>
-                          {project.name}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border",
-                            project.status === 'in_progress' ? "bg-purple-50 text-purple-700 border-purple-100" :
-                              project.status === 'completed' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                "bg-gray-50 text-gray-500 border-gray-100"
-                          )}>
-                            {project.status.replace("_", " ")}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-bold text-gray-500">
-                          {project.dueDate ? new Date(project.dueDate).toLocaleDateString() : 'TBD'}
-                        </td>
-                        <td className="px-6 py-4 text-right pr-8">
-                          <Link href={`/dashboard/client/projects/${project.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-400 hover:text-purple-700 hover:bg-purple-50">
-                              View
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+    <div className="min-h-full bg-[#F4F5F9]">
+      {/* ── Page Header ─────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-slate-100 px-7 py-5">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Welcome back</p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {client.contactName.split(" ")[0]}&apos;s Dashboard
+            </h1>
           </div>
-        </div>
-
-        {/* Right Sidebar (Col 4) */}
-        <div className="col-span-12 lg:col-span-4 space-y-8 animate-enter delay-400">
-          {/* Time Tracker / Hours Concept */}
-          <Card className="rounded-xl border-gray-100 shadow-sm p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Support Hours</span>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">{formatMinutesToHours(remainingMinutes)}</h2>
-                <p className={cn("text-[10px] font-bold uppercase tracking-widest mt-1", remainingMinutes > 0 ? "text-emerald-500" : "text-orange-500")}>
-                  {remainingMinutes > 0 ? 'Available this month' : 'Hours depleted'}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-2 rounded-xl">
-                <MoreHorizontal className="w-4 h-4 text-gray-400" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              {recentMessages.length > 0 ? recentMessages.map((msg) => (
-                <Link key={msg.id} href={`/dashboard/client/messages`}>
-                  <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer group">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-purple-50 group-hover:text-purple-700 transition-colors">
-                      <MessageSquare className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-gray-900 truncate">{msg.projectName || 'Message'}</p>
-                      <p className="text-[10px] text-gray-400 font-medium truncate">{msg.content.substring(0, 30)}...</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-300 group-hover:text-purple-400">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
-                  </div>
-                </Link>
-              )) : (
-                <div className="text-center text-gray-400 text-xs py-4">No recent activity</div>
-              )}
-            </div>
-          </Card>
-
-          {/* Notifications / Pending Items */}
-          <Card className="rounded-xl border-gray-100 shadow-sm p-6 bg-[#111827] text-white">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-sm font-bold">Action Required</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                  {pendingTickets.length} {pendingTickets.length === 1 ? 'Ticket' : 'Tickets'} Pending
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {pendingTickets.length > 0 ? pendingTickets.map((ticket) => (
-                <Link key={ticket.id} href={`/dashboard/client/tickets/${ticket.id}`}>
-                  <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-                    <p className="text-xs font-bold mb-1">{ticket.title}</p>
-                    <p className="text-[10px] text-gray-400">
-                      {ticket.status === 'waiting_on_client' ? 'Awaiting your response' : 'Open ticket'} • {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                </Link>
-              )) : (
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">All caught up!</p>
-                </div>
-              )}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 mr-4">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              All systems operational
             </div>
             <Link href="/dashboard/client/tickets">
-              <Button className="w-full mt-6 font-semibold rounded-xl text-sm">
-                View All Tickets
+              <Button size="sm" className="rounded-xl font-semibold">
+                <HelpCircle className="w-3.5 h-3.5 mr-2" />
+                Get Support
               </Button>
             </Link>
-          </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-7 py-6 space-y-6">
+        {/* ── Stat Cards ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {STATS.map((stat) => (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="group bg-white rounded-2xl border border-slate-100 p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", stat.iconBg)}>
+                  <stat.icon className={cn("w-[18px] h-[18px]", stat.iconColor)} strokeWidth={2} />
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              </div>
+              <p className="text-[13px] font-medium text-slate-500 mb-1">{stat.label}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">{stat.value}</p>
+              <div className="mt-3">
+                <span className="text-[12px] text-slate-400">{stat.sub}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* ── Main Grid ──────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Active Projects */}
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <FolderKanban className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-slate-800">Your Projects</h2>
+                  <p className="text-[12px] text-slate-400">{clientProjects.length} projects total</p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/client/projects"
+                className="flex items-center gap-1 text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors"
+              >
+                View all <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {clientProjects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                <p className="text-[13px] font-semibold text-slate-700">No projects yet</p>
+                <p className="text-[12px] text-slate-400 mt-1">Your projects will appear here once started</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {clientProjects.slice(0, 5).map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/dashboard/client/projects/${project.id}`}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-600 to-violet-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm shadow-violet-200 group-hover:scale-105 transition-transform">
+                      {project.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-slate-800 truncate group-hover:text-violet-700 transition-colors">
+                        {project.name}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Updated {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0", statusColors[project.status] || statusColors.planning)}>
+                      {statusLabels[project.status] || "Planning"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Action Required + Recent Activity */}
+          <div className="lg:col-span-5 space-y-5">
+            {/* Action Required */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="w-4 h-4 text-amber-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-bold text-slate-800">Action Required</h2>
+                    <p className="text-[12px] text-slate-400">Tickets needing your attention</p>
+                  </div>
+                </div>
+                {pendingTickets.length > 0 && (
+                  <span className="text-[11px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    {pendingTickets.length} pending
+                  </span>
+                )}
+              </div>
+
+              {pendingTickets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <DijiMascot variant="celebrating" size="sm" className="mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-700">All caught up!</p>
+                  <p className="text-[12px] text-slate-400 mt-1">No tickets need your attention</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {pendingTickets.map((ticket) => {
+                    const p = priorityConfig[ticket.priority] || priorityConfig.low;
+                    return (
+                      <Link
+                        key={ticket.id}
+                        href={`/dashboard/client/tickets/${ticket.id}`}
+                        className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-amber-200 hover:bg-amber-50/30 transition-all group"
+                      >
+                        <div className="pt-1">
+                          <div className={cn("w-2 h-2 rounded-full", p.dot)} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-slate-800 leading-snug truncate group-hover:text-violet-700 transition-colors">
+                            {ticket.title}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            {ticket.status === "waiting_on_client" ? "Awaiting your response" : "Open"} · {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                  <Link
+                    href="/dashboard/client/tickets"
+                    className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-slate-500 hover:text-violet-600 transition-colors"
+                  >
+                    View all tickets <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-sky-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-bold text-slate-800">Recent Activity</h2>
+                    <p className="text-[12px] text-slate-400">Latest updates from your team</p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard/client/messages"
+                  className="flex items-center gap-1 text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors"
+                >
+                  See all <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              {recentMessages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-700">No recent activity</p>
+                  <p className="text-[12px] text-slate-400 mt-1">Messages and updates will show here</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {recentMessages.map((msg) => (
+                    <Link
+                      key={msg.id}
+                      href="/dashboard/client/messages"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-50 transition-colors">
+                        <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-violet-600 transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-slate-800 truncate">{msg.projectName || "Message"}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{msg.content.substring(0, 50)}</p>
+                      </div>
+                      <span className="text-[11px] text-slate-400 flex-shrink-0">
+                        {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

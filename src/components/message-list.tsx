@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { User, MessageSquare, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { DijiMascot } from "@/components/diji-mascot";
 
 interface Message {
   id: string;
@@ -58,12 +59,10 @@ const MessageListComponent = ({ projectId, initialMessages }: MessageListProps) 
   if (messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center p-8">
-          <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-700">
-            <MessageSquare className="w-6 h-6" />
-          </div>
-          <h3 className="text-gray-900 font-bold text-base mb-2">Start a Conversation</h3>
-          <p className="text-gray-500 text-sm max-w-xs mx-auto">
+        <div className="text-center p-8 flex flex-col items-center">
+          <DijiMascot variant="neutral" size="sm" className="mb-4" />
+          <h3 className="text-slate-800 font-bold text-base mb-2">Start a Conversation</h3>
+          <p className="text-slate-500 text-sm max-w-xs mx-auto">
             Send a message below to communicate with your project team.
           </p>
         </div>

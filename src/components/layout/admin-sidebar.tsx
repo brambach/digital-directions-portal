@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { DijiMascot } from "@/components/diji-mascot";
 import {
     LayoutDashboard,
     Users,
@@ -128,8 +129,9 @@ export function AdminSidebar() {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 border-t border-slate-100">
-                <p className="text-[11px] text-slate-400">© 2025 Digital Directions</p>
+            <div className="px-4 py-3 border-t border-slate-100 flex flex-col items-center gap-2">
+                <DijiMascot variant="neutral" size="xs" />
+                <p className="text-[11px] text-slate-400">&copy; 2025 Digital Directions</p>
             </div>
         </aside>
     );

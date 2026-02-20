@@ -175,7 +175,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   );
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-8 space-y-8 no-scrollbar relative font-geist">
       <AnimateOnScroll />
 
       {/* Header Row */}

@@ -10,6 +10,15 @@
 
 ---
 
+## First Step — Create the Branch
+
+Before touching any files, run:
+```bash
+git checkout -b sprint/1-design-system
+```
+
+---
+
 ## What's Already Done — Do NOT redo these
 
 The following was completed before this sprint and should be left exactly as-is:

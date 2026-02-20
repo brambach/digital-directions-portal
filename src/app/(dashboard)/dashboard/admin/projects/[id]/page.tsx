@@ -86,7 +86,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
   const daysLeft = project.dueDate ? differenceInDays(new Date(project.dueDate), now) : null;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F2F4F7] p-6 lg:p-10 space-y-6 no-scrollbar relative font-geist">
+    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-6 lg:p-10 space-y-6 no-scrollbar relative font-geist">
       <AnimateOnScroll />
 
       {/* Back & Breadcrumb */}

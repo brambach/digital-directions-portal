@@ -9,6 +9,7 @@ import { ClientStatusMenu } from "@/components/client-status-menu";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DijiMascot } from "@/components/diji-mascot";
 
 // Lazy load dialog for better performance
 const AddClientDialog = dynamicImport(
@@ -110,7 +111,7 @@ export default async function ClientsPage() {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-8 space-y-8 no-scrollbar relative font-geist">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
         <div>
@@ -145,9 +146,11 @@ export default async function ClientsPage() {
             <tbody className="text-sm bg-white">
               {clientData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <Users className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-                    <p className="text-gray-400 italic text-sm font-medium uppercase tracking-widest">No clients found</p>
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                      <p className="text-[13px] font-semibold text-slate-700">No clients found</p>
+                    </div>
                   </td>
                 </tr>
               ) : (

@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import Image from "next/image";
+import { DijiMascot } from "@/components/diji-mascot";
 
 interface Project {
     id: string;
@@ -272,13 +273,11 @@ export function MessagesInterface({ projects, currentUserId, userRole }: Message
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
                                 </div>
                             ) : messages.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
-                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-                                        <Send className="w-8 h-8 text-gray-300 ml-1" />
-                                    </div>
+                                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                                    <DijiMascot variant="neutral" size="sm" />
                                     <div className="text-center">
-                                        <p className="text-gray-900 font-semibold text-lg">No messages yet</p>
-                                        <p className="text-gray-500">Break the ice and start the conversation!</p>
+                                        <p className="text-slate-800 font-semibold text-lg">No messages yet</p>
+                                        <p className="text-slate-500">Break the ice and start the conversation!</p>
                                     </div>
                                 </div>
                             ) : (

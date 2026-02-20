@@ -16,7 +16,7 @@ export default async function AdminSettingsPage() {
   const user = await currentUser();
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-8 space-y-8 no-scrollbar relative font-geist">
+    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-8 space-y-8 no-scrollbar relative font-geist">
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
         <div>

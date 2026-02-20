@@ -1,49 +1,48 @@
 "use client";
 
-import { Search, Gift, Bell, PlusCircle } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { Search } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { NotificationBell } from "@/components/notification-bell";
 
 export function ClientHeader() {
+    const { user } = useUser();
+    const displayName = user?.fullName || "Client User";
+
     return (
-        <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white/80 backdrop-blur-md z-30 flex-shrink-0 sticky top-0">
-            {/* Search */}
-            <div className="relative group hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-purple-700 transition-colors duration-300" />
-                <input
-                    type="text"
-                    placeholder="Search Projects"
-                    className="pl-10 pr-4 py-2.5 w-80 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-200 rounded-xl text-sm outline-none transition-all duration-300 placeholder:text-gray-400 text-gray-600 focus:w-96 focus:shadow-sm"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-50 group-focus-within:opacity-100 transition-opacity">
-                    <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm">⌘</span>
-                    <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm">K</span>
+        <header className="h-[60px] flex items-center justify-between px-6 border-b border-slate-100 bg-white z-30 flex-shrink-0 sticky top-0">
+            {/* Left: Search */}
+            <div className="flex items-center gap-3 flex-1 max-w-sm">
+                <div className="relative group w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
+                    <input
+                        type="text"
+                        placeholder="Search projects, tickets..."
+                        className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-violet-300 focus:ring-2 focus:ring-violet-100 rounded-lg text-[13px] text-slate-700 placeholder:text-slate-400 outline-none transition-all"
+                    />
                 </div>
             </div>
 
-            {/* Mobile Title (visible if search is hidden) */}
-            <div className="md:hidden font-semibold text-gray-900">Portal</div>
-
             {/* Right Tools */}
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-4">
-                    <NotificationBell />
-                </div>
+            <div className="flex items-center gap-1">
+                <NotificationBell />
 
-                <div className="h-8 w-px bg-gray-100 hidden sm:block"></div>
+                {/* Divider */}
+                <div className="h-5 w-px bg-slate-200 mx-2" />
 
-                <div className="flex items-center gap-3 pl-2">
-                    <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                            elements: {
-                                avatarBox: "w-9 h-9 rounded-full border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-                            }
-                        }}
-                    />
-                    <div className="hidden lg:flex flex-col items-start">
-                        <span className="text-sm font-semibold text-gray-900">Client Account</span>
-                        <span className="text-[10px] text-gray-500 font-medium">Standard Access</span>
+                {/* User Avatar */}
+                <div className="flex items-center gap-2.5 cursor-pointer group">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-[13px] font-semibold text-slate-700 leading-tight">{displayName}</p>
+                        <p className="text-[11px] text-slate-400 leading-tight">Client</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-violet-100 border-2 border-white ring-1 ring-slate-200 transition-all group-hover:ring-violet-300">
+                        {user?.imageUrl ? (
+                            <img src={user.imageUrl} alt={displayName} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-violet-700 text-sm font-bold">
+                                {displayName.charAt(0)}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

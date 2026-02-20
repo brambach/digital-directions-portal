@@ -1,8 +1,9 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, messages, clients } from "@/lib/db/schema";
-import { eq, isNull, and, desc, sql } from "drizzle-orm";
+import { projects, clients } from "@/lib/db/schema";
+import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
+import { DijiMascot } from "@/components/diji-mascot";
 import {
   FolderOpen,
   Clock,
@@ -17,7 +18,6 @@ export const dynamic = "force-dynamic";
 export default async function ClientProjectsPage() {
   const user = await requireAuth();
 
-  // Get client info
   const client = await db
     .select()
     .from(clients)
@@ -28,12 +28,12 @@ export default async function ClientProjectsPage() {
   if (!client) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center max-w-md shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center max-w-md shadow-sm">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="w-8 h-8 text-amber-500" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Profile Pending</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Profile Pending</h2>
+          <p className="text-slate-500 text-sm leading-relaxed">
             Your client profile is being initialized.
           </p>
         </div>
@@ -41,7 +41,6 @@ export default async function ClientProjectsPage() {
     );
   }
 
-  // Fetch all projects for this client
   const clientProjects = await db
     .select()
     .from(projects)
@@ -49,88 +48,85 @@ export default async function ClientProjectsPage() {
     .orderBy(desc(projects.createdAt));
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white p-8 space-y-8 no-scrollbar relative font-geist">
+    <div className="min-h-full bg-[#F4F5F9]">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 animate-enter delay-100">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Projects</h1>
-          <p className="text-sm text-gray-500 mt-1.5">Status board for all active implementations and deliveries.</p>
+      <div className="bg-white border-b border-slate-100 px-7 py-5">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Overview</p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Projects</h1>
+          </div>
+          <p className="text-[13px] text-slate-500">
+            {clientProjects.length} {clientProjects.length === 1 ? "project" : "projects"} total
+          </p>
         </div>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-enter delay-200">
-        {clientProjects.length === 0 ? (
-          <div className="col-span-full py-32 text-center bg-gray-50/30 border border-dashed border-gray-200 rounded-[40px] flex flex-col items-center justify-center">
-            <div className="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center mb-6 border border-gray-100">
-              <FolderOpen className="w-10 h-10 text-gray-200" />
+      <div className="px-7 py-6">
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {clientProjects.length === 0 ? (
+            <div className="col-span-full py-20 text-center bg-white border border-slate-100 rounded-2xl flex flex-col items-center justify-center">
+              <DijiMascot variant="neutral" size="sm" className="mb-4" />
+              <h3 className="text-[13px] font-semibold text-slate-700">No active projects found</h3>
+              <p className="text-[12px] text-slate-400 mt-1">Your projects will appear here once started</p>
             </div>
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">No active projects found</h3>
-            <p className="text-xs text-gray-400 mt-2 font-medium">Try adjusting your search or filters</p>
-          </div>
-        ) : (
-          clientProjects.map((project, idx) => (
-            <ProjectCard key={project.id} project={project} index={idx} />
-          ))
-        )}
+          ) : (
+            clientProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function ProjectCard({ project, index }: any) {
-  const statusLabels: any = {
-    planning: 'Planning',
-    in_progress: 'In Progress',
-    review: 'Review',
-    completed: 'Completed',
-    on_hold: 'On Hold'
+function ProjectCard({ project }: any) {
+  const statusLabels: Record<string, string> = {
+    planning: "Planning",
+    in_progress: "In Progress",
+    review: "In Review",
+    completed: "Completed",
+    on_hold: "On Hold",
   };
 
-  const statusColors: any = {
-    planning: 'bg-purple-50 text-purple-700 border-purple-100',
-    in_progress: 'bg-purple-700/5 text-purple-700 border-purple-700/10',
-    review: 'bg-amber-50 text-amber-600 border-amber-100',
-    completed: 'bg-gray-50 text-gray-500 border-gray-100',
-    on_hold: 'bg-red-50 text-red-600 border-red-100',
+  const statusColors: Record<string, string> = {
+    planning: "bg-violet-50 text-violet-700",
+    in_progress: "bg-violet-50 text-violet-700",
+    review: "bg-amber-50 text-amber-700",
+    completed: "bg-emerald-50 text-emerald-700",
+    on_hold: "bg-slate-100 text-slate-600",
   };
 
   return (
     <Link href={`/dashboard/client/projects/${project.id}`}>
-      <div className="group bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 relative overflow-hidden group-hover:border-purple-100 transition-all duration-300">
+      <div className="group bg-white border border-slate-100 rounded-2xl p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-700 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-100 group-hover:scale-110 transition-transform duration-500">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-violet-200 group-hover:scale-105 transition-transform">
               {project.name.charAt(0)}
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-purple-700 transition-colors leading-tight">{project.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={cn(
-                  "px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border",
-                  statusColors[project.status] || statusColors.planning
-                )}>
-                  {statusLabels[project.status]}
-                </span>
-                <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">•</span>
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active</span>
-              </div>
+              <h3 className="text-[14px] font-bold text-slate-900 group-hover:text-violet-700 transition-colors leading-tight">{project.name}</h3>
+              <span className={cn(
+                "inline-flex mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold",
+                statusColors[project.status] || statusColors.planning
+              )}>
+                {statusLabels[project.status]}
+              </span>
             </div>
           </div>
-          <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-purple-50 transition-colors">
-            <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-purple-700 transition-colors" />
-          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
         </div>
 
-        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-6">
-          {project.description || 'Full deliverable roadmap, execution metrics and pipeline visibility for this implementation.'}
+        <p className="text-[12px] text-slate-500 line-clamp-2 leading-relaxed mb-5">
+          {project.description || "Full deliverable roadmap, execution metrics and pipeline visibility for this implementation."}
         </p>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-50/50 mt-4">
-          <div className="flex items-center gap-1 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-            <Clock className="w-3 h-3" />
-            <span>Updated {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}</span>
-          </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-4 border-t border-slate-50">
+          <Clock className="w-3 h-3" />
+          <span>Updated {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}</span>
         </div>
       </div>
     </Link>

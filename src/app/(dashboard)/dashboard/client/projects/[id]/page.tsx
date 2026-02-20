@@ -1,20 +1,18 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, messages, users, integrationMonitors } from "@/lib/db/schema";
+import { projects, messages, users } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, MessageSquare, Clock, Activity, HelpCircle, Ticket, AlertCircle, Layout, Plus, ArrowUpRight, TrendingUp, CheckCircle, ChevronRight, Play } from "lucide-react";
+import { ArrowLeft, Calendar, MessageSquare, Activity, HelpCircle, Plus, CheckCircle, AlertCircle, Layout } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { MessageForm } from "@/components/message-form";
 import { clerkClient } from "@clerk/nextjs/server";
 import { MessageList } from "@/components/message-list";
-import { ContactTeamButton } from "@/components/contact-team-button";
 import { ProjectPhaseManager } from "@/components/project-phase-manager";
 import { IntegrationHealthGrid } from "@/components/integration-health-grid";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +20,6 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
   const user = await requireAuth();
   const { id } = await params;
 
-  // Fetch project
   const project = await db
     .select()
     .from(projects)
@@ -34,7 +31,6 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
     notFound();
   }
 
-  // Fetch messages
   const projectMessagesRaw = await db
     .select({
       id: messages.id,
@@ -51,13 +47,11 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
     .orderBy(desc(messages.createdAt))
     .limit(10);
 
-  // Fetch Clerk user info
   const clerkIds = [...new Set(projectMessagesRaw.map((m) => m.senderClerkId).filter(Boolean))] as string[];
   const clerk = await clerkClient();
-  const clerkUsers = clerkIds.length > 0 ? await Promise.all(clerkIds.map(async (id) => { try { return await clerk.users.getUser(id); } catch { return null; } })) : [];
+  const clerkUsers = clerkIds.length > 0 ? await Promise.all(clerkIds.map(async (cid) => { try { return await clerk.users.getUser(cid); } catch { return null; } })) : [];
   const clerkUserMap = new Map(clerkUsers.filter((u): u is NonNullable<typeof u> => u !== null).map((u) => [u.id, u]));
 
-  // Enrich messages
   const projectMessages = projectMessagesRaw.map((message) => {
     const clerkUser = message.senderClerkId ? clerkUserMap.get(message.senderClerkId) : null;
     return {
@@ -70,62 +64,53 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
   const now = new Date();
   const daysLeft = project.dueDate ? differenceInDays(new Date(project.dueDate), now) : null;
 
-  // Status styling
-  const statusConfig: any = {
-    planning: { color: "bg-purple-50 text-purple-700", label: "Planning Phase", icon: Layout },
-    in_progress: { color: "bg-emerald-50 text-emerald-600", label: "In Active Development", icon: Activity },
-    review: { color: "bg-amber-50 text-amber-600", label: "Under Review", icon: CheckCircle },
-    completed: { color: "bg-gray-50 text-gray-600", label: "Project Completed", icon: CheckCircle },
-    on_hold: { color: "bg-red-50 text-red-600", label: "On Hold", icon: AlertCircle },
+  const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
+    planning: { color: "bg-violet-50 text-violet-700", label: "Planning Phase", icon: Layout },
+    in_progress: { color: "bg-emerald-50 text-emerald-700", label: "In Active Development", icon: Activity },
+    review: { color: "bg-amber-50 text-amber-700", label: "Under Review", icon: CheckCircle },
+    completed: { color: "bg-slate-100 text-slate-600", label: "Project Completed", icon: CheckCircle },
+    on_hold: { color: "bg-red-50 text-red-700", label: "On Hold", icon: AlertCircle },
   };
 
   const currentStatus = statusConfig[project.status] || statusConfig.planning;
   const StatusIcon = currentStatus.icon;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F2F4F7] p-6 lg:p-10 space-y-6 no-scrollbar relative font-geist">
-      <AnimateOnScroll />
-
-      {/* Back & Breadcrumb */}
-      <div className="flex items-center gap-2 animate-enter delay-100">
-        <Link href="/dashboard/client/projects" className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm text-gray-400 hover:text-gray-900">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <span className="text-gray-400 font-bold text-sm">/ {project.name}</span>
+    <div className="min-h-full bg-[#F4F5F9]">
+      {/* Page Header */}
+      <div className="bg-white border-b border-slate-100 px-7 py-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/client/projects" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-0.5">Project</p>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">{project.name}</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold", currentStatus.color)}>
+              <StatusIcon className="w-3.5 h-3.5" />
+              {currentStatus.label}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* Main Hero (Left) */}
-        <div className="col-span-12 lg:col-span-8 animate-enter delay-200">
-          <div className="bg-white rounded-xl p-8 lg:p-10 shadow-sm border border-gray-100 h-full min-h-[400px] flex flex-col justify-between">
-            <div>
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <span className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4", currentStatus.color)}>
-                    <StatusIcon className="w-3.5 h-3.5" />
-                    {currentStatus.label}
-                  </span>
-                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight mb-3">
-                    {project.name}
-                  </h1>
-                  <p className="text-gray-500 text-base max-w-xl">
-                    {project.description || "We are actively working on your deliverables. Track real-time progress and milestones below."}
-                  </p>
-                </div>
-                <div className="hidden sm:block">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-700 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple-200">
-                    {project.name.charAt(0)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Action Area */}
-            <div className="flex flex-wrap gap-3 items-center mt-8">
+      <div className="px-7 py-6 space-y-6">
+        {/* Top Row: Project Info + Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Project Info */}
+          <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-6">
+            <p className="text-slate-500 text-[14px] leading-relaxed mb-6">
+              {project.description || "We are actively working on your deliverables. Track real-time progress and milestones below."}
+            </p>
+            <div className="flex flex-wrap gap-3">
               <Link href="/dashboard/client/tickets">
-                <Button size="sm" className="rounded-xl font-semibold shadow-sm">
+                <Button size="sm" className="rounded-xl font-semibold">
                   <Plus className="w-4 h-4 mr-2" />
-                  Request Project Change
+                  Request Change
                 </Button>
               </Link>
               <Link href="/dashboard/client/tickets">
@@ -136,79 +121,82 @@ export default async function ClientProjectDetailPage({ params }: { params: Prom
               </Link>
             </div>
           </div>
-        </div>
 
-        {/* Sidebar Stats (Right) */}
-        <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter delay-300">
-          {/* Due Date Card */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
-                <Calendar className="w-5 h-5" />
+          {/* Stats Sidebar */}
+          <div className="lg:col-span-4 space-y-5">
+            <div className="bg-white rounded-2xl border border-slate-100 p-5">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                </div>
+                <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest">Target Delivery</p>
               </div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Delivery</p>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {project.dueDate ? format(new Date(project.dueDate), "MMM d, yyyy") : "TBD"}
-            </h3>
-            {daysLeft !== null && (
-              <p className={cn("text-xs font-semibold", daysLeft < 0 ? "text-red-500" : "text-emerald-500")}>
-                {daysLeft < 0 ? `${Math.abs(daysLeft)} Days Overdue` : `${daysLeft} Days Remaining`}
+              <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                {project.dueDate ? format(new Date(project.dueDate), "MMM d, yyyy") : "TBD"}
               </p>
-            )}
-          </div>
-
-          {/* Team Activity Card */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Team Updates</p>
+              {daysLeft !== null && (
+                <p className={cn("text-[12px] font-semibold mt-1", daysLeft < 0 ? "text-red-600" : "text-emerald-600")}>
+                  {daysLeft < 0 ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
+                </p>
+              )}
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">{projectMessages.length}</h3>
-            <p className="text-sm text-gray-500">Recent communications</p>
+
+            <div className="bg-white rounded-2xl border border-slate-100 p-5">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-sky-600" strokeWidth={2} />
+                </div>
+                <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest">Team Updates</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900 tabular-nums">{projectMessages.length}</p>
+              <p className="text-[12px] text-slate-400 mt-1">Recent communications</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-12 gap-6 animate-enter delay-400">
-        {/* Roadmap & Integrations */}
-        <div className="col-span-12 lg:col-span-8 space-y-8">
-          {/* Phase Manager */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Roadmap Progress</h3>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        {/* Bottom Row: Roadmap + Chat */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div className="lg:col-span-8 space-y-5">
+            {/* Phase Manager */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                </div>
+                <h2 className="text-[15px] font-bold text-slate-800">Roadmap Progress</h2>
+              </div>
               <ProjectPhaseManager projectId={id} isAdmin={false} />
             </div>
-          </section>
 
-          {/* System Health */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">System Health</h3>
+            {/* System Health */}
+            <div>
+              <div className="flex items-center gap-2.5 mb-4 px-1">
+                <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-emerald-600" strokeWidth={2} />
+                </div>
+                <h2 className="text-[15px] font-bold text-slate-800">System Health</h2>
+              </div>
+              <IntegrationHealthGrid clientId={project.clientId} projectId={id} />
             </div>
-            <IntegrationHealthGrid clientId={project.clientId} projectId={id} />
-          </section>
-        </div>
+          </div>
 
-        {/* Chat / Sidebar */}
-        <div className="col-span-12 lg:col-span-4">
-          <section className="h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Project Chat</h3>
+          {/* Chat */}
+          <div className="lg:col-span-4">
+            <div className="flex items-center gap-2.5 mb-4 px-1">
+              <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-sky-600" strokeWidth={2} />
+              </div>
+              <h2 className="text-[15px] font-bold text-slate-800">Project Chat</h2>
             </div>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-[700px] border border-gray-100">
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden flex flex-col h-[700px]">
               <div className="flex-1 overflow-y-auto no-scrollbar p-4">
                 <MessageList projectId={id} initialMessages={projectMessages} />
               </div>
-              <div className="p-4 bg-gray-50 border-t border-gray-100">
+              <div className="p-4 bg-slate-50 border-t border-slate-100">
                 <MessageForm projectId={id} />
               </div>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </div>

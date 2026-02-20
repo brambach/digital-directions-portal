@@ -4,104 +4,119 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { DijiMascot } from "@/components/diji-mascot";
 import {
     LayoutDashboard,
     FolderKanban,
+    Ticket,
     MessageSquare,
     HelpCircle,
-    Gem,
-    ChevronsUpDown,
+    User,
+    ChevronDown,
 } from "lucide-react";
 
 export function ClientSidebar() {
     const pathname = usePathname();
 
     const isActive = (href: string) => {
-        // Exact match for dashboard home
         if (href === "/dashboard/client" && pathname === "/dashboard/client") return true;
-        // Partial match for sub-routes
-        if (href !== "/dashboard/client" && pathname.startsWith(href)) return true;
+        if (href !== "/dashboard/client" && pathname !== "/dashboard/client" && pathname.startsWith(href)) return true;
         return false;
     };
 
-    const navItemClass = (href: string) => cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group relative",
-        isActive(href)
-            ? "bg-purple-50 text-purple-700 shadow-sm shadow-purple-100/50"
-            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-    );
+    const navGroups = [
+        {
+            title: "GENERAL",
+            items: [
+                { label: "Dashboard", href: "/dashboard/client", icon: LayoutDashboard },
+                { label: "Projects", href: "/dashboard/client/projects", icon: FolderKanban },
+                { label: "Tickets", href: "/dashboard/client/tickets", icon: Ticket },
+                { label: "Messages", href: "/dashboard/client/messages", icon: MessageSquare },
+            ]
+        },
+        {
+            title: "SUPPORT",
+            items: [
+                { label: "Help Center", href: "/dashboard/client/help", icon: HelpCircle },
+            ]
+        }
+    ];
 
-    const iconClass = (href: string) => cn(
-        "w-4 h-4 transition-colors duration-200",
-        isActive(href) ? "text-purple-700" : "text-gray-400 group-hover:text-gray-900"
-    );
+    const renderNavItem = (item: any) => {
+        const active = isActive(item.href);
+        return (
+            <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 group",
+                    active
+                        ? "bg-violet-50 text-violet-700 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.15)]"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                )}
+            >
+                <item.icon
+                    strokeWidth={active ? 2 : 1.75}
+                    className={cn(
+                        "w-[17px] h-[17px] flex-shrink-0 transition-colors",
+                        active ? "text-violet-600" : "text-slate-400 group-hover:text-slate-600"
+                    )}
+                />
+                <span className="flex-1">{item.label}</span>
+            </Link>
+        );
+    };
 
     return (
-        <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col py-6 px-5 z-20 flex-shrink-0 relative h-full">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-2 mb-10 group cursor-pointer">
-                <Image
-                    src="/images/dd-logo.png"
-                    alt="Digital Directions"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-lg transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-110"
-                />
-                <span className="text-xl font-semibold tracking-tight text-gray-900">Digital Directions</span>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-8">
-
-                {/* General Section */}
-                <div>
-                    <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">General</div>
-                    <nav className="space-y-1">
-                        <Link href="/dashboard/client" className={navItemClass("/dashboard/client")}>
-                            <LayoutDashboard className={iconClass("/dashboard/client")} />
-                            Dashboard
-                        </Link>
-                        <Link href="/dashboard/client/projects" className={navItemClass("/dashboard/client/projects")}>
-                            <FolderKanban className={iconClass("/dashboard/client/projects")} />
-                            Projects
-                        </Link>
-                    </nav>
-                </div>
-
-                {/* Support Section */}
-                <div>
-                    <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Support</div>
-                    <nav className="space-y-1">
-                        <Link href="/dashboard/client/tickets" className={navItemClass("/dashboard/client/support")}>
-                            <HelpCircle className={iconClass("/dashboard/client/support")} />
-                            Help Center
-                        </Link>
-                    </nav>
+        <aside className="w-[240px] bg-white flex flex-col flex-shrink-0 h-full border-r border-slate-100">
+            {/* Brand Header */}
+            <div className="px-5 py-6 flex items-center">
+                <div className="relative h-7 w-36">
+                    <Image
+                        src="/images/logos/long_form_purple_text.png"
+                        alt="Digital Directions"
+                        fill
+                        className="object-contain object-left"
+                    />
                 </div>
             </div>
 
-            {/* Support */}
-            <div className="mt-auto pt-6">
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div
-                            className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-700 to-purple-500 flex items-center justify-center text-white shadow-sm shadow-purple-200">
-                            <Gem className="w-4 h-4" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-medium">Digital Directions</span>
-                            <span className="text-sm font-semibold text-gray-900">Client Portal</span>
-                        </div>
+            {/* Divider */}
+            <div className="mx-5 h-px bg-slate-100 mb-4" />
+
+            {/* Navigation Groups */}
+            <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-6 pt-1">
+                {navGroups.map((group) => (
+                    <div key={group.title} className="space-y-1">
+                        <h3 className="px-3 text-[10.5px] font-semibold text-slate-400 tracking-[0.07em] uppercase mb-2">
+                            {group.title}
+                        </h3>
+                        <nav className="space-y-0.5">
+                            {group.items.map(renderNavItem)}
+                        </nav>
                     </div>
-                    <button
-                        className="w-full bg-white border border-gray-200 text-gray-900 font-medium text-xs py-2.5 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 duration-100">
-                        Contact Support
-                    </button>
-                </div>
-                <div className="mt-4 text-center">
-                    <span className="text-[10px] text-gray-400">© 2026 Digital Directions</span>
+                ))}
+            </div>
+
+            {/* Account Section */}
+            <div className="p-3 mx-3 mb-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                        <User className="w-4 h-4 text-violet-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-medium text-slate-400">Account Type</p>
+                        <p className="text-[13px] font-semibold text-slate-700 truncate">Client</p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                 </div>
             </div>
-        </aside >
+
+            {/* Footer */}
+            <div className="px-4 py-3 border-t border-slate-100 flex flex-col items-center gap-2">
+                <DijiMascot variant="neutral" size="xs" />
+                <p className="text-[11px] text-slate-400">&copy; 2025 Digital Directions</p>
+            </div>
+        </aside>
     );
 }

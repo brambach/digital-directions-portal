@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
+import { DijiMascot } from "@/components/diji-mascot";
 
 interface Project {
     id: string;
@@ -113,7 +114,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
     };
 
     return (
-        <div className="flex-1 flex overflow-hidden bg-[#F9FAFB] font-geist h-[calc(100vh-5rem)]">
+        <div className="flex-1 flex overflow-hidden bg-[#F4F5F9] font-geist h-[calc(100vh-5rem)]">
             {/* Sidebar List */}
             <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
                 <div className="p-4 border-b border-gray-100">
@@ -163,7 +164,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+            <div className="flex-1 flex flex-col bg-[#F4F5F9]">
                 {selectedProject ? (
                     <>
                         {/* Chat Header */}
@@ -191,12 +192,10 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
                                 </div>
                             ) : messages.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-2">
-                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                                        <Send className="w-6 h-6 text-gray-300" />
-                                    </div>
-                                    <p className="text-sm font-medium">No messages yet</p>
-                                    <p className="text-xs">Start the conversation!</p>
+                                <div className="flex flex-col items-center justify-center h-full space-y-2">
+                                    <DijiMascot variant="neutral" size="sm" className="mb-2" />
+                                    <p className="text-sm font-medium text-slate-700">No messages yet</p>
+                                    <p className="text-xs text-slate-400">Start the conversation!</p>
                                 </div>
                             ) : (
                                 messages.map((msg, idx) => {

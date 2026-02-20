@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnimatedProgressBar } from "@/components/animated-progress-bar";
+import { DijiMascot } from "@/components/diji-mascot";
 
 export const dynamic = "force-dynamic";
 
@@ -309,9 +310,7 @@ export default async function AdminDashboard() {
 
             {UNASSIGNED_TICKETS.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                </div>
+                <DijiMascot variant="celebrating" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">All tickets assigned</p>
                 <p className="text-[12px] text-slate-400 mt-1">Nothing needs immediate attention</p>
               </div>
