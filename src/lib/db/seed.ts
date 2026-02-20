@@ -16,10 +16,8 @@ import {
   tickets,
   ticketComments,
   invites,
-  ticketTimeEntries,
   integrationMonitors,
   projectPhases,
-  supportHourLogs,
 } from "./schema";
 
 const db = drizzle(sql);
@@ -34,19 +32,12 @@ function daysAgo(days: number): Date {
   return date;
 }
 
-function monthsAgo(months: number): Date {
-  const date = new Date();
-  date.setMonth(date.getMonth() - months);
-  return date;
-}
-
 async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
     // Clear existing data (in reverse order of dependencies)
     console.log("Clearing existing data...");
-    await db.delete(ticketTimeEntries);
     await db.delete(ticketComments);
     await db.delete(tickets);
     await db.delete(invites);
@@ -55,7 +46,6 @@ async function seed() {
     await db.delete(messages);
     await db.delete(files);
     await db.delete(clientActivity);
-    await db.delete(supportHourLogs);
     await db.delete(projects);
     await db.delete(users);
     await db.delete(clients);
@@ -71,7 +61,7 @@ async function seed() {
       .values({
         name: "Digital Directions",
         logoUrl: "https://picsum.photos/seed/digitaldirections/200/200",
-        primaryColor: "#8B5CF6",
+        primaryColor: "#7C1CFF",
         domain: "portal.digitaldirections.com",
       })
       .returning();
@@ -92,12 +82,12 @@ async function seed() {
 
     // Create template phases
     const phases = [
-      { name: "Project Discovery & Provisioning", description: "Initial project setup and requirements gathering", orderIndex: 0, estimatedDays: 5, color: "#8B5CF6" },
-      { name: "Integration Build", description: "Build and configure HiBob integrations", orderIndex: 1, estimatedDays: 10, color: "#8B5CF6" },
-      { name: "Internal Testing", description: "Internal QA and testing of integrations", orderIndex: 2, estimatedDays: 5, color: "#8B5CF6" },
-      { name: "UAT", description: "User Acceptance Testing with client", orderIndex: 3, estimatedDays: 7, color: "#8B5CF6" },
-      { name: "Go Live Preparation", description: "Final preparations before production launch", orderIndex: 4, estimatedDays: 3, color: "#8B5CF6" },
-      { name: "Go Live", description: "Production launch and monitoring", orderIndex: 5, estimatedDays: 1, color: "#8B5CF6" },
+      { name: "Project Discovery & Provisioning", description: "Initial project setup and requirements gathering", orderIndex: 0, estimatedDays: 5, color: "#7C1CFF" },
+      { name: "Integration Build", description: "Build and configure HiBob integrations", orderIndex: 1, estimatedDays: 10, color: "#7C1CFF" },
+      { name: "Internal Testing", description: "Internal QA and testing of integrations", orderIndex: 2, estimatedDays: 5, color: "#7C1CFF" },
+      { name: "UAT", description: "User Acceptance Testing with client", orderIndex: 3, estimatedDays: 7, color: "#7C1CFF" },
+      { name: "Go Live Preparation", description: "Final preparations before production launch", orderIndex: 4, estimatedDays: 3, color: "#7C1CFF" },
+      { name: "Go Live", description: "Production launch and monitoring", orderIndex: 5, estimatedDays: 1, color: "#7C1CFF" },
     ];
 
     for (const phase of phases) {
@@ -127,54 +117,36 @@ async function seed() {
         contactName: "Sarah Johnson",
         contactEmail: "sarah.johnson@meridianhc.com",
         status: "active" as const,
-        supportHoursPerMonth: 2400, // 40 hours
-        hoursUsedThisMonth: 1440, // 24 hours used
-        supportBillingCycleStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       },
       {
         companyName: "TechCorp Solutions",
         contactName: "Michael Chen",
         contactEmail: "michael.chen@techcorp.io",
         status: "active" as const,
-        supportHoursPerMonth: 1800, // 30 hours
-        hoursUsedThisMonth: 900, // 15 hours used
-        supportBillingCycleStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       },
       {
         companyName: "GreenLeaf Retail",
         contactName: "Emily Rodriguez",
         contactEmail: "emily.r@greenleaf.com",
         status: "active" as const,
-        supportHoursPerMonth: 1200, // 20 hours
-        hoursUsedThisMonth: 600, // 10 hours used
-        supportBillingCycleStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       },
       {
         companyName: "Summit Financial",
         contactName: "David Park",
         contactEmail: "david.park@summitfin.com",
         status: "active" as const,
-        supportHoursPerMonth: 3000, // 50 hours
-        hoursUsedThisMonth: 2100, // 35 hours used
-        supportBillingCycleStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       },
       {
         companyName: "BlueSky Manufacturing",
         contactName: "Jennifer Lee",
         contactEmail: "jen.lee@bluesky.com",
         status: "active" as const,
-        supportHoursPerMonth: 1500, // 25 hours
-        hoursUsedThisMonth: 450, // 7.5 hours used
-        supportBillingCycleStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       },
       {
         companyName: "Apex Logistics",
         contactName: "Robert Williams",
         contactEmail: "rob.w@apexlogistics.com",
         status: "inactive" as const,
-        supportHoursPerMonth: 0,
-        hoursUsedThisMonth: 0,
-        supportBillingCycleStart: null,
       },
     ];
 
@@ -208,6 +180,8 @@ async function seed() {
       name: string;
       description: string;
       status: "planning" | "in_progress" | "review" | "completed" | "on_hold";
+      currentStage: "pre_sales" | "discovery" | "provisioning" | "bob_config" | "mapping" | "build" | "uat" | "go_live" | "support";
+      payrollSystem: "keypay" | "myob" | "deputy" | "generic";
       startDate: Date;
       dueDate: Date | null;
     }> = [];
@@ -219,6 +193,8 @@ async function seed() {
         name: "HiBob Payroll Integration",
         description: "Integrate HiBob with NetSuite for automated payroll processing",
         status: "in_progress",
+        currentStage: "build",
+        payrollSystem: "keypay",
         startDate: daysAgo(45),
         dueDate: daysAgo(-15),
       },
@@ -227,6 +203,8 @@ async function seed() {
         name: "Benefits Enrollment Portal",
         description: "Custom employee benefits enrollment through HiBob",
         status: "review",
+        currentStage: "uat",
+        payrollSystem: "keypay",
         startDate: daysAgo(30),
         dueDate: daysAgo(-5),
       }
@@ -239,6 +217,8 @@ async function seed() {
         name: "Time Tracking Implementation",
         description: "Deploy HiBob time tracking module across all departments",
         status: "in_progress",
+        currentStage: "mapping",
+        payrollSystem: "keypay",
         startDate: daysAgo(60),
         dueDate: daysAgo(-20),
       },
@@ -247,6 +227,8 @@ async function seed() {
         name: "Workato Recipe Optimization",
         description: "Optimize existing Workato recipes for performance",
         status: "completed",
+        currentStage: "support",
+        payrollSystem: "keypay",
         startDate: daysAgo(90),
         dueDate: daysAgo(10),
       }
@@ -259,6 +241,8 @@ async function seed() {
         name: "Employee Onboarding Automation",
         description: "Automate new hire workflows with HiBob and Workato",
         status: "in_progress",
+        currentStage: "build",
+        payrollSystem: "keypay",
         startDate: daysAgo(20),
         dueDate: daysAgo(-30),
       },
@@ -267,6 +251,8 @@ async function seed() {
         name: "Performance Review System",
         description: "Implement quarterly performance review process",
         status: "planning",
+        currentStage: "discovery",
+        payrollSystem: "keypay",
         startDate: daysAgo(5),
         dueDate: null,
       }
@@ -279,6 +265,8 @@ async function seed() {
         name: "Compliance Reporting Dashboard",
         description: "Build custom compliance reports from HiBob data",
         status: "in_progress",
+        currentStage: "build",
+        payrollSystem: "keypay",
         startDate: daysAgo(75),
         dueDate: daysAgo(-10),
       },
@@ -287,6 +275,8 @@ async function seed() {
         name: "ADP Integration",
         description: "Connect HiBob with ADP for payroll sync",
         status: "completed",
+        currentStage: "support",
+        payrollSystem: "keypay",
         startDate: daysAgo(120),
         dueDate: daysAgo(20),
       },
@@ -295,6 +285,8 @@ async function seed() {
         name: "Multi-Country Payroll Setup",
         description: "Configure HiBob for operations in 5 countries",
         status: "review",
+        currentStage: "uat",
+        payrollSystem: "keypay",
         startDate: daysAgo(40),
         dueDate: daysAgo(-8),
       }
@@ -307,6 +299,8 @@ async function seed() {
         name: "Shift Scheduling Module",
         description: "Implement shift scheduling for factory workers",
         status: "planning",
+        currentStage: "discovery",
+        payrollSystem: "keypay",
         startDate: daysAgo(10),
         dueDate: null,
       }
@@ -398,10 +392,6 @@ async function seed() {
     console.log(`✓ Created ${insertedIntegrations.length} integration monitors`);
 
     // Create tickets
-    const ticketTypes = ["general_support", "project_issue", "feature_request", "bug_report"] as const;
-    const ticketPriorities = ["low", "medium", "high", "urgent"] as const;
-    const ticketStatuses = ["open", "in_progress", "waiting_on_client", "resolved", "closed"] as const;
-
     const ticketsData = [
       { clientId: insertedClients[0].id, projectId: insertedProjects[0].id, title: "API timeout in payroll sync", description: "Intermittent timeouts when syncing payroll data to NetSuite during peak hours", type: "bug_report" as const, priority: "high" as const, status: "in_progress" as const, createdAt: daysAgo(5) },
       { clientId: insertedClients[0].id, projectId: insertedProjects[1].id, title: "Employee import CSV error", description: "Getting validation errors when importing employees via CSV", type: "bug_report" as const, priority: "medium" as const, status: "resolved" as const, createdAt: daysAgo(12) },
@@ -424,59 +414,11 @@ async function seed() {
     const insertedTickets = await db.insert(tickets).values(
       ticketsData.map((t) => ({
         ...t,
-        createdBy: PLACEHOLDER_USER_ID, // Will update after creating users
-        timeSpentMinutes: 0,
+        createdBy: PLACEHOLDER_USER_ID,
       }))
     ).returning();
 
     console.log(`✓ Created ${insertedTickets.length} tickets`);
-
-    // Create ticket time entries (spread across Oct, Nov, Dec)
-    const timeEntriesData = [];
-
-    // October entries
-    for (let i = 0; i < 15; i++) {
-      const ticket = insertedTickets[Math.floor(Math.random() * insertedTickets.length)];
-      timeEntriesData.push({
-        ticketId: ticket.id,
-        userId: PLACEHOLDER_USER_ID,
-        minutes: [30, 45, 60, 90, 120, 180][Math.floor(Math.random() * 6)],
-        description: ["Investigated issue", "Implemented fix", "Testing changes", "Code review", "Documentation update"][Math.floor(Math.random() * 5)],
-        loggedAt: monthsAgo(2).toISOString().includes("Oct") ? daysAgo(60 + Math.floor(Math.random() * 30)) : daysAgo(60 + Math.floor(Math.random() * 30)),
-        countTowardsSupportHours: true,
-      });
-    }
-
-    // November entries
-    for (let i = 0; i < 12; i++) {
-      const ticket = insertedTickets[Math.floor(Math.random() * insertedTickets.length)];
-      timeEntriesData.push({
-        ticketId: ticket.id,
-        userId: PLACEHOLDER_USER_ID,
-        minutes: [30, 45, 60, 90, 120, 180][Math.floor(Math.random() * 6)],
-        description: ["Client meeting", "Bug fixing", "Feature implementation", "System configuration", "Testing"][Math.floor(Math.random() * 5)],
-        loggedAt: daysAgo(30 + Math.floor(Math.random() * 30)),
-        countTowardsSupportHours: true,
-      });
-    }
-
-    // December entries (current month)
-    for (let i = 0; i < 20; i++) {
-      const ticket = insertedTickets[Math.floor(Math.random() * insertedTickets.length)];
-      timeEntriesData.push({
-        ticketId: ticket.id,
-        userId: PLACEHOLDER_USER_ID,
-        minutes: [30, 45, 60, 90, 120, 180, 240][Math.floor(Math.random() * 7)],
-        description: ["Troubleshooting", "Implementation", "Code review", "Client support", "Documentation", "Testing", "Deployment"][Math.floor(Math.random() * 7)],
-        loggedAt: daysAgo(Math.floor(Math.random() * 30)),
-        countTowardsSupportHours: true,
-      });
-    }
-
-    // Insert time entries
-    await db.insert(ticketTimeEntries).values(timeEntriesData);
-
-    console.log(`✓ Created ${timeEntriesData.length} ticket time entries`);
 
     // Create ticket comments
     const commentsData = [
@@ -492,7 +434,6 @@ async function seed() {
       { ticketId: insertedTickets[8].id, authorId: PLACEHOLDER_USER_ID, content: "Working on the compliance report formatting. Will send updated template by end of day.", isInternal: false, createdAt: daysAgo(6) },
     ];
 
-    // Insert ticket comments
     await db.insert(ticketComments).values(commentsData);
 
     console.log(`✓ Created ${commentsData.length} ticket comments`);
@@ -525,7 +466,6 @@ async function seed() {
       );
     }
 
-    // Insert messages
     await db.insert(messages).values(messagesData);
 
     console.log(`✓ Created ${messagesData.length} messages`);
@@ -558,7 +498,6 @@ async function seed() {
       });
     }
 
-    // Insert files
     await db.insert(files).values(filesData);
 
     console.log(`✓ Created ${filesData.length} files`);
@@ -568,12 +507,11 @@ async function seed() {
     console.log("");
     console.log("Database seeded with:");
     console.log(`  - 1 agency (Digital Directions)`);
-    console.log(`  - 6 clients with support hour allocations`);
+    console.log(`  - 6 clients`);
     console.log(`  - ${insertedProjects.length} projects across clients`);
     console.log(`  - ${insertedTickets.length} tickets with varied statuses`);
     console.log(`  - ${insertedIntegrations.length} integration monitors`);
     console.log(`  - ${totalPhases} project phases`);
-    console.log(`  - ${timeEntriesData.length} time entries (Oct/Nov/Dec)`);
     console.log(`  - ${commentsData.length} ticket comments`);
     console.log(`  - ${messagesData.length} project messages`);
     console.log(`  - ${filesData.length} uploaded files`);

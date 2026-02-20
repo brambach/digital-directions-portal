@@ -54,7 +54,8 @@ export default async function ClientDashboard() {
     .where(and(eq(integrationMonitors.clientId, client.id), isNull(integrationMonitors.deletedAt)))
     .then((r) => r[0]?.count || 0);
 
-  const remainingMinutes = (client.supportHoursPerMonth || 0) - (client.hoursUsedThisMonth || 0);
+  // TODO Sprint 3: Support hours removed in Sprint 2; this stat will be replaced.
+  const remainingMinutes = 0;
 
   const projectIds = clientProjects.map((p) => p.id);
 
