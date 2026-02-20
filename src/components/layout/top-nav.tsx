@@ -39,7 +39,7 @@ export default function TopNav({ navItems, isAdmin }: TopNavProps) {
             className="flex items-center gap-3 group"
           >
             <Image
-              src="/images/dd-logo.png"
+              src="/images/logos/long_form_purple_text.png"
               alt="Digital Directions"
               width={36}
               height={36}

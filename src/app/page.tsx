@@ -7,7 +7,7 @@ export default function Home() {
       {/* Logo + Title */}
       <div className="flex items-center gap-3 mb-2">
         <Image
-          src="/images/dd-logo.png"
+          src="/images/logos/long_form_purple_text.png"
           alt="Digital Directions"
           width={40}
           height={40}

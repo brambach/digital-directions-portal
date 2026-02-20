@@ -194,7 +194,7 @@ export default function InvitePage() {
           {/* Logo */}
           <div className="flex items-center justify-center mb-6">
             <Image
-              src="/images/dd-logo.png"
+              src="/images/logos/long_form_purple_text.png"
               alt="Digital Directions"
               width={64}
               height={64}

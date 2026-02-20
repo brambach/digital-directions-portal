@@ -9,7 +9,7 @@ export default function SignUpPage() {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8">
           <div className="text-center mb-6">
             <Image
-              src="/images/dd-logo.png"
+              src="/images/logos/long_form_purple_text.png"
               alt="Digital Directions"
               width={120}
               height={30}
