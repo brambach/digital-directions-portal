@@ -14,7 +14,6 @@ import {
     Shield,
     HelpCircle,
     ChevronDown,
-    ChevronLeft,
     ShieldCheck,
 } from "lucide-react";
 
@@ -55,17 +54,17 @@ export function AdminSidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-[12px] text-[14px] font-medium transition-all duration-200 group",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 group",
                     active
-                        ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(124,28,255,0.1)]"
-                        : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
+                        ? "bg-violet-50 text-violet-700 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.15)]"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                 )}
             >
                 <item.icon
-                    strokeWidth={active ? 2 : 1.5}
+                    strokeWidth={active ? 2 : 1.75}
                     className={cn(
-                        "w-[18px] h-[18px] flex-shrink-0 transition-colors",
-                        active ? "text-primary" : "text-slate-500 group-hover:text-slate-300"
+                        "w-[17px] h-[17px] flex-shrink-0 transition-colors",
+                        active ? "text-violet-600" : "text-slate-400 group-hover:text-slate-600"
                     )}
                 />
                 <span className="flex-1">{item.label}</span>
@@ -73,8 +72,8 @@ export function AdminSidebar() {
                     <span className={cn(
                         "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         item.badge === "BETA"
-                            ? "bg-blue-500/10 text-blue-400"
-                            : "bg-primary/10 text-primary"
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-violet-100 text-violet-600"
                     )}>
                         {item.badge}
                     </span>
@@ -84,32 +83,30 @@ export function AdminSidebar() {
     };
 
     return (
-        <aside className="w-[260px] bg-[#0F1219] flex flex-col flex-shrink-0 h-full border-r border-white/[0.05]">
-            {/* Digital Directions Brand Header */}
-            <div className="px-6 py-8 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="relative h-8 w-40">
-                        <Image
-                            src="/images/logos/long_form_white_text.png"
-                            alt="Digital Directions"
-                            fill
-                            className="object-contain"
-                        />
-                    </div>
+        <aside className="w-[240px] bg-white flex flex-col flex-shrink-0 h-full border-r border-slate-100">
+            {/* Brand Header */}
+            <div className="px-5 py-6 flex items-center">
+                <div className="relative h-7 w-36">
+                    <Image
+                        src="/images/logos/long_form_purple_text.png"
+                        alt="Digital Directions"
+                        fill
+                        className="object-contain object-left"
+                    />
                 </div>
-                <button className="w-7 h-7 rounded-md border border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
-                    <ChevronLeft className="w-4 h-4" />
-                </button>
             </div>
 
+            {/* Divider */}
+            <div className="mx-5 h-px bg-slate-100 mb-4" />
+
             {/* Navigation Groups */}
-            <div className="flex-1 overflow-y-auto no-scrollbar px-4 space-y-8 pt-2">
+            <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-6 pt-1">
                 {navGroups.map((group) => (
-                    <div key={group.title} className="space-y-2">
-                        <h3 className="px-3 text-[11px] font-bold text-slate-600 tracking-[0.08em] uppercase">
+                    <div key={group.title} className="space-y-1">
+                        <h3 className="px-3 text-[10.5px] font-semibold text-slate-400 tracking-[0.07em] uppercase mb-2">
                             {group.title}
                         </h3>
-                        <nav className="space-y-1">
+                        <nav className="space-y-0.5">
                             {group.items.map(renderNavItem)}
                         </nav>
                     </div>
@@ -117,22 +114,22 @@ export function AdminSidebar() {
             </div>
 
             {/* Account Section */}
-            <div className="p-4 mx-4 mb-4 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            <div className="p-3 mx-3 mb-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-500">Account Type</p>
-                        <p className="text-sm font-bold text-white truncate">Administrator</p>
+                        <p className="text-[11px] font-medium text-slate-400">Account Type</p>
+                        <p className="text-[13px] font-semibold text-slate-700 truncate">Administrator</p>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-slate-600" />
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                 </div>
             </div>
 
-            {/* Version / Copyright */}
-            <div className="px-6 py-4 border-t border-white/[0.05]">
-                <p className="text-[11px] text-slate-600">@ 2024 Digital Directions</p>
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-slate-100">
+                <p className="text-[11px] text-slate-400">© 2025 Digital Directions</p>
             </div>
         </aside>
     );

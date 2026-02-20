@@ -8,7 +8,9 @@ Digital Directions Portal is a custom-built HiBob implementation management port
 
 **Tech Stack:** Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI, Clerk auth, Vercel Postgres, Drizzle ORM, UploadThing
 
-**Brand Colors:** Purple (#8B5CF6) is the primary brand color. All accent colors, buttons, links, and interactive elements use purple, not blue.
+**Brand Colors:** Purple (`#7C1CFF` — official DD Violet 5) is the primary brand color. All accent colors, buttons, links, and interactive elements use purple, not blue. Do not use `#8B5CF6` — that was the old placeholder.
+
+> **⚠️ Major Revamp In Progress:** This portal is undergoing a full lifecycle revamp per `DD-PORTAL-2026-IMPLEMENTATION-PLAN.md`. Read that file before making significant architectural changes. Key decisions: support hours system is being removed, Freshdesk will replace the current ticket backend, the project phase system is being expanded to a 9-stage lifecycle, and the entire UI is moving to light mode.
 
 ## Development Commands
 
@@ -510,9 +512,11 @@ Invite-only portal - no public signup:
 - Real-time notifications for tickets, messages, file uploads
 - Set `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID`
 
-**Freshdesk (Phase 2):**
-- Planned integration for helpdesk ticket management
-- Portal tickets will sync to Freshdesk for team workflows
+**Freshdesk (Sprint 10 of revamp):**
+- Will REPLACE the current custom ticket system as the backend
+- Portal UI remains; Freshdesk handles data/workflows for DD team
+- Clients never see "Freshdesk" — they use the portal as normal
+- Blocked until Freshdesk account confirmed with Jack
 
 All integrations are optional - portal works without them.
 
@@ -573,9 +577,15 @@ All admins and clients belong to the Digital Directions agency:
 ## Branding & Styling
 
 **Colors:**
-- Primary: Purple (#8B5CF6) - used for all buttons, links, accents
+- Primary: `#7C1CFF` (DD Violet 5) — all buttons, links, active states. CSS var: `--primary: 265 100% 56%`
+- Background: `#F4F5F9` (page), `#FFFFFF` (cards)
 - Status badges: Green (active), Gray (inactive), Red (archived/overdue)
 - Ticket priorities: Gray (low), Blue (medium), Orange (high), Red (urgent)
+
+**Diji Mascot:**
+- Bear mascot named Diji. 7 variants in `/public/images/digi/`: neutral, peeking, construction, celebrating, thinking, confused, sleeping
+- Component: `src/components/diji-mascot.tsx` — `<DijiMascot variant="neutral" size="sm" />`
+- Use in: sidebar footer, empty states, locked lifecycle stages, go-live celebration, help centre
 
 **CSS Variables:**
 Theme colors defined in `src/app/globals.css` using HSL values. Primary and accent set to purple.

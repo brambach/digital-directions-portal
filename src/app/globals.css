@@ -13,14 +13,14 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 265 91% 32%;
-    --primary-foreground: 210 20% 98%;
+    --primary: 265 100% 56%;  /* #7C1CFF — official DD Violet 5 */
+    --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 96%;
     --secondary-foreground: 220 15% 16%;
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
-    --accent: 265 91% 32%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 265 100% 56%;   /* #7C1CFF — official DD Violet 5 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
     --border: 220 13% 91%;
@@ -621,6 +621,18 @@
 
   .tooltip-visible {
     @apply opacity-100;
+  }
+}
+
+/* ===== Dashboard Reveal Animations ===== */
+/*
+ * Uses fill-mode: both so elements are invisible during delay (backwards)
+ * and hold their final state after the animation (forwards).
+ * Combine with .stagger-N for sequenced reveals.
+ */
+@layer utilities {
+  .animate-dashboard-reveal {
+    animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 

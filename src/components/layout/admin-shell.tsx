@@ -9,7 +9,7 @@ interface AdminShellProps {
 
 export default function AdminShell({ children }: AdminShellProps) {
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-[#0B0E14]">
+        <div className="flex h-screen w-full overflow-hidden bg-[#F4F5F9]">
             {/* Sidebar */}
             <div className="hidden lg:block h-full">
                 <AdminSidebar />
