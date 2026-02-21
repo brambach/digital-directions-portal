@@ -35,32 +35,7 @@
     --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .dark {
-    /* Digital Directions Warm Dark Mode - Primary Palette */
-    --background: 265 100% 7%;
-    /* #0F0024 */
-    --foreground: 210 40% 98%;
-    --card: 265 100% 10%;
-    /* Slightly lighter than background */
-    --card-foreground: 210 40% 98%;
-    --popover: 265 100% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 265 91% 50%;
-    /* Brightened for dark mode */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 265 91% 50%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 15%;
-    /* Soft border */
-    --input: 222 47% 15%;
-    --ring: 265 91% 50%;
-  }
+  /* Dark mode removed — portal is light mode only */
 }
 
 @layer base {
