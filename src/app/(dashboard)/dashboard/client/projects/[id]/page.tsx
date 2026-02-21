@@ -159,7 +159,7 @@ export default async function ClientProjectDetailPage({
           </div>
           <div className="flex items-center gap-3">
             <Link href="/dashboard/client/tickets">
-              <Button size="sm" variant="outline" className="rounded-full font-semibold">
+              <Button size="sm" className="rounded-full font-semibold bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200 shadow-none">
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Get Support
               </Button>

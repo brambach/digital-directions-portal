@@ -3,8 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { DijiMascot } from "@/components/diji-mascot";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     LayoutDashboard,
     FolderKanban,
@@ -12,11 +21,14 @@ import {
     MessageSquare,
     HelpCircle,
     User,
-    ChevronDown,
+    ChevronUp,
+    LogOut,
 } from "lucide-react";
 
 export function ClientSidebar() {
     const pathname = usePathname();
+    const { user } = useUser();
+    const { signOut } = useClerk();
 
     const isActive = (href: string) => {
         if (href === "/dashboard/client" && pathname === "/dashboard/client") return true;
@@ -99,18 +111,48 @@ export function ClientSidebar() {
             </div>
 
             {/* Account Section */}
-            <div className="p-3 mx-3 mb-3 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                        <User className="w-4 h-4 text-violet-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium text-slate-400">Account Type</p>
-                        <p className="text-[13px] font-semibold text-slate-700 truncate">Client</p>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                </div>
-            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button className="w-[calc(100%-1.5rem)] p-3 mx-3 mb-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer text-left">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                                {user?.imageUrl ? (
+                                    <Image src={user.imageUrl} alt="" width={32} height={32} className="rounded-lg" />
+                                ) : (
+                                    <User className="w-4 h-4 text-violet-600" />
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-semibold text-slate-700 truncate">
+                                    {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Account"}
+                                </p>
+                                <p className="text-[11px] text-slate-400 truncate">
+                                    {user?.primaryEmailAddress?.emailAddress || "Client"}
+                                </p>
+                            </div>
+                            <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        </div>
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-[216px] mb-1">
+                    <DropdownMenuLabel className="font-normal">
+                        <p className="text-[13px] font-semibold text-slate-700 truncate">
+                            {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Account"}
+                        </p>
+                        <p className="text-[11px] text-slate-400 truncate">
+                            {user?.primaryEmailAddress?.emailAddress}
+                        </p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                        onClick={() => signOut({ redirectUrl: "/" })}
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Footer */}
             <div className="px-4 py-3 border-t border-slate-100 flex flex-col items-center gap-2">

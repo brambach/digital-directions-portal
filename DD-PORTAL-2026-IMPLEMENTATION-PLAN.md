@@ -911,6 +911,56 @@ Since we're building everything at once, here's the recommended order to minimis
 - ROI calculator (admin configures, client reads)
 - Connector library (static for MVP)
 
+### Sprint 12 — Diji AI Chatbot
+> **Model: Opus** — AI-powered chat with context injection, streaming responses, and ticket escalation. Needs careful prompt engineering and UX design for the conversation flow.
+
+**Goal:** Diji becomes a real AI assistant — clients' first line of support before opening a ticket.
+
+**Architecture:**
+- Floating chat bubble in bottom-right corner (client pages only)
+- Opens a chat panel with Diji's avatar and conversational UI
+- Powered by Claude API (Anthropic SDK) with streaming responses
+- Context-aware: knows the client's project, current stage, flags, and help articles
+
+**What to build:**
+- `<DijiChat />` — floating bubble + slide-out chat panel component
+- `/api/chat` — API route that accepts messages, injects context, calls Claude API, streams response
+- Context loader: pulls project data, current stage, unresolved flags, and `helpArticles` content to build the system prompt
+- Conversation history: stored in-memory per session (no DB persistence for MVP)
+- Escalation flow: when Diji can't answer, it offers "Would you like to open a support ticket?" → pre-fills a Freshdesk ticket with the conversation context
+- Diji personality: friendly, knowledgeable about HiBob integrations, uses simple language, never guesses — admits when it doesn't know
+
+**Dependencies:**
+- Sprint 11 (help centre content populates `helpArticles` — Diji needs this to be useful)
+- Sprint 10 (Freshdesk integration for ticket escalation)
+- `ANTHROPIC_API_KEY` environment variable
+
+**System prompt structure:**
+```
+You are Diji, Digital Directions' friendly support assistant.
+You help clients with their HiBob integration projects.
+
+Client context:
+- Company: {clientName}
+- Project: {projectName}
+- Current stage: {currentStage}
+- Unresolved flags: {flags}
+
+Knowledge base:
+{helpArticles content}
+
+Rules:
+- Be concise and helpful
+- Reference specific help articles when relevant
+- If you're not sure, say so and offer to create a ticket
+- Never make up technical answers about HiBob or payroll APIs
+```
+
+**Future enhancements (not in Sprint 12):**
+- Conversation persistence in DB
+- Admin-side Diji for internal knowledge queries
+- Analytics on common questions to improve help articles
+
 ---
 
 ## 14. Open Questions

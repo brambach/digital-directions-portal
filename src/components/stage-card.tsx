@@ -169,7 +169,7 @@ export function StageCard({
                 size="sm"
                 onClick={handleLock}
                 disabled={locking || advancing}
-                className="rounded-full text-xs"
+                className="rounded-full text-xs border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800"
               >
                 {locking ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />

@@ -19,23 +19,9 @@ interface ClientFlagButtonProps {
   className?: string;
 }
 
-const FLAG_TYPES = [
-  {
-    value: "client_blocker",
-    label: "Something is blocked",
-    description: "I can't proceed because something is preventing progress.",
-  },
-  {
-    value: "client_input_needed",
-    label: "I need guidance",
-    description: "I'm unsure about something and need direction from the DD team.",
-  },
-] as const;
-
 export function ClientFlagButton({ projectId, className }: ClientFlagButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<string>("client_blocker");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +36,7 @@ export function ClientFlagButton({ projectId, className }: ClientFlagButtonProps
       const res = await fetch(`/api/projects/${projectId}/flags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, message: message.trim() }),
+        body: JSON.stringify({ type: "client_blocker", message: message.trim() }),
       });
 
       if (!res.ok) {
@@ -61,7 +47,6 @@ export function ClientFlagButton({ projectId, className }: ClientFlagButtonProps
       toast.success("Flag raised — our team has been notified.");
       setOpen(false);
       setMessage("");
-      setType("client_blocker");
       router.refresh();
     } catch (err: any) {
       toast.error(err.message);
@@ -91,43 +76,17 @@ export function ClientFlagButton({ projectId, className }: ClientFlagButtonProps
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {/* Type selector */}
-            <div className="space-y-2">
-              {FLAG_TYPES.map((ft) => (
-                <button
-                  key={ft.value}
-                  type="button"
-                  onClick={() => setType(ft.value)}
-                  className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
-                    type === ft.value
-                      ? "border-[#7C1CFF] bg-violet-50"
-                      : "border-slate-100 hover:border-slate-200"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-slate-900">
-                    {ft.label}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {ft.description}
-                  </p>
-                </button>
-              ))}
-            </div>
-
-            {/* Message */}
-            <div>
-              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">
-                What&apos;s going on?
-              </label>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe the issue or what you need help with..."
-                rows={4}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-100 focus:border-[#7C1CFF] resize-none"
-              />
-            </div>
+          <div className="py-2">
+            <label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+              What&apos;s going on?
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Describe what's blocking you or what you need help with..."
+              rows={4}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-100 focus:border-[#7C1CFF] resize-none"
+            />
           </div>
 
           <DialogFooter>

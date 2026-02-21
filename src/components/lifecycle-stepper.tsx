@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, ChevronRight } from "lucide-react";
 import { LIFECYCLE_STAGES, stageSlug } from "@/lib/lifecycle";
 
 export interface LifecycleStage {
@@ -38,7 +38,7 @@ export function LifecycleStepper({
         <div>
           <h3 className="text-[15px] font-bold text-slate-800">Project Lifecycle</h3>
           <p className="text-[12px] text-slate-400 mt-0.5">
-            {completedCount} of {resolvedStages.length} stages complete
+            {completedCount} of {resolvedStages.length} stages complete &middot; Click a stage to view details
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -69,7 +69,10 @@ export function LifecycleStepper({
             const href = isClickable ? `${basePath}/${projectId}/${slug}` : undefined;
 
             const nodeContent = (
-              <div className="flex flex-col items-center group">
+              <div className={cn(
+                "flex flex-col items-center group",
+                isClickable && "cursor-pointer"
+              )}>
                 {/* Node */}
                 <div
                   className={cn(
@@ -78,7 +81,7 @@ export function LifecycleStepper({
                     stage.status === "active" && "bg-white border-[#7C1CFF] ring-4 ring-violet-100",
                     stage.status === "review" && "bg-amber-50 border-amber-400",
                     stage.status === "locked" && "bg-slate-50 border-slate-200 text-slate-300",
-                    isClickable && "group-hover:scale-110 cursor-pointer"
+                    isClickable && "group-hover:scale-110 group-hover:shadow-md group-hover:shadow-violet-200/50"
                   )}
                 >
                   {stage.status === "complete" ? (
@@ -95,7 +98,7 @@ export function LifecycleStepper({
                 {/* Label */}
                 <span
                   className={cn(
-                    "mt-2.5 text-[10px] font-semibold text-center leading-tight max-w-[64px] transition-colors",
+                    "mt-2.5 text-[10px] font-semibold text-center leading-tight max-w-[72px] transition-colors",
                     stage.status === "complete" && "text-[#6316CC]",
                     stage.status === "active" && "text-[#7C1CFF] font-bold",
                     stage.status === "review" && "text-amber-600",
@@ -105,6 +108,13 @@ export function LifecycleStepper({
                 >
                   {stage.label}
                 </span>
+
+                {/* View indicator */}
+                {isClickable && (
+                  <span className="mt-1 text-[9px] text-transparent group-hover:text-violet-500 transition-colors flex items-center gap-0.5">
+                    View <ChevronRight className="w-2.5 h-2.5" />
+                  </span>
+                )}
               </div>
             );
 
