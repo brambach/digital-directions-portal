@@ -18,6 +18,8 @@ import {
   invites,
   integrationMonitors,
   projectPhases,
+  discoveryTemplates,
+  discoveryResponses,
 } from "./schema";
 
 const db = drizzle(sql);
@@ -38,6 +40,8 @@ async function seed() {
   try {
     // Clear existing data (in reverse order of dependencies)
     console.log("Clearing existing data...");
+    await db.delete(discoveryResponses);
+    await db.delete(discoveryTemplates);
     await db.delete(ticketComments);
     await db.delete(tickets);
     await db.delete(invites);
@@ -502,6 +506,96 @@ async function seed() {
 
     console.log(`✓ Created ${filesData.length} files`);
 
+    // Seed KeyPay Discovery Template
+    const keypayDiscoverySections = [
+      {
+        id: "org-info",
+        title: "Organisation Information",
+        description: "Tell us about your company structure so we can configure HiBob correctly for your organisation.",
+        loomUrl: "",
+        questions: [
+          { id: "org-legal-name", label: "Company legal name", type: "text", required: true },
+          { id: "org-trading-name", label: "Trading name (if different)", type: "text", required: false },
+          { id: "org-abn", label: "ABN", type: "text", required: true },
+          { id: "org-employee-count", label: "Total number of employees", type: "number", required: true },
+          { id: "org-locations", label: "How many office locations do you have?", type: "number", required: true },
+          { id: "org-location-names", label: "List your office location names", type: "textarea", required: true },
+          { id: "org-departments", label: "List your departments", type: "textarea", required: true },
+          { id: "org-entities", label: "Do you have multiple legal entities?", type: "select", required: true, options: ["No — single entity", "Yes — 2 entities", "Yes — 3+ entities"] },
+          { id: "org-countries", label: "Which countries do you operate in?", type: "textarea", required: true },
+        ],
+      },
+      {
+        id: "payroll-config",
+        title: "Payroll Configuration",
+        description: "Help us understand your current payroll setup so we can configure the integration correctly.",
+        loomUrl: "",
+        questions: [
+          { id: "pay-frequency", label: "Pay frequency", type: "select", required: true, options: ["Weekly", "Fortnightly", "Monthly", "Twice monthly"] },
+          { id: "pay-day", label: "What day of the week/month do you pay?", type: "text", required: true },
+          { id: "pay-current-system", label: "What payroll system are you currently using?", type: "text", required: true },
+          { id: "pay-keypay-setup", label: "Is your KeyPay (Employment Hero) account already set up?", type: "select", required: true, options: ["Yes — fully configured", "Yes — partially configured", "No — not yet set up"] },
+          { id: "pay-award-rates", label: "Do you use award/agreement rates?", type: "select", required: true, options: ["Yes", "No", "Some employees"] },
+          { id: "pay-categories-custom", label: "Do you have custom pay categories (e.g. allowances, deductions)?", type: "select", required: true, options: ["Yes", "No"] },
+          { id: "pay-categories-list", label: "If yes, list your custom pay categories", type: "textarea", required: false },
+        ],
+      },
+      {
+        id: "leave-management",
+        title: "Leave Management",
+        description: "Tell us about the leave types and policies you use so we can map them correctly.",
+        loomUrl: "",
+        questions: [
+          { id: "leave-types", label: "Which leave types do you use? (e.g. Annual, Personal, Long Service, etc.)", type: "textarea", required: true },
+          { id: "leave-accrual", label: "How are leave balances accrued?", type: "select", required: true, options: ["Based on hours worked", "Fixed accrual per period", "Based on service length", "Other"] },
+          { id: "leave-custom-policies", label: "Do you have custom leave policies (e.g. birthday leave, wellness days)?", type: "select", required: true, options: ["Yes", "No"] },
+          { id: "leave-custom-list", label: "If yes, describe your custom leave policies", type: "textarea", required: false },
+          { id: "leave-existing-balances", label: "Do you need to migrate existing leave balances?", type: "select", required: true, options: ["Yes", "No"] },
+          { id: "leave-approval-flow", label: "Describe your leave approval workflow", type: "textarea", required: false },
+        ],
+      },
+      {
+        id: "banking-super",
+        title: "Banking & Superannuation",
+        description: "We need to understand your banking and superannuation setup to configure payment splits correctly.",
+        loomUrl: "",
+        questions: [
+          { id: "bank-account-count", label: "How many bank accounts do employees typically have?", type: "select", required: true, options: ["1", "2", "3 or more"] },
+          { id: "bank-split-method", label: "How are bank account splits configured?", type: "select", required: true, options: ["Percentage", "Fixed dollar amount", "Remaining balance", "Mix of methods"] },
+          { id: "super-fund-types", label: "Which super fund types do you use?", type: "select", required: true, options: ["Regular only", "Regular + SMSF", "Regular + SMSF + Employer", "Other"] },
+          { id: "super-fund-selector", label: "Do employees choose their own super fund?", type: "select", required: true, options: ["Yes — employee choice", "No — company default fund", "Mix of both"] },
+          { id: "super-salary-sacrifice", label: "Do any employees have salary sacrifice arrangements?", type: "select", required: true, options: ["Yes", "No"] },
+          { id: "super-additional-notes", label: "Any additional notes about your superannuation setup?", type: "textarea", required: false },
+        ],
+      },
+      {
+        id: "integration-requirements",
+        title: "Integration Requirements",
+        description: "Help us understand your specific integration needs and preferences.",
+        loomUrl: "",
+        questions: [
+          { id: "int-sync-direction", label: "Sync direction preference", type: "select", required: true, options: ["HiBob → KeyPay (one-way)", "Bi-directional", "Not sure — need advice"] },
+          { id: "int-sync-frequency", label: "How often should data sync?", type: "select", required: true, options: ["Real-time (webhook)", "Every few hours", "Daily", "Not sure — need advice"] },
+          { id: "int-employee-fields", label: "Which employee fields need to sync? (e.g. name, address, bank details, tax, super)", type: "textarea", required: true },
+          { id: "int-custom-fields", label: "Do you have custom fields in HiBob that need to sync?", type: "select", required: true, options: ["Yes", "No", "Not sure"] },
+          { id: "int-custom-fields-list", label: "If yes, list your custom fields", type: "textarea", required: false },
+          { id: "int-onboard-offboard", label: "Should new hires and terminations sync automatically?", type: "select", required: true, options: ["Yes — both", "New hires only", "Terminations only", "No — manual process"] },
+          { id: "int-go-live-date", label: "Do you have a target go-live date?", type: "text", required: false },
+          { id: "int-additional-requirements", label: "Any other integration requirements or concerns?", type: "textarea", required: false },
+        ],
+      },
+    ];
+
+    const [keypayTemplate] = await db.insert(discoveryTemplates).values({
+      name: "Standard KeyPay Discovery",
+      payrollSystem: "keypay",
+      sections: JSON.stringify(keypayDiscoverySections),
+      version: 1,
+      isActive: true,
+    }).returning();
+
+    console.log(`✓ Created KeyPay discovery template: ${keypayTemplate.name}`);
+
     console.log("");
     console.log("✅ Seed completed successfully!");
     console.log("");
@@ -515,6 +609,7 @@ async function seed() {
     console.log(`  - ${commentsData.length} ticket comments`);
     console.log(`  - ${messagesData.length} project messages`);
     console.log(`  - ${filesData.length} uploaded files`);
+    console.log(`  - 1 KeyPay discovery template (5 sections, 36 questions)`);
     console.log("");
     console.log("🎉 Dashboards are now ready with realistic data!");
     console.log("");

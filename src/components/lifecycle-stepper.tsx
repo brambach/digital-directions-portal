@@ -38,7 +38,10 @@ export function LifecycleStepper({
         <div>
           <h3 className="text-[15px] font-bold text-slate-800">Project Lifecycle</h3>
           <p className="text-[12px] text-slate-400 mt-0.5">
-            {completedCount} of {resolvedStages.length} stages complete &middot; Click a stage to view details
+            {completedCount} of {resolvedStages.length} stages complete
+          </p>
+          <p className="text-[11px] text-violet-400 mt-0.5 font-medium">
+            Click any stage to view details
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -111,7 +114,7 @@ export function LifecycleStepper({
 
                 {/* View indicator */}
                 {isClickable && (
-                  <span className="mt-1 text-[9px] text-transparent group-hover:text-violet-500 transition-colors flex items-center gap-0.5">
+                  <span className="mt-1 text-[9px] text-slate-300 group-hover:text-violet-500 transition-colors flex items-center gap-0.5">
                     View <ChevronRight className="w-2.5 h-2.5" />
                   </span>
                 )}

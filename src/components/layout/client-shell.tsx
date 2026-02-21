@@ -16,7 +16,8 @@ export default function ClientShell({ children }: ClientShellProps) {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 min-w-0 overflow-y-auto no-scrollbar relative">
+            <main className="flex-1 min-w-0 overflow-y-auto no-scrollbar relative flex flex-col">
+                <ClientHeader />
                 {children}
             </main>
         </div>

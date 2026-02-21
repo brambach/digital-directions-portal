@@ -1,11 +1,12 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags } from "@/lib/db/schema";
+import { projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { deriveStageStatus } from "@/lib/lifecycle";
+import { AdminDiscoveryContent } from "@/components/admin-discovery-content";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +40,7 @@ export default async function AdminDiscoveryPage({ params }: { params: Promise<{
         projectId={id}
         backHref={`/dashboard/admin/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 4</p>
-          <p className="text-xs text-violet-500 mt-1">Discovery questionnaire, review flow, and approval workflow.</p>
-        </div>
+        <AdminDiscoveryContent projectId={id} projectName={project.name} />
       </StageCard>
     </div>
   );
