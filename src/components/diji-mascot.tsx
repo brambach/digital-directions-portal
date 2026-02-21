@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 // Variants map to actual filenames in /public/images/digi/
@@ -43,11 +42,12 @@ export function DijiMascot({
   const altText = alt ?? `Diji the bear — ${variant}`;
 
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={src}
       alt={altText}
       width={px}
-      height={Math.round(px * 1.35)} // ~3:4 aspect ratio matches the character
+      height={Math.round(px * 1.35)}
       className={cn(cls, "object-contain select-none", className)}
       draggable={false}
     />

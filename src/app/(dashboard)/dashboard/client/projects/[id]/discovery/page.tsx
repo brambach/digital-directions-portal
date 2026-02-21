@@ -8,6 +8,7 @@ import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
 import { deriveStageStatus } from "@/lib/lifecycle";
+import { ClientDiscoveryContent } from "@/components/client-discovery-content";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +48,7 @@ export default async function ClientDiscoveryPage({ params }: { params: Promise<
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
-        <div className="flex items-center justify-between">
-          <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center flex-1">
-            <p className="text-sm font-semibold text-violet-700">Coming in Sprint 4</p>
-            <p className="text-xs text-violet-500 mt-1">Guided questionnaire with section-by-section navigation and save/resume.</p>
-          </div>
-        </div>
+        <ClientDiscoveryContent projectId={id} />
         {status !== "locked" && (
           <div className="flex justify-end pt-2">
             <ClientFlagButton projectId={id} />

@@ -244,6 +244,116 @@ export async function sendTicketResolvedEmail(params: {
   }
 }
 
+// Discovery Email (for discovery questionnaire state changes)
+export async function sendDiscoveryEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+  event: "ready" | "submitted" | "approved" | "changes_requested";
+  reviewNotes?: string;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  const eventConfig = {
+    ready: {
+      subject: `Discovery questionnaire ready: ${params.projectName}`,
+      heading: "Your Discovery Questionnaire Is Ready",
+      gradientColors: "#7C1CFF 0%, #6316CC 100%",
+      body: `<p>Your discovery questionnaire for <strong>${params.projectName}</strong> is ready to complete.</p>
+        <p>This questionnaire helps us understand your organisation, payroll setup, and integration requirements so we can plan your build.</p>`,
+      ctaText: "Complete Questionnaire",
+      ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/discovery`,
+      ctaColor: "#7C1CFF",
+    },
+    submitted: {
+      subject: `Discovery questionnaire submitted: ${params.projectName}`,
+      heading: "Discovery Questionnaire Submitted",
+      gradientColors: "#7C1CFF 0%, #6316CC 100%",
+      body: `<p>The discovery questionnaire for <strong>${params.projectName}</strong> has been submitted and is ready for your review.</p>`,
+      ctaText: "Review Responses",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/discovery`,
+      ctaColor: "#7C1CFF",
+    },
+    approved: {
+      subject: `Discovery approved: ${params.projectName}`,
+      heading: "Discovery Questionnaire Approved",
+      gradientColors: "#10B981 0%, #059669 100%",
+      body: `<p>Great news! Your discovery questionnaire for <strong>${params.projectName}</strong> has been approved by the Digital Directions team.</p>
+        ${params.reviewNotes ? `<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 16px 0;"><p style="margin: 0 0 4px 0; color: #6b7280; font-size: 13px; font-weight: 600;">Review Notes:</p><p style="margin: 0; color: #374151; font-size: 14px;">${params.reviewNotes}</p></div>` : ""}
+        <p>We'll be moving to the next stage of your project shortly.</p>`,
+      ctaText: "View Project",
+      ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}`,
+      ctaColor: "#10B981",
+    },
+    changes_requested: {
+      subject: `Changes requested: ${params.projectName} discovery`,
+      heading: "Changes Requested",
+      gradientColors: "#F59E0B 0%, #D97706 100%",
+      body: `<p>The Digital Directions team has reviewed your discovery questionnaire for <strong>${params.projectName}</strong> and has requested some changes.</p>
+        ${params.reviewNotes ? `<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 16px 0;"><p style="margin: 0 0 4px 0; color: #6b7280; font-size: 13px; font-weight: 600;">Review Notes:</p><p style="margin: 0; color: #374151; font-size: 14px;">${params.reviewNotes}</p></div>` : ""}
+        <p>Please update your responses and resubmit.</p>`,
+      ctaText: "Update Questionnaire",
+      ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/discovery`,
+      ctaColor: "#F59E0B",
+    },
+  };
+
+  const config = eventConfig[params.event];
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: config.subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, ${config.gradientColors}); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">${config.heading}</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            ${config.body}
+            <p>
+              <a href="${config.ctaUrl}" style="display: inline-block; background: ${config.ctaColor}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">${config.ctaText}</a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+              If you have any questions, simply reply to this email or log in to the portal.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return {
+        success: false,
+        error: result.error.message || String(result.error),
+      };
+    }
+
+    console.log(`Discovery email (${params.event}) sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending discovery email:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
 // Invite Email (for team members and clients)
 export async function sendInviteEmail(params: {
   to: string;
