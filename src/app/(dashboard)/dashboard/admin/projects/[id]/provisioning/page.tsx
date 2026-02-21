@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { deriveStageStatus } from "@/lib/lifecycle";
+import { AdminProvisioningContent } from "@/components/admin-provisioning-content";
 
 export const dynamic = "force-dynamic";
 
@@ -34,15 +35,12 @@ export default async function AdminProvisioningPage({ params }: { params: Promis
         stage="provisioning"
         status={status}
         title="System Provisioning"
-        description="Configure and verify client system provisioning steps."
+        description="Initialize and verify the client's provisioning steps for HiBob, KeyPay, and Workato."
         isAdmin={true}
         projectId={id}
         backHref={`/dashboard/admin/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 5</p>
-          <p className="text-xs text-violet-500 mt-1">Provisioning checklist with Loom video guidance and admin verification.</p>
-        </div>
+        <AdminProvisioningContent projectId={id} projectName={project.name} />
       </StageCard>
     </div>
   );

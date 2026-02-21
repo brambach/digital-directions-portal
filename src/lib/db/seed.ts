@@ -20,6 +20,8 @@ import {
   projectPhases,
   discoveryTemplates,
   discoveryResponses,
+  provisioningSteps,
+  bobConfigChecklist,
 } from "./schema";
 
 const db = drizzle(sql);
@@ -42,6 +44,8 @@ async function seed() {
     console.log("Clearing existing data...");
     await db.delete(discoveryResponses);
     await db.delete(discoveryTemplates);
+    await db.delete(bobConfigChecklist);
+    await db.delete(provisioningSteps);
     await db.delete(ticketComments);
     await db.delete(tickets);
     await db.delete(invites);
@@ -596,6 +600,211 @@ async function seed() {
 
     console.log(`✓ Created KeyPay discovery template: ${keypayTemplate.name}`);
 
+    // ─── Provisioning Steps ───────────────────────────────────────────────────
+    // Add provisioning steps to the TechCorp "Time Tracking Implementation" project
+    // (in mapping stage — provisioning already fully completed as a demo)
+    const techCorpMappingProject = insertedProjects.find(
+      (p) => p.name === "Time Tracking Implementation"
+    );
+
+    // Also add to Meridian "HiBob Payroll Integration" (in build — partially done)
+    const meridianBuildProject = insertedProjects.find(
+      (p) => p.name === "HiBob Payroll Integration"
+    );
+
+    const hibobStepContent = JSON.stringify({
+      intro:
+        "Your Digital Directions Integration Specialist will require administrative access to your HiBob Production environment. Once granted, they can access your Sandbox environment. This process should take 10–15 minutes.",
+      steps: [
+        "Login to your HiBob Production environment.",
+        "Navigate to Org → People, then click New Hire to open the \"Add new hire to Bob\" popup.",
+        "Choose your onboarding template. Enter the following details carefully:\n  • Email: firstname+yourclientdomain@digitaldirections.io (use .io — not .com)\n  • First name / Last name: as provided by your DD Integration Specialist\n  • Start date: Set in the past so the account is accessible immediately\n  • Ensure \"Invite employee\" is turned on before completing",
+        "Click the grid icon (top left) → System Settings → expand Account → select Permission Groups → click the Admin row.",
+        "Under Admins, open Group actions → Edit details → click Edit under Members.",
+        "Search for the employee you just created, click their row to add them to Selected, then click Select → Save → Confirm.",
+      ],
+      revokeNote:
+        "Navigate to Org → People, find the specialist, click Actions → Manage access → Delete employee profile, type DELETE to confirm.",
+    });
+
+    const keypayStepContent = JSON.stringify({
+      intro:
+        "Your Digital Directions Integration Specialist will require administrative access to your Employment Hero (KeyPay) environment. This process should take approximately 5 minutes.",
+      steps: [
+        "Login to your KeyPay environment.",
+        "Hover over the briefcase icon in the left navigation → select Payroll Settings.",
+        "In Business Settings, select Manage Users → click the green + Add button.",
+        "Enter the Integration Specialist's details and assign Admin permissions, then save.",
+        "Navigate back to Business Settings → Manage Users to confirm the user appears. Notify your DD Integration Specialist that they have been added — they will reset their password and complete access on their end.",
+      ],
+      revokeNote:
+        "Go to Business Settings → Manage Users, click the red trash icon next to the specialist's name.",
+    });
+
+    const workatoStepContent = JSON.stringify({
+      intro:
+        "Your Digital Directions Integration Specialist will require administrative access to your Workato environment across all environments (Development, Testing, Production).",
+      steps: [
+        "Login to Workato using your workato@yourcompanydomain admin account (e.g. if your email is jon@acmecorp.com, use workato@acmecorp.com).",
+        "Hover over the left side of the screen to reveal navigation → click Workspace admin.",
+        "On the Workspace admin page, click + Invite collaborator.",
+        "Fill in the collaborator details:\n  • Full name: as provided by your DD Integration Specialist\n  • Email: firstname+yourclientdomain@digitaldirections.io (use .io — not .com)\n  • Roles: Grant Admin access to all three environments — Development, Test, and Production\n  • Click Send invitation",
+        "Confirm the invitation appears in the Pending invitations section with all three environments listed. Notify your DD Integration Specialist.",
+      ],
+      revokeNote:
+        "Go to Workspace admin → Collaborators, click the specialist's name, then click the trash icon.",
+    });
+
+    if (techCorpMappingProject) {
+      // Fully verified steps (project is past provisioning stage)
+      await db.insert(provisioningSteps).values([
+        {
+          projectId: techCorpMappingProject.id,
+          stepKey: "hibob",
+          title: "HiBob",
+          description: hibobStepContent,
+          orderIndex: 1,
+          completedAt: daysAgo(50),
+          verifiedAt: daysAgo(49),
+        },
+        {
+          projectId: techCorpMappingProject.id,
+          stepKey: "keypay",
+          title: "Employment Hero Payroll (KeyPay)",
+          description: keypayStepContent,
+          orderIndex: 2,
+          completedAt: daysAgo(50),
+          verifiedAt: daysAgo(49),
+        },
+        {
+          projectId: techCorpMappingProject.id,
+          stepKey: "workato",
+          title: "Workato",
+          description: workatoStepContent,
+          orderIndex: 3,
+          completedAt: daysAgo(49),
+          verifiedAt: daysAgo(48),
+        },
+      ]);
+      console.log(`✓ Created fully verified provisioning steps for ${techCorpMappingProject.name}`);
+    }
+
+    if (meridianBuildProject) {
+      // Partially verified steps (hibob done, keypay awaiting verification, workato not started)
+      await db.insert(provisioningSteps).values([
+        {
+          projectId: meridianBuildProject.id,
+          stepKey: "hibob",
+          title: "HiBob",
+          description: hibobStepContent,
+          orderIndex: 1,
+          completedAt: daysAgo(42),
+          verifiedAt: daysAgo(41),
+        },
+        {
+          projectId: meridianBuildProject.id,
+          stepKey: "keypay",
+          title: "Employment Hero Payroll (KeyPay)",
+          description: keypayStepContent,
+          orderIndex: 2,
+          completedAt: daysAgo(40),
+          verifiedAt: null,
+        },
+        {
+          projectId: meridianBuildProject.id,
+          stepKey: "workato",
+          title: "Workato",
+          description: workatoStepContent,
+          orderIndex: 3,
+          completedAt: null,
+          verifiedAt: null,
+        },
+      ]);
+      console.log(`✓ Created partial provisioning steps for ${meridianBuildProject.name}`);
+    }
+
+    // ─── Bob Config Checklist ─────────────────────────────────────────────────
+    // Add a bob config checklist to TechCorp project (approved, since they're in mapping)
+    if (techCorpMappingProject) {
+      const bobConfigItems = [
+        {
+          id: "bc-seed-1",
+          title: "Organisation Units (Departments)",
+          description:
+            "Ensure your departments and org structure in HiBob matches how your payroll system categorises employees.",
+          loomUrl: null,
+          faqItems: [
+            {
+              question: "What if my departments don't match my payroll categories?",
+              answer:
+                "Work with your DD Integration Specialist to create a mapping between HiBob departments and your payroll categories.",
+            },
+          ],
+          completedAt: daysAgo(45).toISOString(),
+        },
+        {
+          id: "bc-seed-2",
+          title: "Leave Types",
+          description:
+            "Review and confirm all leave types are configured in HiBob (e.g. Annual Leave, Sick Leave, Long Service Leave).",
+          loomUrl: null,
+          faqItems: [
+            {
+              question: "How many leave types do we need?",
+              answer:
+                "Set up all leave types your employees use. Unused leave types can be hidden from employees.",
+            },
+          ],
+          completedAt: daysAgo(45).toISOString(),
+        },
+        {
+          id: "bc-seed-3",
+          title: "Employee Profiles & Fields",
+          description:
+            "Verify that all required employee fields are populated in HiBob: employment type, work location, pay rate type, and start date.",
+          loomUrl: null,
+          faqItems: [],
+          completedAt: daysAgo(44).toISOString(),
+        },
+        {
+          id: "bc-seed-4",
+          title: "Pay Groups & Pay Calendars",
+          description:
+            "Confirm your pay groups and pay calendars are set up correctly in HiBob.",
+          loomUrl: null,
+          faqItems: [],
+          completedAt: daysAgo(44).toISOString(),
+        },
+        {
+          id: "bc-seed-5",
+          title: "Work Locations",
+          description:
+            "Ensure all work locations are configured in HiBob and assigned to the correct employees.",
+          loomUrl: null,
+          faqItems: [],
+          completedAt: daysAgo(43).toISOString(),
+        },
+        {
+          id: "bc-seed-6",
+          title: "Custom Fields Review",
+          description:
+            "Review any custom fields configured in HiBob that are relevant to the integration.",
+          loomUrl: null,
+          faqItems: [],
+          completedAt: daysAgo(43).toISOString(),
+        },
+      ];
+
+      await db.insert(bobConfigChecklist).values({
+        projectId: techCorpMappingProject.id,
+        items: JSON.stringify(bobConfigItems),
+        status: "approved",
+        submittedAt: daysAgo(43),
+        approvedAt: daysAgo(42),
+      });
+      console.log(`✓ Created approved bob config checklist for ${techCorpMappingProject.name}`);
+    }
+
     console.log("");
     console.log("✅ Seed completed successfully!");
     console.log("");
@@ -610,6 +819,9 @@ async function seed() {
     console.log(`  - ${messagesData.length} project messages`);
     console.log(`  - ${filesData.length} uploaded files`);
     console.log(`  - 1 KeyPay discovery template (5 sections, 36 questions)`);
+    console.log(`  - Provisioning steps (verified for TechCorp, partial for Meridian)`);
+    console.log(`  - 1 Bob Config checklist (approved, TechCorp)`);
+
     console.log("");
     console.log("🎉 Dashboards are now ready with realistic data!");
     console.log("");

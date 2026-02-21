@@ -837,7 +837,7 @@ Since we're building everything at once, here's the recommended order to minimis
 - `<ClientFlagButton />` + `<DdFlagBanner />`
 - Admin flag: "client input needed" notification
 
-### Sprint 4 — Discovery Module
+### Sprint 4 — Discovery Module ✅ Complete (Feb 2026)
 > **Model: Opus** — Multi-step wizard UI with save/resume, admin review flow, and inline comment system. High UX complexity.
 
 **Goal:** Clients can complete discovery online. Admins can review and approve.
@@ -857,6 +857,87 @@ Since we're building everything at once, here's the recommended order to minimis
 - Provisioning checklist UI (client marks steps, admin verifies)
 - `<LoomEmbed />` integration per step
 - Bob configuration checklist (similar pattern)
+
+---
+
+#### Provisioning Step Content (Stage 3)
+
+Provisioning is structured as **3 sections** — one per system. Each section has a Loom video (placeholder until recorded) and detailed written instructions. The client marks each system as complete; admin verifies.
+
+Admin applies a provisioning template when setting up a project. The specialist's email is dynamically injected using the format `firstname+clientdomain@digitaldirections.io`.
+
+> **Multi-platform note:** HiBob and Workato steps are **universal** — identical for every project regardless of payroll system. Only the third section (payroll platform) changes per project. The template system must be designed to support this:
+> - **MVP (Sprint 5):** KeyPay provisioning only
+> - **Future:** Add MYOB, Deputy, and other payroll platform sections as separate templates
+> - **Architecture:** A `provisioningTemplates` table (similar to `discoveryTemplates`) should store payroll-system-specific templates. When applied to a project, the universal HiBob + Workato steps are always included, and the payroll-specific section is appended based on `project.payrollSystem`.
+
+**Overall intro shown to client:**
+> The System Provisioning consists of granting administrative access to your Digital Directions Integration Specialist(s) on your HiBob, Workato, and KeyPay systems. The entire exercise should take less than 45 minutes.
+
+---
+
+**Section 1 — HiBob**
+- `stepKey`: `hibob`
+- `loomUrl`: `PLACEHOLDER — record walkthrough of HiBob admin provisioning`
+- `orderIndex`: 1
+- **Intro:** Your Digital Directions Integration Specialist will require administrative access to your HiBob Production environment. Once granted, they can access your Sandbox environment. This process should take 10–15 minutes.
+- **Steps:**
+  1. Login to your HiBob Production environment
+  2. Navigate to **Org → People**, then click **New Hire** to open the "Add new hire to Bob" popup
+  3. Choose your onboarding template. Enter the following details carefully:
+     - **Email:** `firstname+yourclientdomain@digitaldirections.io` (use `.io` — not `.com`)
+     - **First name / Last name:** as provided by your DD Integration Specialist
+     - **Start date:** Set in the past so the account is accessible immediately
+     - Ensure **"Invite employee"** is turned on before completing
+  4. Click the grid icon (top left) → **System Settings** → expand **Account** → select **Permission Groups** → click the **Admin** row
+  5. Under **Admins**, open **Group actions → Edit details** → click **Edit** under Members
+  6. Search for the employee you just created, click their row to add them to Selected, then click **Select → Save → Confirm**
+- **Revoking access (info only, shown after completion):** Navigate to Org → People, find the specialist, click Actions → Manage access → Delete employee profile, type DELETE to confirm.
+
+---
+
+**Section 2 — Employment Hero Payroll (KeyPay)**
+- `stepKey`: `keypay`
+- `loomUrl`: `PLACEHOLDER — record walkthrough of KeyPay admin provisioning`
+- `orderIndex`: 2
+- **Intro:** Your Digital Directions Integration Specialist will require administrative access to your Employment Hero (KeyPay) environment. This process should take approximately 5 minutes.
+- **Steps:**
+  1. Login to your KeyPay environment
+  2. Hover over the briefcase icon in the left navigation → select **Payroll Settings**
+  3. In **Business Settings**, select **Manage Users** → click the green **+ Add** button
+  4. Enter the Integration Specialist's details and assign **Admin** permissions, then save
+  5. Navigate back to **Business Settings → Manage Users** to confirm the user appears. Notify your DD Integration Specialist that they have been added — they will reset their password and complete access on their end
+- **Revoking access (info only):** Go to Business Settings → Manage Users, click the red trash icon next to the specialist's name.
+
+---
+
+**Section 3 — Workato**
+- `stepKey`: `workato`
+- `loomUrl`: `PLACEHOLDER — record walkthrough of Workato admin provisioning`
+- `orderIndex`: 3
+- **Intro:** Your Digital Directions Integration Specialist will require administrative access to your Workato environment across all environments (Development, Testing, Production).
+- **Steps:**
+  1. Login to Workato using your **workato@yourcompanydomain** admin account (e.g. if your email is `jon@acmecorp.com`, use `workato@acmecorp.com`)
+  2. Hover over the left side of the screen to reveal navigation → click **Workspace admin**
+  3. On the Workspace admin page, click **+ Invite collaborator**
+  4. Fill in the collaborator details:
+     - **Full name:** as provided by your DD Integration Specialist
+     - **Email:** `firstname+yourclientdomain@digitaldirections.io` (use `.io` — not `.com`)
+     - **Roles:** Grant **Admin** access to all three environments — Development, Test, and Production
+     - Click **Send invitation**
+  5. Confirm the invitation appears in the **Pending invitations** section with all three environments listed. Notify your DD Integration Specialist.
+- **Revoking access (info only):** Go to Workspace admin → Collaborators, click the specialist's name, then click the trash icon.
+
+---
+
+**Completion message shown to client:**
+> Congratulations! You've completed the provisioning of your HiBob, KeyPay, and Workato environments. Please notify your Integration Specialist that this step has been completed.
+
+---
+
+#### Bob Config Step Content (Stage 4)
+
+> ⚠️ **Content TBD** — Bryce to provide the HiBob configuration checklist items (e.g. departments, leave types, custom fields etc.) before this sprint is built. Steps will follow the same structure as provisioning: section title + Loom placeholder + written instructions + client marks complete + admin approves.
 
 ### Sprint 6 — Data Mapping Tool
 > **Model: Opus** — The most complex UI in the entire portal. Two-column visual mapper, API integrations, validation rules, CSV export. Needs the best possible output.

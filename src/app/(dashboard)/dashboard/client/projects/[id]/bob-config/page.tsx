@@ -8,6 +8,7 @@ import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
 import { deriveStageStatus } from "@/lib/lifecycle";
+import { ClientBobConfigContent } from "@/components/client-bob-config-content";
 
 export const dynamic = "force-dynamic";
 
@@ -42,17 +43,14 @@ export default async function ClientBobConfigPage({ params }: { params: Promise<
         stage="bob_config"
         status={status}
         title="HiBob Configuration"
-        description="Complete the HiBob configuration checklist to prepare your HR data for integration."
+        description="Work through the HiBob configuration checklist to prepare your HR data for integration."
         isAdmin={false}
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 5</p>
-          <p className="text-xs text-violet-500 mt-1">Configuration checklist with embedded FAQ and Loom videos.</p>
-        </div>
+        <ClientBobConfigContent projectId={id} />
         {status !== "locked" && (
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-4 border-t border-slate-100 mt-4">
             <ClientFlagButton projectId={id} />
           </div>
         )}

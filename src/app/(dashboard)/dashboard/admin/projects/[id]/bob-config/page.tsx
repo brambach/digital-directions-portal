@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { deriveStageStatus } from "@/lib/lifecycle";
+import { AdminBobConfigContent } from "@/components/admin-bob-config-content";
 
 export const dynamic = "force-dynamic";
 
@@ -34,15 +35,12 @@ export default async function AdminBobConfigPage({ params }: { params: Promise<{
         stage="bob_config"
         status={status}
         title="HiBob Configuration"
-        description="Review and approve the client's HiBob configuration."
+        description="Review and approve the client's HiBob configuration checklist."
         isAdmin={true}
         projectId={id}
         backHref={`/dashboard/admin/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 5</p>
-          <p className="text-xs text-violet-500 mt-1">HiBob configuration checklist with FAQ panels and Loom videos.</p>
-        </div>
+        <AdminBobConfigContent projectId={id} projectName={project.name} />
       </StageCard>
     </div>
   );
