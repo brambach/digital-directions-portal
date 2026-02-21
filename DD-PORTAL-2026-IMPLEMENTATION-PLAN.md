@@ -797,6 +797,10 @@ Since we're building everything at once, here's the recommended order to minimis
 - **Opus** — Use for sprints requiring high design judgment, novel architecture, or complex multi-file coordination. Worth the cost.
 - **Sonnet** — Use for well-defined, mechanical work (schema changes, CRUD routes, page migrations following an established pattern). Faster and cheaper.
 
+**Standing requirement for all sprints (Sprint 4+):**
+- **Notifications:** Every state change that affects the other role (admin↔client) must trigger an in-app notification (`userNotifications` insert) AND a lightweight email via Resend driving the user back to the portal. See CLAUDE.md "Notification Pattern" for implementation details.
+- **NotificationBell:** Must be visible in both admin and client UI. If missing, re-wire it.
+
 ---
 
 ### Sprint 1 — Foundation & Design System
@@ -842,6 +846,9 @@ Since we're building everything at once, here's the recommended order to minimis
 - API routes: create, save draft, submit, review, approve
 - Save & resume functionality
 - Review UI for admin (side-by-side questions + answers with inline notes)
+- Seed default KeyPay discovery template with realistic sections
+- **Notifications:** Wire in-app + email notifications for all discovery state changes (see CLAUDE.md "Notification Pattern")
+- **NotificationBell:** Verify it's rendered in both admin and client headers — re-wire if missing from UI
 
 ### Sprint 5 — Provisioning & Bob Config
 > **Model: Sonnet** — Checklist pattern is simple and repetitive. Follows the same structure twice.
