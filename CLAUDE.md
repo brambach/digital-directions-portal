@@ -727,6 +727,55 @@ Custom file uploader (`src/components/file-uploader.tsx`) uses:
 
 Tooltips use `z-[9999]` to ensure they appear above all content including file panels and sticky headers.
 
+## Notification Pattern (Required for All Sprints)
+
+**Rule:** Whenever an action changes state for the other role (admin→client or client→admin), you MUST:
+
+1. **Create an in-app notification** — Insert a `userNotifications` record for all affected users
+2. **Send an email via Resend** — Lightweight email that drives users back to the portal
+
+**When to notify:**
+- Admin advances/locks a lifecycle stage → notify client users
+- Client submits a form (discovery, UAT, etc.) → notify admin users
+- Admin approves or requests changes → notify client users
+- Flag raised (either direction) → notify the other side
+- Admin creates "Request Client Input" flag → notify client users
+- Stage-specific events (provisioning step verified, mapping approved, etc.)
+
+**Email format:**
+Keep emails short — don't put sensitive project details in the email body. Just drive them to the portal:
+```
+Subject: New update on {Project Name}
+Body: You have a new update on your project "{Project Name}" — {brief description}.
+      Log in to view: {portal URL}
+```
+
+**Implementation:**
+```typescript
+import { db } from "@/lib/db";
+import { userNotifications } from "@/lib/db/schema";
+import { sendNotificationEmail } from "@/lib/email"; // use existing Resend setup
+
+// Create in-app notification
+await db.insert(userNotifications).values({
+  userId: targetUser.id,
+  type: "stage_update",  // or ticket_update, message, file_upload, etc.
+  title: "Discovery questionnaire submitted",
+  message: "Meridian Healthcare submitted their discovery responses for review.",
+  linkUrl: `/dashboard/admin/projects/${projectId}/discovery`,
+});
+
+// Send email notification
+await sendNotificationEmail({
+  to: targetUser.email,
+  projectName: project.name,
+  message: "A discovery questionnaire has been submitted for your review.",
+  linkUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/admin/projects/${projectId}/discovery`,
+});
+```
+
+**NotificationBell component** exists at `src/components/notification-bell.tsx` and should be rendered in both admin and client headers/shells.
+
 ## Common Pitfalls
 
 1. **Don't store user profile data in DB** - Email, name, avatar come from Clerk. Use Clerk's `clerkClient.users.getUser(clerkId)` or the user object from `useUser()` hook.
