@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clients, users, integrationMonitors, messages } from "@/lib/db/schema";
+import { projects, clients, users, integrationMonitors, messages, clientFlags } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +14,7 @@ import { ProjectPhaseManager } from "@/components/project-phase-manager";
 import { Card } from "@/components/ui/card";
 import { IntegrationManagementSection } from "@/components/integration-management-section";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
+import { LifecycleStepper } from "@/components/lifecycle-stepper";
 
 // Lazy load dialogs
 const EditProjectDialog = dynamicImport(
@@ -38,6 +39,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
       name: projects.name,
       description: projects.description,
       status: projects.status,
+      currentStage: projects.currentStage,
       startDate: projects.startDate,
       dueDate: projects.dueDate,
       createdAt: projects.createdAt,
@@ -70,6 +72,14 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
     .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
     .then((rows) => rows.length);
 
+  // Fetch unresolved flags
+  const unresolvedFlags = await db
+    .select()
+    .from(clientFlags)
+    .where(
+      and(eq(clientFlags.projectId, id), isNull(clientFlags.resolvedAt))
+    );
+
   // Status styling
   const statusConfig: any = {
     planning: { color: "bg-purple-50 text-purple-700", label: "Planning Phase", icon: Layout },
@@ -96,6 +106,35 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
         </Link>
         <span className="text-gray-400 font-bold text-sm">/ {project.name}</span>
       </div>
+
+      {/* Lifecycle Stepper */}
+      <div className="animate-enter delay-150">
+        <LifecycleStepper
+          currentStage={project.currentStage}
+          projectId={id}
+          basePath="/dashboard/admin/projects"
+        />
+      </div>
+
+      {/* Unresolved flags banner */}
+      {unresolvedFlags.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 animate-enter delay-150">
+          <p className="text-sm font-semibold text-amber-800">
+            {unresolvedFlags.length} unresolved flag{unresolvedFlags.length > 1 ? "s" : ""} on this project
+          </p>
+          <div className="mt-2 space-y-1.5">
+            {unresolvedFlags.slice(0, 3).map((flag) => (
+              <p key={flag.id} className="text-xs text-amber-700">
+                <span className="font-medium">{flag.type === "client_blocker" ? "Blocker" : "Input needed"}:</span>{" "}
+                {flag.message}
+              </p>
+            ))}
+            {unresolvedFlags.length > 3 && (
+              <p className="text-xs text-amber-500">+ {unresolvedFlags.length - 3} more</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-12 gap-6">
         {/* Main Hero (Left) */}
