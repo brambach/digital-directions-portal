@@ -107,6 +107,56 @@ async function seed() {
 
     console.log(`✓ Created ${phases.length} template phases`);
 
+    // Create build-specific phase template
+    const [buildTemplate] = await db
+      .insert(phaseTemplates)
+      .values({
+        name: "Standard Integration Build",
+        description: "4-phase breakdown of the integration build work (use inside the Build stage)",
+        isDefault: false,
+      })
+      .returning();
+
+    const buildPhases = [
+      {
+        name: "Webhook Infrastructure",
+        description: "Set up webhook listener, queue, and scheduled batch processors",
+        orderIndex: 0,
+        estimatedDays: 2,
+        color: "#7C1CFF",
+      },
+      {
+        name: "Employee Sync",
+        description: "New hire, update, and termination recipes flowing into the payroll system",
+        orderIndex: 1,
+        estimatedDays: 4,
+        color: "#7C1CFF",
+      },
+      {
+        name: "Leave, Banking & Super",
+        description: "Leave type mapping, bank account sync (up to 3 accounts), and superannuation fund configuration",
+        orderIndex: 2,
+        estimatedDays: 4,
+        color: "#7C1CFF",
+      },
+      {
+        name: "Internal QA",
+        description: "End-to-end testing of all recipes before handing to the client for UAT",
+        orderIndex: 3,
+        estimatedDays: 2,
+        color: "#7C1CFF",
+      },
+    ];
+
+    for (const phase of buildPhases) {
+      await db.insert(templatePhases).values({
+        templateId: buildTemplate.id,
+        ...phase,
+      });
+    }
+
+    console.log(`✓ Created build template: ${buildTemplate.name} (${buildPhases.length} phases)`);
+
     // Create a placeholder admin user for seed data
     await db.insert(users).values({
       id: PLACEHOLDER_USER_ID,
