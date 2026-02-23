@@ -195,6 +195,9 @@ export const projects = pgTable(
     leaveSyncStatus: syncComponentStatusEnum("leave_sync_status").notNull().default("not_started"),
     paySlipStatus: syncComponentStatusEnum("pay_slip_status").notNull().default("not_started"),
 
+    // Assigned integration specialists (JSON array of user IDs)
+    assignedSpecialists: text("assigned_specialists"),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),

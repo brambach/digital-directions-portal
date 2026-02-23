@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, description, clientId, status = "planning", startDate, dueDate } = body;
+    const { name, description, clientId, status = "planning", startDate, dueDate, assignedSpecialists } = body;
 
     // Validate required fields
     if (!name || !clientId) {
@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
         status,
         startDate: startDate ? new Date(startDate) : null,
         dueDate: dueDate ? new Date(dueDate) : null,
+        assignedSpecialists:
+          Array.isArray(assignedSpecialists) && assignedSpecialists.length > 0
+            ? JSON.stringify(assignedSpecialists)
+            : null,
       })
       .returning();
 

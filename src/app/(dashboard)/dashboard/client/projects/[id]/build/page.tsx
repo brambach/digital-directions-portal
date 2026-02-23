@@ -1,9 +1,10 @@
 import { DigiMascot } from "@/components/digi-mascot";
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags, releaseNotes, signoffs } from "@/lib/db/schema";
+import { projects, clientFlags, releaseNotes, signoffs, users } from "@/lib/db/schema";
 import { eq, and, isNull, isNotNull, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { clerkClient } from "@clerk/nextjs/server";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
@@ -12,7 +13,7 @@ import { BuildSpecSignoffBanner } from "@/components/build-spec-signoff-banner";
 import { BuildSyncComponents } from "@/components/build-sync-components";
 import { Users, Calendar, FileText } from "lucide-react";
 import { deriveStageStatus } from "@/lib/lifecycle";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, UserCircle2, PartyPopper } from "lucide-react";
 
 const UAT_SCENARIOS = [
   { label: "Employee Upsert", icon: Users },
@@ -117,6 +118,42 @@ export default async function ClientBuildPage({
 
   const signoff = buildSignoff[0] ?? null;
 
+  // Fetch assigned specialists (JSON array of user IDs)
+  interface SpecialistProfile {
+    name: string;
+    avatarUrl: string | null;
+  }
+  const specialistIds: string[] = project.assignedSpecialists
+    ? JSON.parse(project.assignedSpecialists)
+    : [];
+
+  let specialists: SpecialistProfile[] = [];
+  if (specialistIds.length > 0) {
+    const specialistDbUsers = await db
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(isNull(users.deletedAt));
+
+    const matchedUsers = specialistDbUsers.filter((u) => specialistIds.includes(u.id));
+    const clerk = await clerkClient();
+    specialists = await Promise.all(
+      matchedUsers.map(async (u) => {
+        try {
+          const clerkUser = await clerk.users.getUser(u.clerkId);
+          return {
+            name:
+              `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+              clerkUser.emailAddresses[0]?.emailAddress ||
+              "Specialist",
+            avatarUrl: clerkUser.imageUrl ?? null,
+          };
+        } catch {
+          return { name: "Integration Specialist", avatarUrl: null };
+        }
+      })
+    );
+  }
+
   const serializedNotes = publishedNotes.map((n) => ({
     ...n,
     publishedAt: n.publishedAt?.toISOString() ?? null,
@@ -139,6 +176,20 @@ export default async function ClientBuildPage({
     project.leaveSyncStatus,
     project.paySlipStatus,
   ].filter((s) => s === "built").length;
+
+  const allBuilt = builtCount === 3;
+
+  const headline = allBuilt
+    ? "Your integration is complete!"
+    : builtCount > 0
+    ? "Build is progressing well"
+    : "We're building your integration";
+
+  const subtext = allBuilt
+    ? "All three sync components are built and ready. The final review and go-live are just ahead."
+    : builtCount > 0
+    ? "Our team has completed some components. More updates coming soon."
+    : "Our team is hard at work. You'll see progress updates as each component is completed below.";
 
   return (
     <div className="min-h-full bg-[#F4F5F9] px-7 py-6 space-y-6">
@@ -169,24 +220,89 @@ export default async function ClientBuildPage({
             <BuildSpecSignoffBanner projectId={id} signoff={serializedSignoff} />
           )}
 
-          {/* Digi header card */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-5 px-6 py-5">
-              <DigiMascot variant="construction" className="w-20 md:w-24 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-slate-800 text-base leading-snug">
-                  We&apos;re building your integration
-                </h3>
-                <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                  Our team is hard at work. You&apos;ll see progress updates as each component is
-                  completed below.
+          {/* Celebration banner — all 3 built */}
+          {allBuilt && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <PartyPopper className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Build complete!</p>
+                <p className="text-xs text-emerald-600 mt-0.5">
+                  All components are built. Your team will be in touch shortly about next steps.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Digi header card */}
+          <div
+            className={
+              allBuilt
+                ? "bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm overflow-hidden"
+                : "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            }
+          >
+            <div className="flex items-center gap-5 px-6 py-5">
+              <DigiMascot
+                variant={allBuilt ? "celebrating" : "construction"}
+                className="w-20 md:w-24 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h3
+                  className={
+                    "font-bold text-base leading-snug " +
+                    (allBuilt ? "text-emerald-800" : "text-slate-800")
+                  }
+                >
+                  {headline}
+                </h3>
+                <p
+                  className={
+                    "text-sm mt-1 leading-relaxed " +
+                    (allBuilt ? "text-emerald-700" : "text-slate-500")
+                  }
+                >
+                  {subtext}
+                </p>
+
+                {/* Last update row */}
                 <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
                   <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                   {lastUpdate
                     ? `Last update ${formatDistanceToNow(new Date(lastUpdate), { addSuffix: true })}`
                     : "No updates posted yet"}
                 </div>
+
+                {/* Assigned specialists */}
+                {specialists.length > 0 && (
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <UserCircle2 className="w-3.5 h-3.5 text-[#7C1CFF] flex-shrink-0" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {specialists.map((s, i) => (
+                        <div key={i} className="flex items-center gap-1 text-xs">
+                          {s.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={s.avatarUrl}
+                              alt={s.name}
+                              className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : null}
+                          <span className="font-medium text-[#7C1CFF]">{s.name}</span>
+                          {i < specialists.length - 1 && (
+                            <span className="text-slate-300">·</span>
+                          )}
+                        </div>
+                      ))}
+                      <span className="text-slate-400 text-xs">
+                        {specialists.length === 1
+                          ? "· Integration Specialist"
+                          : "· Integration Team"}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
               <ProgressArc built={builtCount} total={3} />
             </div>
@@ -261,7 +377,7 @@ export default async function ClientBuildPage({
               </div>
             </div>
 
-            {/* Scenario pills — mirror the three sync components using the same icons */}
+            {/* Scenario pills */}
             <div className="flex flex-wrap gap-2 pl-10">
               {UAT_SCENARIOS.map(({ label, icon: Icon }) => (
                 <span

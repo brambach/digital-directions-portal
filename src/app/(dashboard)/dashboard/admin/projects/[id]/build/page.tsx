@@ -1,14 +1,16 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags, releaseNotes, signoffs } from "@/lib/db/schema";
+import { projects, clientFlags, releaseNotes, signoffs, users } from "@/lib/db/schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { clerkClient } from "@clerk/nextjs/server";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { AdminFlagSection } from "@/components/admin-flag-section";
 import { ReleaseNoteEditor } from "@/components/release-note-editor";
 import { BuildSpecPublishDialog } from "@/components/build-spec-publish-dialog";
 import { BuildSyncComponents } from "@/components/build-sync-components";
+import { AssignSpecialistSelect, type AdminUser } from "@/components/assign-specialist-select";
 import { deriveStageStatus } from "@/lib/lifecycle";
 import { ClipboardCheck, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -29,7 +31,7 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
 
   const status = deriveStageStatus("build", project.currentStage);
 
-  const [unresolvedFlags, allNotes, buildSignoff] = await Promise.all([
+  const [unresolvedFlags, allNotes, buildSignoff, adminUsers] = await Promise.all([
     db
       .select()
       .from(clientFlags)
@@ -44,9 +46,39 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
       .from(signoffs)
       .where(and(eq(signoffs.projectId, id), eq(signoffs.type, "build_spec")))
       .limit(1),
+    db
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(and(eq(users.role, "admin"), isNull(users.deletedAt))),
   ]);
 
   const signoff = buildSignoff[0] ?? null;
+
+  // Enrich admin users with Clerk profile data
+  const clerk = await clerkClient();
+  const enrichedAdmins: AdminUser[] = await Promise.all(
+    adminUsers.map(async (u) => {
+      try {
+        const clerkUser = await clerk.users.getUser(u.clerkId);
+        return {
+          id: u.id,
+          name:
+            `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+            clerkUser.emailAddresses[0]?.emailAddress ||
+            "Admin",
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+          avatarUrl: clerkUser.imageUrl,
+        };
+      } catch {
+        return { id: u.id, name: "Admin", email: "" };
+      }
+    })
+  );
+
+  // Parse assigned specialists JSON array
+  const assignedSpecialistIds: string[] = project.assignedSpecialists
+    ? JSON.parse(project.assignedSpecialists)
+    : [];
 
   const serializedNotes = allNotes.map((n) => ({
     ...n,
@@ -121,9 +153,16 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm">Sync Components</h3>
-              {!signoff && (
-                <BuildSpecPublishDialog projectId={id} existingSignoff={serializedSignoff} />
-              )}
+              <div className="flex items-center gap-2">
+                <AssignSpecialistSelect
+                  projectId={id}
+                  admins={enrichedAdmins}
+                  selectedIds={assignedSpecialistIds}
+                />
+                {!signoff && (
+                  <BuildSpecPublishDialog projectId={id} existingSignoff={serializedSignoff} />
+                )}
+              </div>
             </div>
             <BuildSyncComponents
               projectId={id}

@@ -939,16 +939,43 @@ Admin applies a provisioning template when setting up a project. The specialist'
 - Admin review + approve flow
 - CSV export (Workato format)
 
-### Sprint 7 — Integration Build Enhancements
-> **Model: Sonnet** — Extends existing phase system. Mostly adding new fields and components to established patterns.
+### Sprint 7 — Integration Build Enhancements ✅ COMPLETE
+> **Model: Sonnet**
 
-**Goal:** Build stage is significantly better than current.
-- Release notes per phase (admin writes, client reads)
-- `<ReleaseNote />` component
-- Enhanced milestone notifications (Slack + in-app)
-- Build Spec sign-off (`<SignoffModal />` variant 1)
+**Goal:** Build stage is significantly better than current. ✅
 
-**Note — Build stage hero (already implemented):** The client-facing build page (`/client/projects/[id]/build`) already has a large Digi construction mascot (`w-48 md:w-64`) as the hero element while Sprint 7 content is pending. When release notes and phase progress are built, keep the mascot visible above the content — it should remain a prominent visual anchor for this stage, not be replaced entirely.
+- ✅ Build updates (release notes) — admin writes, client reads; draft + publish flow
+- ✅ `<ReleaseNoteCard />` + `<ReleaseNoteEditor />` components
+- ✅ In-app + email notifications (release note published, build spec published, client signed)
+- ✅ Build Spec sign-off — admin publishes spec → client signs → admin counter-signs
+- ✅ Three fixed sync components (Employee Upsert, Leave Request Sync, Pay Slip Upload) with not_started → in_progress → built status
+- ✅ Client build page redesign — Digi construction mascot, dynamic headline copy, progress arc, celebration state at 3/3
+- ✅ Assigned integration specialist(s) — multi-select on project creation + build page; shown on client page
+
+**Slack notifications deferred** — see Sprint 7.5 below.
+
+**Note:** Build phases were intentionally replaced with the three fixed sync components. The phase system remains in the schema for other lifecycle stages.
+
+### Sprint 7.5 — Slack Notifications (All Build Events)
+> **Model: Sonnet** — Straightforward wiring. All the infrastructure exists; just needs build-specific event types and function calls added.
+
+**Goal:** The DD team gets Slack alerts for every meaningful build event — no more silently missing client actions.
+
+**What to build:**
+- Add Slack notification types to `src/lib/slack.ts`:
+  - `release_note_published` — admin publishes a build update
+  - `build_spec_published` — admin sends build spec to client for signing
+  - `build_spec_signed` — client signs the build spec
+  - `build_spec_counter_signed` — admin counter-signs
+  - `sync_component_updated` — admin advances a sync component status (optional, may be noisy)
+- Wire calls into existing API routes:
+  - `POST /api/projects/[id]/release-notes` (on publish)
+  - `PUT /api/projects/[id]/release-notes/[noteId]` (on first publish)
+  - `POST /api/projects/[id]/signoffs` (on spec published)
+  - `POST /api/projects/[id]/signoffs/[signoffId]` (on client sign + admin counter-sign)
+- Add missing in-app + email notification for admin counter-sign (currently has no notification at all)
+
+**Note:** Slack is optional infrastructure — if `SLACK_BOT_TOKEN` is not set, all calls are no-ops. No changes needed to make it work without Slack configured.
 
 ### Sprint 8 — UAT Module
 > **Model: Opus** — Checklist + sign-off flow + inline ticket creation + dual counter-sign. More state complexity than it looks.

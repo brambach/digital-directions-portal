@@ -1,7 +1,9 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clients } from "@/lib/db/schema";
-import { eq, isNull, desc } from "drizzle-orm";
+import { projects, clients, users } from "@/lib/db/schema";
+import { eq, isNull, desc, and } from "drizzle-orm";
+import { clerkClient } from "@clerk/nextjs/server";
+import type { AdminUser } from "@/components/add-project-dialog";
 import Link from "next/link";
 import {
   FolderKanban,
@@ -26,15 +28,34 @@ export const dynamic = "force-dynamic";
 export default async function ProjectsPage() {
   await requireAdmin();
 
-  // Fetch all clients for the project form
-  const allClients = await db
-    .select({
-      id: clients.id,
-      companyName: clients.companyName,
+  // Fetch all clients and admin users for the project form
+  const [allClients, adminDbUsers] = await Promise.all([
+    db
+      .select({ id: clients.id, companyName: clients.companyName })
+      .from(clients)
+      .where(isNull(clients.deletedAt))
+      .orderBy(clients.companyName),
+    db
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(and(eq(users.role, "admin"), isNull(users.deletedAt))),
+  ]);
+
+  const clerk = await clerkClient();
+  const adminUsers: AdminUser[] = await Promise.all(
+    adminDbUsers.map(async (u) => {
+      try {
+        const cu = await clerk.users.getUser(u.clerkId);
+        return {
+          id: u.id,
+          name: `${cu.firstName || ""} ${cu.lastName || ""}`.trim() || cu.emailAddresses[0]?.emailAddress || "Admin",
+          email: cu.emailAddresses[0]?.emailAddress || "",
+        };
+      } catch {
+        return { id: u.id, name: "Admin", email: "" };
+      }
     })
-    .from(clients)
-    .where(isNull(clients.deletedAt))
-    .orderBy(clients.companyName);
+  );
 
   // Fetch all projects with their client info
   const allProjects = await db
@@ -79,7 +100,7 @@ export default async function ProjectsPage() {
           <p className="text-sm text-gray-500 mt-1">Status board for all client delivery across segments.</p>
         </div>
         <div className="flex items-center gap-3">
-          <AddProjectDialog clients={allClients} />
+          <AddProjectDialog clients={allClients} admins={adminUsers} />
         </div>
       </div>
 

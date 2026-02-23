@@ -32,7 +32,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
-    const { name, description, status, startDate, dueDate } = body;
+    const { name, description, status, startDate, dueDate, assignedSpecialists } = body;
 
     // Get current project to track status changes
     const existingProject = await db
@@ -60,6 +60,11 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (assignedSpecialists !== undefined) {
+      updateData.assignedSpecialists = Array.isArray(assignedSpecialists) && assignedSpecialists.length > 0
+        ? JSON.stringify(assignedSpecialists)
+        : null;
+    }
 
     const updatedProject = await db
       .update(projects)

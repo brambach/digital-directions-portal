@@ -21,15 +21,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Check, UserCircle2, X } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Client {
   id: string;
   companyName: string;
 }
 
-export function AddProjectDialog({ clients }: { clients: Client[] }) {
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface AddProjectDialogProps {
+  clients: Client[];
+  admins?: AdminUser[];
+}
+
+export function AddProjectDialog({ clients, admins = [] }: AddProjectDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,6 +53,13 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
     startDate: "",
     dueDate: "",
   });
+  const [selectedSpecialists, setSelectedSpecialists] = useState<string[]>([]);
+
+  const toggleSpecialist = (id: string) => {
+    setSelectedSpecialists((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,16 +69,16 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          assignedSpecialists: selectedSpecialists,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to create project");
       }
 
-      const data = await response.json();
-
-      // Reset form and close dialog
       setFormData({
         name: "",
         description: "",
@@ -68,6 +87,7 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
         startDate: "",
         dueDate: "",
       });
+      setSelectedSpecialists([]);
       setOpen(false);
       toast.success("Project created successfully");
       router.refresh();
@@ -180,6 +200,51 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
                 />
               </div>
             </div>
+
+            {/* Integration Specialists multi-select */}
+            {admins.length > 0 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <UserCircle2 className="w-3.5 h-3.5 text-[#7C1CFF]" />
+                  Integration Specialist(s)
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {admins.map((admin) => {
+                    const selected = selectedSpecialists.includes(admin.id);
+                    return (
+                      <button
+                        key={admin.id}
+                        type="button"
+                        onClick={() => toggleSpecialist(admin.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                          selected
+                            ? "bg-violet-50 border-[#7C1CFF] text-[#7C1CFF]"
+                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                        )}
+                      >
+                        {selected ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          <Plus className="w-3 h-3 opacity-50" />
+                        )}
+                        {admin.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedSpecialists.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSpecialists([])}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear selection
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

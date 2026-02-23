@@ -128,6 +128,28 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     })
   );
 
+  // Fetch admin users for the specialist selector in AddProjectDialog
+  const adminDbUsers = await db
+    .select({ id: users.id, clerkId: users.clerkId })
+    .from(users)
+    .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
+
+  const clerkForAdmins = await clerkClient();
+  const adminUsers = await Promise.all(
+    adminDbUsers.map(async (u) => {
+      try {
+        const cu = await clerkForAdmins.users.getUser(u.clerkId);
+        return {
+          id: u.id,
+          name: `${cu.firstName || ""} ${cu.lastName || ""}`.trim() || cu.emailAddresses[0]?.emailAddress || "Admin",
+          email: cu.emailAddresses[0]?.emailAddress || "",
+        };
+      } catch {
+        return { id: u.id, name: "Admin", email: "" };
+      }
+    })
+  );
+
   // Fetch pending invites for this client
   const pendingInvites = await db
     .select({
@@ -273,7 +295,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 <Briefcase className="w-3.5 h-3.5" />
                 Projects
               </div>
-              <AddProjectDialog clients={[{ id: client.id, companyName: client.companyName }]} />
+              <AddProjectDialog clients={[{ id: client.id, companyName: client.companyName }]} admins={adminUsers} />
             </div>
 
             {clientProjects.length === 0 ? (
