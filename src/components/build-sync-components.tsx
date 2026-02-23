@@ -15,9 +15,11 @@ interface BuildSyncComponentsProps {
   leaveSyncStatus: SyncComponentStatus;
   paySlipStatus: SyncComponentStatus;
   isAdmin: boolean;
+  /** "grid" = tall portrait cards (client view), "list" = compact rows (admin view) */
+  layout?: "grid" | "list";
 }
 
-const COMPONENTS: {
+export const SYNC_COMPONENTS: {
   key: SyncComponentKey;
   label: string;
   description: string;
@@ -53,6 +55,7 @@ const STATUS_CONFIG: Record<
     cardClass: string;
     iconBgClass: string;
     iconClass: string;
+    labelColor: string;
   }
 > = {
   not_started: {
@@ -63,6 +66,7 @@ const STATUS_CONFIG: Record<
     cardClass: "border-slate-100 bg-white",
     iconBgClass: "bg-slate-100",
     iconClass: "text-slate-400",
+    labelColor: "text-slate-800",
   },
   in_progress: {
     label: "In progress",
@@ -72,6 +76,7 @@ const STATUS_CONFIG: Record<
     cardClass: "border-amber-100 bg-amber-50/20",
     iconBgClass: "bg-amber-100",
     iconClass: "text-amber-600",
+    labelColor: "text-slate-800",
   },
   built: {
     label: "Built",
@@ -81,6 +86,7 @@ const STATUS_CONFIG: Record<
     cardClass: "border-emerald-100 bg-emerald-50/30",
     iconBgClass: "bg-emerald-100",
     iconClass: "text-emerald-600",
+    labelColor: "text-emerald-800",
   },
 };
 
@@ -92,6 +98,7 @@ export function BuildSyncComponents({
   leaveSyncStatus,
   paySlipStatus,
   isAdmin,
+  layout = "list",
 }: BuildSyncComponentsProps) {
   const router = useRouter();
   const [statuses, setStatuses] = useState<Record<SyncComponentKey, SyncComponentStatus>>({
@@ -125,9 +132,71 @@ export function BuildSyncComponents({
     }
   };
 
+  if (layout === "grid") {
+    return (
+      <div className="grid grid-cols-3 gap-3">
+        {SYNC_COMPONENTS.map(({ key, label, description, icon: Icon }) => {
+          const status = statuses[key];
+          const config = STATUS_CONFIG[status];
+          const StatusIcon = config.icon;
+          const isUpdating = updating === key;
+
+          return (
+            <div
+              key={key}
+              className={cn(
+                "relative rounded-2xl border overflow-hidden flex flex-col p-4 gap-3 transition-all duration-200",
+                config.cardClass,
+                isAdmin && "cursor-pointer hover:shadow-md",
+                isUpdating && "opacity-60"
+              )}
+              onClick={() => isAdmin && cycleStatus(key)}
+              title={isAdmin ? "Click to advance status" : undefined}
+            >
+              {/* Top accent bar */}
+              <div
+                className={cn("absolute top-0 left-0 right-0 h-[3px]", config.barClass)}
+              />
+
+              {/* Icon */}
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1",
+                  config.iconBgClass
+                )}
+              >
+                <Icon className={cn("w-5 h-5", config.iconClass)} />
+              </div>
+
+              {/* Text */}
+              <div className="flex-1">
+                <p className={cn("text-sm font-bold leading-snug", config.labelColor)}>
+                  {label}
+                </p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{description}</p>
+              </div>
+
+              {/* Status badge at bottom */}
+              <div
+                className={cn(
+                  "self-start flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  config.badgeClass
+                )}
+              >
+                <StatusIcon className="w-3 h-3" />
+                {config.label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Default: list layout (admin)
   return (
     <div className="space-y-2.5">
-      {COMPONENTS.map(({ key, label, description, icon: Icon }) => {
+      {SYNC_COMPONENTS.map(({ key, label, description, icon: Icon }) => {
         const status = statuses[key];
         const config = STATUS_CONFIG[status];
         const StatusIcon = config.icon;
@@ -147,14 +216,10 @@ export function BuildSyncComponents({
           >
             {/* Left accent bar */}
             <div
-              className={cn(
-                "absolute left-0 top-0 bottom-0 w-[3px]",
-                config.barClass
-              )}
+              className={cn("absolute left-0 top-0 bottom-0 w-[3px]", config.barClass)}
             />
 
             <div className="flex items-center gap-3 px-4 py-3 pl-5">
-              {/* Icon */}
               <div
                 className={cn(
                   "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
@@ -164,13 +229,11 @@ export function BuildSyncComponents({
                 <Icon className={cn("w-4 h-4", config.iconClass)} />
               </div>
 
-              {/* Text */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800 leading-tight">{label}</p>
                 <p className="text-xs text-slate-500 mt-0.5 leading-tight">{description}</p>
               </div>
 
-              {/* Status badge */}
               <div
                 className={cn(
                   "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border flex-shrink-0",
