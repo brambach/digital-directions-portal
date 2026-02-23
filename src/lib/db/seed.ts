@@ -22,6 +22,7 @@ import {
   discoveryResponses,
   provisioningSteps,
   bobConfigChecklist,
+  uatTemplates,
 } from "./schema";
 
 const db = drizzle(sql);
@@ -42,6 +43,7 @@ async function seed() {
   try {
     // Clear existing data (in reverse order of dependencies)
     console.log("Clearing existing data...");
+    await db.delete(uatTemplates);
     await db.delete(discoveryResponses);
     await db.delete(discoveryTemplates);
     await db.delete(bobConfigChecklist);
@@ -805,6 +807,59 @@ async function seed() {
       console.log(`✓ Created approved bob config checklist for ${techCorpMappingProject.name}`);
     }
 
+    // ─── UAT Templates ───────────────────────────────────────────────────────
+    const keypayUatScenarios = [
+      {
+        id: "uat-employee-upsert",
+        title: "Employee Upsert",
+        description: "Create or update an employee in HiBob and verify the changes flow through to your payroll system (Employment Hero / KeyPay).",
+        loomUrl: "",
+        steps: [
+          "Open HiBob and create a new test employee (or update an existing one) with a unique name you can easily identify.",
+          "Fill in the required fields: name, email, start date, department, and work location.",
+          "Wait 2–3 minutes for the sync to process.",
+          "Log in to Employment Hero (KeyPay) and search for the employee by name.",
+          "Verify the employee record exists and all synced fields match what you entered in HiBob.",
+        ],
+      },
+      {
+        id: "uat-leave-sync",
+        title: "Leave Request Sync",
+        description: "Submit and cancel a leave request in HiBob and verify it flows correctly to your payroll system.",
+        loomUrl: "",
+        steps: [
+          "In HiBob, navigate to the test employee's profile and submit a new leave request (e.g. 1 day of Annual Leave).",
+          "Approve the leave request in HiBob (you may need manager/admin access).",
+          "Wait 2–3 minutes for the sync to process.",
+          "In Employment Hero (KeyPay), check the employee's leave requests and verify the approved leave appears.",
+          "Back in HiBob, cancel the same leave request.",
+          "Wait 2–3 minutes, then verify the cancellation is reflected in Employment Hero.",
+        ],
+      },
+      {
+        id: "uat-payslip-upload",
+        title: "Pay Slip Upload",
+        description: "Run a payroll in your payroll system and verify pay slips flow back to HiBob.",
+        loomUrl: "",
+        steps: [
+          "In Employment Hero (KeyPay), run a test pay run that includes the test employee.",
+          "Finalise the pay run so pay slips are generated.",
+          "Wait 5–10 minutes for the pay slip sync to process.",
+          "In HiBob, navigate to the test employee's Payroll section.",
+          "Verify the pay slip appears with the correct pay period and amounts.",
+        ],
+      },
+    ];
+
+    const [keypayUatTemplate] = await db.insert(uatTemplates).values({
+      name: "Standard KeyPay UAT",
+      payrollSystem: "keypay",
+      scenarios: JSON.stringify(keypayUatScenarios),
+      isActive: true,
+    }).returning();
+
+    console.log(`✓ Created KeyPay UAT template: ${keypayUatTemplate.name} (${keypayUatScenarios.length} scenarios)`);
+
     console.log("");
     console.log("✅ Seed completed successfully!");
     console.log("");
@@ -821,6 +876,7 @@ async function seed() {
     console.log(`  - 1 KeyPay discovery template (5 sections, 36 questions)`);
     console.log(`  - Provisioning steps (verified for TechCorp, partial for Meridian)`);
     console.log(`  - 1 Bob Config checklist (approved, TechCorp)`);
+    console.log(`  - 1 KeyPay UAT template (3 scenarios)`);
 
     console.log("");
     console.log("🎉 Dashboards are now ready with realistic data!");
