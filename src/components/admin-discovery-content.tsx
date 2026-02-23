@@ -12,8 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoomEmbed } from "@/components/loom-embed";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   Check,
   Clock,
@@ -25,6 +26,10 @@ import {
   Send,
   RotateCcw,
   Video,
+  Pencil,
+  Trash2,
+  Plus,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +61,7 @@ interface DiscoveryResponse {
   projectId: string;
   templateId: string;
   responses: Record<string, string | boolean>;
+  sections: Section[];
   status: string;
   submittedAt: string | null;
   reviewedAt: string | null;
@@ -88,6 +94,9 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
   const [template, setTemplate] = useState<Template | null>(null);
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [editableSections, setEditableSections] = useState<Section[]>([]);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ label: string; required: boolean }>({ label: "", required: false });
   const [starting, setStarting] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewing, setReviewing] = useState(false);
@@ -127,17 +136,80 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
     fetchDiscovery();
   }, [fetchDiscovery]);
 
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    setEditingQuestionId(null);
+    const tpl = templates.find((t) => t.id === templateId);
+    if (tpl) {
+      // Deep clone so edits don't mutate the templates list
+      setEditableSections(JSON.parse(JSON.stringify(tpl.sections)));
+    }
+  };
+
+  const startEditQuestion = (q: Question) => {
+    setEditingQuestionId(q.id);
+    setEditDraft({ label: q.label, required: q.required });
+  };
+
+  const saveEditQuestion = (sectionId: string, questionId: string) => {
+    setEditableSections((prev) =>
+      prev.map((s) =>
+        s.id !== sectionId
+          ? s
+          : {
+              ...s,
+              questions: s.questions.map((q) =>
+                q.id !== questionId ? q : { ...q, label: editDraft.label, required: editDraft.required }
+              ),
+            }
+      )
+    );
+    setEditingQuestionId(null);
+  };
+
+  const deleteQuestion = (sectionId: string, questionId: string) => {
+    setEditableSections((prev) =>
+      prev.map((s) =>
+        s.id !== sectionId
+          ? s
+          : { ...s, questions: s.questions.filter((q) => q.id !== questionId) }
+      )
+    );
+    if (editingQuestionId === questionId) setEditingQuestionId(null);
+  };
+
+  const addQuestion = (sectionId: string) => {
+    const newId = `q_${Math.random().toString(36).slice(2, 8)}`;
+    const newQuestion: Question = { id: newId, label: "", type: "text", required: false };
+    setEditableSections((prev) =>
+      prev.map((s) =>
+        s.id !== sectionId ? s : { ...s, questions: [...s.questions, newQuestion] }
+      )
+    );
+    setEditingQuestionId(newId);
+    setEditDraft({ label: "", required: false });
+  };
+
   const handleStart = async () => {
     if (!selectedTemplateId) {
       toast.error("Please select a template");
       return;
+    }
+    // Validate no empty question labels
+    for (const section of editableSections) {
+      for (const q of section.questions) {
+        if (!q.label.trim()) {
+          toast.error("All questions must have a label before starting");
+          return;
+        }
+      }
     }
     setStarting(true);
     try {
       const res = await fetch(`/api/projects/${projectId}/discovery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: selectedTemplateId }),
+        body: JSON.stringify({ templateId: selectedTemplateId, sections: editableSections }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -198,21 +270,25 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
     );
   }
 
-  // No discovery response yet — show "Start Discovery" card
+  // No discovery response yet — show "Start Discovery" with question editor
   if (!response) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-xl border border-slate-100 p-8 text-center">
-          <DijiMascot variant="thinking" size="sm" className="mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-900 mb-2">Start Discovery</h3>
-          <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
-            Select a discovery template to assign to this project.
-            The client will be notified and can begin filling out the questionnaire.
-          </p>
+      <div className="space-y-5">
+        {/* Template selector */}
+        <div className="bg-white rounded-xl border border-slate-100 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <DigiMascot variant="neutral" size="sm" />
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Start Discovery</h3>
+              <p className="text-sm text-slate-500">
+                Select a template, review and edit the questions, then send to the client.
+              </p>
+            </div>
+          </div>
 
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
-            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-              <SelectTrigger className="bg-white border-slate-200 rounded-xl flex-1">
+          <div className="flex items-center gap-3">
+            <Select value={selectedTemplateId} onValueChange={handleTemplateSelect}>
+              <SelectTrigger className="bg-white border-slate-200 rounded-xl flex-1 max-w-sm">
                 <SelectValue placeholder="Select a template..." />
               </SelectTrigger>
               <SelectContent>
@@ -223,26 +299,138 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              onClick={handleStart}
-              disabled={starting || !selectedTemplateId}
-              className="rounded-full shrink-0"
-            >
-              {starting ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Send className="w-4 h-4 mr-2" />
-              )}
-              Start Discovery
-            </Button>
+            {selectedTemplateId && (
+              <Button
+                onClick={handleStart}
+                disabled={starting}
+                className="rounded-full shrink-0"
+              >
+                {starting ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Send to Client
+              </Button>
+            )}
           </div>
 
           {templates.length === 0 && (
-            <p className="text-xs text-slate-400 mt-4">
+            <p className="text-xs text-slate-400 mt-3">
               No discovery templates found. Create one in Settings first.
             </p>
           )}
         </div>
+
+        {/* Editable question preview */}
+        {selectedTemplateId && editableSections.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                Review & Edit Questions
+              </p>
+              <p className="text-xs text-slate-400">
+                {editableSections.reduce((n, s) => n + s.questions.length, 0)} questions across {editableSections.length} sections
+              </p>
+            </div>
+
+            {editableSections.map((section, sIdx) => (
+              <div key={section.id} className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+                {/* Section header */}
+                <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-50 bg-slate-50/60">
+                  <span className="text-[11px] font-bold text-[#7C1CFF] shrink-0">{sIdx + 1}</span>
+                  <span className="text-sm font-semibold text-slate-800 flex-1">{section.title}</span>
+                  {section.description && (
+                    <span className="text-xs text-slate-400 truncate max-w-xs hidden lg:block">{section.description}</span>
+                  )}
+                </div>
+
+                {/* Questions */}
+                <div className="divide-y divide-slate-50">
+                  {section.questions.map((question) => {
+                    const isEditing = editingQuestionId === question.id;
+                    return (
+                      <div key={question.id} className="px-5 py-3">
+                        {isEditing ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              autoFocus
+                              value={editDraft.label}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, label: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveEditQuestion(section.id, question.id);
+                                if (e.key === "Escape") setEditingQuestionId(null);
+                              }}
+                              placeholder="Question label..."
+                              className="flex-1 h-8 text-sm rounded-lg border-slate-200"
+                            />
+                            <label className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={editDraft.required}
+                                onChange={(e) => setEditDraft((d) => ({ ...d, required: e.target.checked }))}
+                                className="rounded"
+                              />
+                              Required
+                            </label>
+                            <Button
+                              size="sm"
+                              className="h-7 rounded-lg text-xs px-2.5"
+                              onClick={() => saveEditQuestion(section.id, question.id)}
+                            >
+                              <Check className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-lg text-xs px-2.5"
+                              onClick={() => setEditingQuestionId(null)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3 group">
+                            <span className="text-sm text-slate-700 flex-1">
+                              {question.label || <em className="text-slate-300">Empty question</em>}
+                              {question.required && <span className="text-red-400 ml-0.5">*</span>}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium uppercase shrink-0">{question.type}</span>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <button
+                                onClick={() => startEditQuestion(question)}
+                                className="w-6 h-6 rounded-md hover:bg-violet-50 flex items-center justify-center text-slate-400 hover:text-violet-600 transition-colors"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => deleteQuestion(section.id, question.id)}
+                                className="w-6 h-6 rounded-md hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Add question row */}
+                  <div className="px-5 py-2.5">
+                    <button
+                      onClick={() => addQuestion(section.id)}
+                      className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-violet-600 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add question
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -250,7 +438,8 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
   // Discovery response exists — show review UI
   const statusConfig = STATUS_CONFIG[response.status] || STATUS_CONFIG.active;
   const StatusIcon = statusConfig.icon;
-  const sections = template?.sections || [];
+  // Use project-specific sections (from response), falling back to template
+  const sections: Section[] = response.sections || template?.sections || [];
 
   // Count answered questions
   const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);

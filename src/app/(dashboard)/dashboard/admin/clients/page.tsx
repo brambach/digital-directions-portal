@@ -9,7 +9,7 @@ import { ClientStatusMenu } from "@/components/client-status-menu";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 
 // Lazy load dialog for better performance
 const AddClientDialog = dynamicImport(
@@ -148,7 +148,7 @@ export default async function ClientsPage() {
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
                     <div className="flex flex-col items-center">
-                      <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                      <DigiMascot variant="neutral" size="sm" className="mb-3" />
                       <p className="text-[13px] font-semibold text-slate-700">No clients found</p>
                     </div>
                   </td>

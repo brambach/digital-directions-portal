@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 
 interface Project {
     id: string;
@@ -193,7 +193,7 @@ export function AdminMessagesInterface({ projects, currentUserId }: { projects: 
                                 </div>
                             ) : messages.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full space-y-2">
-                                    <DijiMascot variant="neutral" size="sm" className="mb-2" />
+                                    <DigiMascot variant="neutral" size="sm" className="mb-2" />
                                     <p className="text-sm font-medium text-slate-700">No messages yet</p>
                                     <p className="text-xs text-slate-400">Start the conversation!</p>
                                 </div>

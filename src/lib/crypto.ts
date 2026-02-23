@@ -1,6 +1,6 @@
 /**
  * Credential Encryption Utilities
- * Uses AES-256-GCM for secure encryption of Workato credentials
+ * Uses AES-256-GCM for secure encryption of credentials
  */
 
 import crypto from 'crypto';
@@ -14,19 +14,29 @@ export interface WorkatoCredentials {
   email: string;
 }
 
+/** HiBob API credentials */
+export interface HiBobCredentials {
+  serviceUserId: string;
+  serviceUserToken: string;
+}
+
+/** KeyPay (Employment Hero) API credentials */
+export interface KeyPayCredentials {
+  apiKey: string;
+  businessId: string;
+}
+
 /**
- * Encrypts credentials using AES-256-GCM
+ * Encrypts any JSON-serializable data using AES-256-GCM
  * Returns format: iv:authTag:encrypted
- *
- * @throws Error in production if CREDENTIALS_ENCRYPTION_KEY is not set
  */
-export function encryptCredentials(credentials: WorkatoCredentials): string {
+export function encryptJSON<T>(data: T): string {
   if (!ENCRYPTION_KEY) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error("CREDENTIALS_ENCRYPTION_KEY is required in production");
     }
-    console.warn("[crypto] CREDENTIALS_ENCRYPTION_KEY not set - storing credentials in plaintext (dev only)");
-    return JSON.stringify(credentials);
+    console.warn("[crypto] CREDENTIALS_ENCRYPTION_KEY not set - storing in plaintext (dev only)");
+    return JSON.stringify(data);
   }
 
   const iv = crypto.randomBytes(16);
@@ -36,37 +46,33 @@ export function encryptCredentials(credentials: WorkatoCredentials): string {
     iv
   );
 
-  let encrypted = cipher.update(JSON.stringify(credentials), 'utf8', 'hex');
+  let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
   encrypted += cipher.final('hex');
 
   const authTag = cipher.getAuthTag();
 
-  // Return: iv:authTag:encrypted
   return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
 
 /**
- * Decrypts credentials encrypted with encryptCredentials
- * @returns Decrypted credentials or null if decryption fails
+ * Decrypts data encrypted with encryptJSON
+ * @returns Decrypted data or null if decryption fails
  */
-export function decryptCredentials(encryptedData: string): WorkatoCredentials | null {
+export function decryptJSON<T>(encryptedData: string): T | null {
   if (!ENCRYPTION_KEY) {
-    // If no encryption key, assume it's plaintext JSON (dev mode only)
     try {
-      return JSON.parse(encryptedData) as WorkatoCredentials;
+      return JSON.parse(encryptedData) as T;
     } catch {
-      console.error("[crypto] Failed to parse credentials as JSON");
+      console.error("[crypto] Failed to parse data as JSON");
       return null;
     }
   }
 
-  // Check if data is in encrypted format (has colons for iv:authTag:encrypted)
   if (!encryptedData.includes(':')) {
-    // Assume it's plaintext JSON (legacy data)
     try {
-      return JSON.parse(encryptedData) as WorkatoCredentials;
+      return JSON.parse(encryptedData) as T;
     } catch {
-      console.error("[crypto] Failed to parse credentials as JSON");
+      console.error("[crypto] Failed to parse data as JSON");
       return null;
     }
   }
@@ -85,11 +91,25 @@ export function decryptCredentials(encryptedData: string): WorkatoCredentials | 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
 
-    return JSON.parse(decrypted) as WorkatoCredentials;
+    return JSON.parse(decrypted) as T;
   } catch (error) {
     console.error("[crypto] Decryption error:", error);
     return null;
   }
+}
+
+/**
+ * Encrypts Workato credentials (backward-compatible wrapper)
+ */
+export function encryptCredentials(credentials: WorkatoCredentials): string {
+  return encryptJSON(credentials);
+}
+
+/**
+ * Decrypts Workato credentials (backward-compatible wrapper)
+ */
+export function decryptCredentials(encryptedData: string): WorkatoCredentials | null {
+  return decryptJSON<WorkatoCredentials>(encryptedData);
 }
 
 /**

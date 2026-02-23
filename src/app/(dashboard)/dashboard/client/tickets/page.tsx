@@ -8,7 +8,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 
 const CreateTicketDialog = dynamicImport(
   () => import("@/components/create-ticket-dialog").then((mod) => ({ default: mod.CreateTicketDialog })),
@@ -154,7 +154,7 @@ export default async function ClientTicketsPage() {
           <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
             {openTickets.length === 0 ? (
               <div className="py-16 text-center flex flex-col items-center">
-                <DijiMascot variant="celebrating" size="sm" className="mb-3" />
+                <DigiMascot variant="celebrating" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">All Caught Up!</p>
                 <p className="text-[12px] text-slate-400 mt-1">You have no pending requests.</p>
                 <div className="mt-4">

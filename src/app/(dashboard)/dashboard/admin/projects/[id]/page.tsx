@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { IntegrationManagementSection } from "@/components/integration-management-section";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { AdminFlagSection } from "@/components/admin-flag-section";
+import { StageAdvanceButton } from "@/components/stage-advance-button";
+import { stageSlug } from "@/lib/lifecycle";
 
 const EditProjectDialog = dynamicImport(
   () => import("@/components/edit-project-dialog").then((mod) => ({ default: mod.EditProjectDialog })),
@@ -108,6 +110,9 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {stageSlug(project.currentStage) === null && (
+            <StageAdvanceButton projectId={project.id} currentStage={project.currentStage} />
+          )}
           <EditProjectDialog
             project={{
               id: project.id,

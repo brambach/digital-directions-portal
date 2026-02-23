@@ -19,7 +19,7 @@
 9. [New Shared Components](#9-new-shared-components)
 10. [Freshdesk Integration](#10-freshdesk-integration)
 11. [Post-Revamp Cleanup](#11-post-revamp-cleanup)
-11. [The Diji Mascot](#11-the-diji-mascot)
+11. [The Digi Mascot](#11-the-digi-mascot)
 12. [Route Map](#12-route-map)
 13. [Build Sequence](#13-build-sequence)
 14. [Open Questions](#14-open-questions)
@@ -698,51 +698,41 @@ Clients never see the word "Freshdesk". They submit and view tickets in the port
 
 ---
 
-## 11. The Diji Mascot
+## 11. The Digi Mascot
 
-### Usage guide
-| Context | Variant |
-|---------|---------|
-| Stages not yet active (locked) | Under Construction / Sleeping |
-| Welcome / loading states | Neutral |
-| Discovery / guided sections | Working / Thinking |
-| Error states | Confused |
-| Go-live celebration | Happy / Celebrating |
-| Empty states (no tickets, all clear) | Happy |
-| Something needs attention | Slightly worried |
+> **Naming note:** The mascot is named **Digi** (not Diji). Component: `<DigiMascot />` at `src/components/digi-mascot.tsx`. Images at `/public/images/digi/digi_[variant].png`.
 
-### Implementation
-- Store variants in `/public/images/mascot/diji-[variant].png`
-- Create `<DijiMascot variant="happy" size="sm|md|lg" />` component
-- Use in: empty states, locked stages, go-live celebration, help centre landing
+### Active variants (5)
+| Variant | File | Used for |
+|---------|------|----------|
+| `neutral` | `digi_neutral.png` | Default, sidebar footer, "get started" empty states |
+| `construction` | `digi_construction.png` | Integration Build stage hero (large) |
+| `celebrating` | `digi_celebrating.png` | Go-live celebration overlay |
+| `confused` | `digi_confused.png` | Error states, 404 pages, unexpected states |
+| `sleeping` | `digi_sleeping.png` | Locked lifecycle stages |
 
-### How to create the transparent PNG
-1. Generate the image via Midjourney, DALL-E, or similar — ask for the character **on a plain white background**
-2. Run it through **remove.bg** (free, one-click background removal) — works extremely well for illustration-style characters
-3. Save as PNG with transparency
-4. Export multiple variants (happy, working, confused, sleeping, celebrating) using the same base character for consistency
+### Current placements ✅
+| Location | Variant | Size | Notes |
+|----------|---------|------|-------|
+| Locked stage cards (`stage-card.tsx`) | `sleeping` | `xl` (240px) | Full opacity — no dimming |
+| Client build stage page | `construction` | `w-48 md:w-64` | Large hero above "We're building your integration" copy |
+| Admin discovery empty state | `neutral` | `sm` | Shown when no template selected yet |
+| Client discovery waiting state | `sleeping` | `sm` | Shown while questionnaire is being prepared |
 
-### Placement ideas
-| Placement | How it works | Best variant |
-|-----------|--------------|-------------|
-| **Peeking over a card edge** | Position Diji absolutely below the card with `overflow: hidden` clipping — only the top of the head/ears peeks above the card border. Very charming. | Neutral / curious |
-| **Empty state companion** | Diji standing beside the empty state message ("No tickets! You're all caught up") | Happy |
-| **Go-live celebration** | Full character centred on the overlay, confetti raining around it | Celebrating |
-| **Locked stage cards** | Small Diji in the corner of the locked content area | Sleeping / waiting |
-| **Sidebar footer** | Tiny Diji waving at the very bottom of the sidebar | Neutral / waving |
-| **Help centre landing** | Diji in a "thinking" pose next to the search bar | Working / thinking |
+### Build stage hero (Sprint 7 note)
+The construction image is intentionally large (`w-48 md:w-64`) as the primary visual while the build content is sparse. When Sprint 7 adds release notes and phase progress, **keep the mascot** as a header above the content — don't replace it.
 
-### Current status
-Assets done ✅ — all 7 variants processed and saved to `/public/images/digi/`. Component built at `src/components/diji-mascot.tsx`.
+### Remaining placements (future sprints)
+- [ ] **Admin sidebar footer** — `neutral`, `xs` size, above `© Digital Directions`
+- [ ] **Empty states** — no tickets, no projects, no clients → `neutral` beside message
+- [ ] **Go-live celebration overlay** — `celebrating`, `xl`, centred with confetti (Sprint 9)
+- [ ] **Help centre landing** — `neutral` or `confused` beside the search bar (Sprint 11)
+- [ ] **Error/404 pages** — `confused`, `md`
 
-### TODO — Wire Diji into the UI
-These placements are ready to implement now that assets exist:
-
-- [ ] **Admin sidebar footer** — replace the `© 2025 Digital Directions` text with a small Diji (`neutral`, `xs` size) sitting above it. First visible placement, shows on every page.
-- [ ] **Empty states** — anywhere a "no results" message exists (no tickets, no projects, no clients), add Diji (`neutral` or `celebrating`) beside the message.
-- [ ] **Locked lifecycle stage cards** — when a stage is locked/not yet active, show Diji (`sleeping`, `sm` size) in the corner.
-- [ ] **Go-live celebration overlay** — Diji (`celebrating`, `xl` size) centred with confetti around it.
-- [ ] **Help centre landing page** — Diji (`thinking`, `md` size) beside the search bar.
+### Image spec
+- Format: PNG with transparent background (remove.bg processed)
+- Source resolution: 1024×1024 (generated via DALL-E with reference character)
+- Display max: ~256px (`w-64`) — 4× resolution for retina sharpness
 
 ---
 
@@ -850,7 +840,7 @@ Since we're building everything at once, here's the recommended order to minimis
 - **Notifications:** Wire in-app + email notifications for all discovery state changes (see CLAUDE.md "Notification Pattern")
 - **NotificationBell:** Verify it's rendered in both admin and client headers — re-wire if missing from UI
 
-### Sprint 5 — Provisioning & Bob Config
+### Sprint 5 — Provisioning & Bob Config ✅ Complete (Feb 2026)
 > **Model: Sonnet** — Checklist pattern is simple and repetitive. Follows the same structure twice.
 
 **Goal:** Stages 3 and 4 are functional.
@@ -957,6 +947,8 @@ Admin applies a provisioning template when setting up a project. The specialist'
 - `<ReleaseNote />` component
 - Enhanced milestone notifications (Slack + in-app)
 - Build Spec sign-off (`<SignoffModal />` variant 1)
+
+**Note — Build stage hero (already implemented):** The client-facing build page (`/client/projects/[id]/build`) already has a large Digi construction mascot (`w-48 md:w-64`) as the hero element while Sprint 7 content is pending. When release notes and phase progress are built, keep the mascot visible above the content — it should remain a prominent visual anchor for this stage, not be replaced entirely.
 
 ### Sprint 8 — UAT Module
 > **Model: Opus** — Checklist + sign-off flow + inline ticket creation + dual counter-sign. More state complexity than it looks.

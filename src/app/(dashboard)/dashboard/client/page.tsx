@@ -18,7 +18,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn, formatMinutesToHours } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export default async function ClientDashboard() {
     .orderBy(desc(tickets.createdAt))
     .limit(4);
 
-  const recentMessages = await db
+  const recentMessages = projectIds.length === 0 ? [] : await db
     .select({
       id: messages.id,
       content: messages.content,
@@ -90,7 +90,7 @@ export default async function ClientDashboard() {
     .where(
       and(
         isNull(messages.deletedAt),
-        projectIds.length > 0 ? inArray(messages.projectId, projectIds) : eq(messages.id, "")
+        inArray(messages.projectId, projectIds)
       )
     )
     .orderBy(desc(messages.createdAt))
@@ -232,7 +232,7 @@ export default async function ClientDashboard() {
 
             {clientProjects.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                <DigiMascot variant="neutral" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">No projects yet</p>
                 <p className="text-[12px] text-slate-400 mt-1">Your projects will appear here once started</p>
               </div>
@@ -287,7 +287,7 @@ export default async function ClientDashboard() {
 
               {pendingTickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <DijiMascot variant="celebrating" size="sm" className="mb-3" />
+                  <DigiMascot variant="celebrating" size="sm" className="mb-3" />
                   <p className="text-[13px] font-semibold text-slate-700">All caught up!</p>
                   <p className="text-[12px] text-slate-400 mt-1">No tickets need your attention</p>
                 </div>
@@ -347,7 +347,7 @@ export default async function ClientDashboard() {
 
               {recentMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <DijiMascot variant="neutral" size="sm" className="mb-3" />
+                  <DigiMascot variant="neutral" size="sm" className="mb-3" />
                   <p className="text-[13px] font-semibold text-slate-700">No recent activity</p>
                   <p className="text-[12px] text-slate-400 mt-1">Messages and updates will show here</p>
                 </div>

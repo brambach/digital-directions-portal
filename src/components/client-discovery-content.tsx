@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoomEmbed } from "@/components/loom-embed";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 import { toast } from "sonner";
 import {
   Check,
@@ -201,7 +201,7 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
   if (!response) {
     return (
       <div className="text-center py-12">
-        <DijiMascot variant="thinking" size="sm" className="mx-auto mb-4" />
+        <DigiMascot variant="sleeping" size="sm" className="mx-auto mb-4" />
         <h3 className="text-base font-bold text-slate-700 mb-1">
           Your discovery questionnaire is being prepared
         </h3>
@@ -527,7 +527,7 @@ function ReadOnlyView({
       {/* Status banner */}
       {bannerType === "review" ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-          <DijiMascot variant="construction" size="xs" />
+          <DigiMascot variant="construction" size="xs" />
           <div>
             <p className="text-sm font-semibold text-amber-800">
               Your questionnaire is being reviewed

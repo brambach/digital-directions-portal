@@ -4,12 +4,10 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   CalendarDays,
   MapPin,
@@ -20,14 +18,16 @@ import {
   UserX,
   Check,
   X,
-  Link2,
   AlertCircle,
   Loader2,
   ArrowRight,
   ArrowLeft,
   Send,
   Sparkles,
-  Undo2,
+  ChevronDown,
+  Trash2,
+  Search,
+  PartyPopper,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { MappingCategory } from "@/lib/mapping-defaults";
@@ -49,7 +49,6 @@ function wordOverlapScore(a: string, b: string): number {
     if (wordsB.has(w)) {
       overlap++;
     } else {
-      // Partial match — check if a word in B starts with/contains this word
       for (const wb of wordsB) {
         if (wb.length < 2) continue;
         if (wb.includes(w) || w.includes(wb)) {
@@ -129,21 +128,13 @@ export function MappingConnector({
   onSubmitRequest,
   isSubmitting = false,
 }: MappingConnectorProps) {
-  const [selectedHibob, setSelectedHibob] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const hibobCardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const payrollCardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [lineCoords, setLineCoords] = useState<
-    { x1: number; y1: number; x2: number; y2: number; hibob: string; payroll: string }[]
-  >([]);
 
-  // Track newly added connections for draw-in animation
-  const [newConnectionKeys, setNewConnectionKeys] = useState<Set<string>>(new Set());
+  // Hover state for read-only view
+  const [hoveredHibob, setHoveredHibob] = useState<string | null>(null);
+  const [hoveredPayroll, setHoveredPayroll] = useState<string | null>(null);
 
   // Undo state
-  const undoSnapshotRef = useRef<MappingEntry[] | null>(null);
   const undoToastIdRef = useRef<string | number | null>(null);
 
   // Get values for active category
@@ -156,13 +147,20 @@ export function MappingConnector({
     [payrollValues, activeCategory]
   );
 
-  // Filter entries for active category
-  const categoryEntries = useMemo(
-    () => entries.filter((e) => e.category === activeCategory),
-    [entries, activeCategory]
-  );
+  // Filter entries for active category — only include entries whose HiBob AND
+  // payroll values still exist in the current value lists (ignores stale entries)
+  const categoryEntries = useMemo(() => {
+    const hibobSet = new Set(currentHibobValues);
+    const payrollSet = new Set(currentPayrollValues);
+    return entries.filter(
+      (e) =>
+        e.category === activeCategory &&
+        hibobSet.has(e.hibobValue) &&
+        payrollSet.has(e.payrollValue)
+    );
+  }, [entries, activeCategory, currentHibobValues, currentPayrollValues]);
 
-  // Build lookup maps
+  // Build lookup maps — one HiBob value maps to one payroll value (many HiBob → one payroll is allowed)
   const hibobToPayroll = useMemo(() => {
     const map = new Map<string, string>();
     for (const e of categoryEntries) {
@@ -181,17 +179,28 @@ export function MappingConnector({
     return map;
   }, [categoryEntries]);
 
-  // Progress per category
+  // Progress per category — counts unique HiBob values that have at least one valid mapping
+  // (ignores stale entries referencing removed values)
   const getCategoryProgress = useCallback(
     (catKey: string) => {
-      const hibobCount = (hibobValues[catKey] || []).length;
+      const hibobVals = hibobValues[catKey] || [];
+      const hibobCount = hibobVals.length;
       if (hibobCount === 0) return { mapped: 0, total: 0 };
-      const mapped = entries.filter(
-        (e) => e.category === catKey
-      ).length;
-      return { mapped, total: hibobCount };
+      const hibobSet = new Set(hibobVals);
+      const payrollSet = new Set(payrollValues[catKey] || []);
+      const mappedHibobValues = new Set(
+        entries
+          .filter(
+            (e) =>
+              e.category === catKey &&
+              hibobSet.has(e.hibobValue) &&
+              payrollSet.has(e.payrollValue)
+          )
+          .map((e) => e.hibobValue)
+      );
+      return { mapped: mappedHibobValues.size, total: hibobCount };
     },
-    [hibobValues, entries]
+    [hibobValues, payrollValues, entries]
   );
 
   // Check mobile
@@ -202,95 +211,46 @@ export function MappingConnector({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Calculate SVG line coordinates
-  const updateLines = useCallback(() => {
-    if (isMobile || !containerRef.current) {
-      setLineCoords([]);
-      return;
-    }
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const coords: typeof lineCoords = [];
-
-    for (const entry of categoryEntries) {
-      const hibobEl = hibobCardRefs.current.get(entry.hibobValue);
-      const payrollEl = payrollCardRefs.current.get(entry.payrollValue);
-      if (!hibobEl || !payrollEl) continue;
-
-      const hRect = hibobEl.getBoundingClientRect();
-      const pRect = payrollEl.getBoundingClientRect();
-
-      coords.push({
-        x1: hRect.right - containerRect.left,
-        y1: hRect.top + hRect.height / 2 - containerRect.top,
-        x2: pRect.left - containerRect.left,
-        y2: pRect.top + pRect.height / 2 - containerRect.top,
-        hibob: entry.hibobValue,
-        payroll: entry.payrollValue,
-      });
-    }
-
-    setLineCoords(coords);
-  }, [categoryEntries, isMobile]);
-
-  useEffect(() => {
-    updateLines();
-    // Recalculate on resize/scroll
-    const handler = () => requestAnimationFrame(updateLines);
-    window.addEventListener("resize", handler);
-    window.addEventListener("scroll", handler, true);
-    return () => {
-      window.removeEventListener("resize", handler);
-      window.removeEventListener("scroll", handler, true);
-    };
-  }, [updateLines]);
-
-  // Recalculate lines after category change (DOM needs to settle)
-  useEffect(() => {
-    const timer = setTimeout(updateLines, 50);
-    return () => clearTimeout(timer);
-  }, [activeCategory, categoryEntries.length, updateLines]);
-
-  // Handle click on HiBob card
-  const handleHibobClick = (value: string) => {
+  // Select a payroll value for a HiBob value (replaces any existing mapping)
+  const handleSelectMatch = (hibobValue: string, payrollValue: string | null) => {
     if (readOnly) return;
-    if (selectedHibob === value) {
-      setSelectedHibob(null);
-    } else {
-      setSelectedHibob(value);
-    }
-  };
 
-  // Handle click on Payroll card (completes the connection)
-  const handlePayrollClick = (payrollValue: string) => {
-    if (readOnly || !selectedHibob) return;
+    const previousEntries = [...entries];
 
-    // Save undo snapshot
-    undoSnapshotRef.current = [...entries];
-
+    // Remove existing mapping for this HiBob value
     const newEntries = entries.filter(
-      (e) => !(e.category === activeCategory && e.hibobValue === selectedHibob)
+      (e) => !(e.category === activeCategory && e.hibobValue === hibobValue)
     );
 
-    newEntries.push({
-      category: activeCategory,
-      hibobValue: selectedHibob,
-      payrollValue,
-    });
-
-    // Track this as a new connection for line draw-in animation
-    const connectionKey = `${activeCategory}:${selectedHibob}:${payrollValue}`;
-    setNewConnectionKeys((prev) => new Set(prev).add(connectionKey));
-    setTimeout(() => {
-      setNewConnectionKeys((prev) => {
-        const next = new Set(prev);
-        next.delete(connectionKey);
-        return next;
+    if (payrollValue) {
+      newEntries.push({
+        category: activeCategory,
+        hibobValue,
+        payrollValue,
       });
-    }, 600);
+    }
 
     onEntriesChange(newEntries);
-    setSelectedHibob(null);
+
+    // Show undo toast when unmapping
+    if (!payrollValue) {
+      const removedEntry = previousEntries.find(
+        (e) => e.category === activeCategory && e.hibobValue === hibobValue
+      );
+      if (removedEntry) {
+        if (undoToastIdRef.current) toast.dismiss(undoToastIdRef.current);
+        undoToastIdRef.current = toast(
+          `Unmapped "${removedEntry.hibobValue}"`,
+          {
+            action: {
+              label: "Undo",
+              onClick: () => onEntriesChange(previousEntries),
+            },
+            duration: 5000,
+          }
+        );
+      }
+    }
   };
 
   // Handle removing a mapping (with undo toast)
@@ -307,19 +267,14 @@ export function MappingConnector({
     );
     onEntriesChange(newEntries);
 
-    // Show undo toast
     if (removedEntry) {
-      // Dismiss any existing undo toast
       if (undoToastIdRef.current) toast.dismiss(undoToastIdRef.current);
-
       undoToastIdRef.current = toast(
         `Unmapped "${removedEntry.hibobValue}"`,
         {
           action: {
             label: "Undo",
-            onClick: () => {
-              onEntriesChange(previousEntries);
-            },
+            onClick: () => onEntriesChange(previousEntries),
           },
           duration: 5000,
         }
@@ -337,13 +292,11 @@ export function MappingConnector({
 
     let newEntries = [...entries];
     let matchCount = 0;
-    const newKeys = new Set<string>();
 
     for (const hVal of currentHibob) {
       if (alreadyMapped.has(hVal)) continue;
       const match = findBestMatch(hVal, currentPayroll);
       if (match) {
-        // Remove any existing mapping for this HiBob value (shouldn't exist, but be safe)
         newEntries = newEntries.filter(
           (e) => !(e.category === activeCategory && e.hibobValue === hVal)
         );
@@ -352,37 +305,21 @@ export function MappingConnector({
           hibobValue: hVal,
           payrollValue: match.value,
         });
-        newKeys.add(`${activeCategory}:${hVal}:${match.value}`);
         matchCount++;
       }
     }
 
     if (matchCount > 0) {
-      // Save undo snapshot before auto-match
       const previousEntries = [...entries];
-
-      // Animate all new connections
-      setNewConnectionKeys((prev) => new Set([...prev, ...newKeys]));
-      setTimeout(() => {
-        setNewConnectionKeys((prev) => {
-          const next = new Set(prev);
-          for (const k of newKeys) next.delete(k);
-          return next;
-        });
-      }, 600);
-
       onEntriesChange(newEntries);
 
-      // Show undo-capable toast
       if (undoToastIdRef.current) toast.dismiss(undoToastIdRef.current);
       undoToastIdRef.current = toast.success(
         `Matched ${matchCount} item${matchCount > 1 ? "s" : ""} automatically`,
         {
           action: {
             label: "Undo",
-            onClick: () => {
-              onEntriesChange(previousEntries);
-            },
+            onClick: () => onEntriesChange(previousEntries),
           },
           duration: 5000,
         }
@@ -392,29 +329,50 @@ export function MappingConnector({
     }
   };
 
+  // Clear ALL mappings for the current category (with undo)
+  const handleClearCategory = () => {
+    if (readOnly) return;
+    const removedEntries = entries.filter((e) => e.category === activeCategory);
+    if (removedEntries.length === 0) return;
+
+    const previousEntries = [...entries];
+    const newEntries = entries.filter((e) => e.category !== activeCategory);
+    onEntriesChange(newEntries);
+
+    if (undoToastIdRef.current) toast.dismiss(undoToastIdRef.current);
+    undoToastIdRef.current = toast(
+      `Cleared all ${removedEntries.length} mapping${removedEntries.length > 1 ? "s" : ""} in this category`,
+      {
+        action: {
+          label: "Undo",
+          onClick: () => onEntriesChange(previousEntries),
+        },
+        duration: 6000,
+      }
+    );
+  };
+
   // Count unmapped items for auto-match button visibility
   const unmappedInCategory = currentHibobValues.filter(
     (hv) => !hibobToPayroll.has(hv)
   ).length;
 
-  // Mobile: dropdown selector
-  const handleMobileSelect = (hibobValue: string, payrollValue: string) => {
-    if (readOnly) return;
-    const newEntries = entries.filter(
-      (e) => !(e.category === activeCategory && e.hibobValue === hibobValue)
-    );
-    if (payrollValue !== "__unmap__") {
-      newEntries.push({
-        category: activeCategory,
-        hibobValue,
-        payrollValue,
-      });
-    }
-    onEntriesChange(newEntries);
-  };
-
   const { mapped: catMapped, total: catTotal } = getCategoryProgress(activeCategory);
   const unmappedCount = catTotal - catMapped;
+  const isCategoryComplete = catTotal > 0 && catMapped === catTotal;
+
+  // Track previous completion state to detect when a category BECOMES complete
+  const prevCompleteRef = useRef(false);
+  useEffect(() => {
+    if (isCategoryComplete && !prevCompleteRef.current && !readOnly) {
+      const catLabel = categories.find((c) => c.key === activeCategory)?.label || activeCategory;
+      toast.success(`${catLabel} — all mapped!`, {
+        icon: <PartyPopper className="w-4 h-4 text-emerald-500" />,
+        duration: 3000,
+      });
+    }
+    prevCompleteRef.current = isCategoryComplete;
+  }, [isCategoryComplete, activeCategory, categories, readOnly]);
 
   // Sequential prev/next navigation
   const currentCategoryIndex = categories.findIndex((c) => c.key === activeCategory);
@@ -438,7 +396,8 @@ export function MappingConnector({
               key={cat.key}
               onClick={() => {
                 onCategoryChange(cat.key);
-                setSelectedHibob(null);
+                setHoveredHibob(null);
+                setHoveredPayroll(null);
               }}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
@@ -477,14 +436,27 @@ export function MappingConnector({
             <span className="text-sm font-semibold text-slate-700">
               {categories.find((c) => c.key === activeCategory)?.label}
             </span>
-            {!readOnly && unmappedInCategory > 0 && (
-              <button
-                onClick={handleAutoMatch}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-[#7C1CFF] bg-violet-50 hover:bg-violet-100 transition-colors"
-              >
-                <Sparkles className="w-3 h-3" />
-                Suggest Matches
-              </button>
+            {!readOnly && (
+              <div className="flex items-center gap-1.5">
+                {unmappedInCategory > 0 && (
+                  <button
+                    onClick={handleAutoMatch}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-[#7C1CFF] bg-violet-50 hover:bg-violet-100 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Suggest Matches
+                  </button>
+                )}
+                {catMapped > 0 && (
+                  <button
+                    onClick={handleClearCategory}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Clear All
+                  </button>
+                )}
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -501,7 +473,10 @@ export function MappingConnector({
         </div>
         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#7C1CFF] rounded-full transition-all duration-300"
+            className={cn(
+              "h-full rounded-full transition-all duration-500",
+              isCategoryComplete ? "bg-emerald-500" : "bg-[#7C1CFF]"
+            )}
             style={{ width: catTotal > 0 ? `${(catMapped / catTotal) * 100}%` : "0%" }}
           />
         </div>
@@ -514,11 +489,11 @@ export function MappingConnector({
         </div>
       )}
 
-      {/* Mobile: Dropdown selectors */}
+      {/* Mobile: Card-based selectors */}
       {isMobile && currentHibobValues.length > 0 && (
         <div className="space-y-3">
           {currentHibobValues.map((hVal) => {
-            const mapped = hibobToPayroll.get(hVal);
+            const mappedValue = hibobToPayroll.get(hVal);
             return (
               <div
                 key={hVal}
@@ -530,31 +505,20 @@ export function MappingConnector({
                 </div>
                 {readOnly ? (
                   <div className="pl-4">
-                    {mapped ? (
-                      <span className="text-sm text-[#7C1CFF] font-medium">{mapped}</span>
+                    {mappedValue ? (
+                      <span className="text-sm text-[#7C1CFF] font-medium">{mappedValue}</span>
                     ) : (
                       <span className="text-sm text-slate-300 italic">Unmapped</span>
                     )}
                   </div>
                 ) : (
-                  <Select
-                    value={mapped || "__unmap__"}
-                    onValueChange={(v) => handleMobileSelect(hVal, v)}
-                  >
-                    <SelectTrigger className="bg-white border-slate-200 rounded-xl text-sm">
-                      <SelectValue placeholder="Select payroll value..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__unmap__">
-                        <span className="text-slate-400">Unmapped</span>
-                      </SelectItem>
-                      {currentPayrollValues.map((pVal) => (
-                        <SelectItem key={pVal} value={pVal}>
-                          {pVal}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <PayrollSelect
+                    selectedValue={mappedValue || null}
+                    allPayrollValues={currentPayrollValues}
+                    onSelect={(pv) => handleSelectMatch(hVal, pv)}
+                    currentHibobValue={hVal}
+                    payrollToHibobList={payrollToHibobList}
+                  />
                 )}
               </div>
             );
@@ -562,202 +526,217 @@ export function MappingConnector({
         </div>
       )}
 
-      {/* Desktop: Interactive card connector */}
-      {!isMobile && (currentHibobValues.length > 0 || currentPayrollValues.length > 0) && (
-        <div
-          ref={containerRef}
-          className="relative"
-        >
-          {/* SVG connection lines */}
-          <svg
-            ref={svgRef}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 1 }}
-          >
-            <defs>
-              <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#7C1CFF" stopOpacity="0.6" />
-                <stop offset="50%" stopColor="#7C1CFF" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#7C1CFF" stopOpacity="0.6" />
-              </linearGradient>
-            </defs>
-            {lineCoords.map((line, idx) => {
-              const dx = line.x2 - line.x1;
-              const cp = dx * 0.4;
-              const isHighlighted = selectedHibob === line.hibob;
-              const connectionKey = `${activeCategory}:${line.hibob}:${line.payroll}`;
-              const isNew = newConnectionKeys.has(connectionKey);
-              const pathD = `M ${line.x1} ${line.y1} C ${line.x1 + cp} ${line.y1}, ${line.x2 - cp} ${line.y2}, ${line.x2} ${line.y2}`;
-
-              return (
-                <path
-                  key={idx}
-                  d={pathD}
-                  fill="none"
-                  stroke={isHighlighted ? "#7C1CFF" : "url(#connectionGradient)"}
-                  strokeWidth={isHighlighted ? 2.5 : 1.5}
-                  className={isNew ? "" : "transition-all duration-200"}
-                  strokeLinecap="round"
-                  style={{
-                    filter: isHighlighted ? "drop-shadow(0 0 4px rgba(124, 28, 255, 0.4))" : "none",
-                    // Draw-in animation for new connections
-                    ...(isNew
-                      ? {
-                          strokeDasharray: "1000",
-                          strokeDashoffset: "1000",
-                          animation: "line-draw-in 0.5s ease-out forwards",
-                        }
-                      : {}),
-                  }}
-                />
-              );
-            })}
-          </svg>
-
-          {/* Two-column layout */}
-          <div className="grid grid-cols-[1fr_80px_1fr] gap-0">
-            {/* Left column — HiBob values */}
-            <div className="space-y-2 pr-2">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-orange-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  HiBob
-                </span>
-              </div>
-              {currentHibobValues.map((hVal) => {
-                const isMapped = hibobToPayroll.has(hVal);
-                const isSelected = selectedHibob === hVal;
-
-                return (
-                  <div
-                    key={hVal}
-                    ref={(el) => {
-                      if (el) hibobCardRefs.current.set(hVal, el);
-                      else hibobCardRefs.current.delete(hVal);
-                    }}
-                    onClick={() => handleHibobClick(hVal)}
-                    className={cn(
-                      "relative group px-4 py-3 rounded-xl border text-sm font-medium transition-all",
-                      readOnly
-                        ? isMapped
-                          ? "bg-violet-50 border-violet-200 text-slate-800"
-                          : "bg-slate-50 border-slate-200 text-slate-500"
-                        : isSelected
-                        ? "bg-violet-50 border-[#7C1CFF] text-[#7C1CFF] shadow-[0_0_0_3px_rgba(124,28,255,0.15)] cursor-pointer"
-                        : isMapped
-                        ? "bg-violet-50/50 border-violet-200 text-slate-800 hover:border-[#7C1CFF] cursor-pointer"
-                        : "bg-white border-slate-200 text-slate-700 hover:border-violet-300 hover:shadow-sm cursor-pointer"
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate">{hVal}</span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {isMapped && (
-                          <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        )}
-                        {!isMapped && !readOnly && (
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                        )}
-                        {isMapped && !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveMapping(hVal);
-                            }}
-                            className="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100"
-                          >
-                            <X className="w-3 h-3 text-red-500" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {isMapped && (
-                      <span className="text-[10px] text-[#7C1CFF]/60 mt-0.5 block truncate">
-                        → {hibobToPayroll.get(hVal)}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Center connector column */}
-            <div className="flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2 text-slate-300">
-                <Link2 className="w-4 h-4" />
-              </div>
-            </div>
-
-            {/* Right column — Payroll values */}
-            <div className="space-y-2 pl-2">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Payroll
-                </span>
-              </div>
-              {currentPayrollValues.map((pVal) => {
-                const connectedHibobValues = payrollToHibobList.get(pVal) || [];
-                const hasConnections = connectedHibobValues.length > 0;
-                const isClickable = !readOnly && selectedHibob !== null;
-
-                return (
-                  <div
-                    key={pVal}
-                    ref={(el) => {
-                      if (el) payrollCardRefs.current.set(pVal, el);
-                      else payrollCardRefs.current.delete(pVal);
-                    }}
-                    onClick={() => isClickable && handlePayrollClick(pVal)}
-                    className={cn(
-                      "relative px-4 py-3 rounded-xl border text-sm font-medium transition-all",
-                      readOnly
-                        ? hasConnections
-                          ? "bg-emerald-50/50 border-emerald-200 text-slate-800"
-                          : "bg-slate-50 border-slate-200 text-slate-500"
-                        : isClickable && hasConnections
-                        ? "bg-emerald-50/50 border-emerald-200 text-slate-800 hover:border-emerald-400 hover:shadow-md cursor-pointer"
-                        : isClickable
-                        ? "bg-violet-50 border-violet-300 text-slate-800 hover:border-[#7C1CFF] hover:shadow-md cursor-pointer ring-2 ring-violet-100"
-                        : hasConnections
-                        ? "bg-emerald-50/50 border-emerald-200 text-slate-800"
-                        : "bg-white border-slate-200 text-slate-600"
-                    )}
-                  >
-                    <span className="truncate block">{pVal}</span>
-                    {/* Connected HiBob values as pills */}
-                    {connectedHibobValues.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {connectedHibobValues.map((hv) => (
-                          <span
-                            key={hv}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-[10px] font-semibold text-[#7C1CFF]"
-                          >
-                            {hv}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Selection hint */}
-          {!readOnly && selectedHibob && (
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-50 text-[#7C1CFF] text-xs font-semibold animate-pulse">
-                <Link2 className="w-3.5 h-3.5" />
-                Now click a payroll value to connect &quot;{selectedHibob}&quot;
+      {/* ============================================================ */}
+      {/* Desktop Interactive: Row-based select layout (editable)       */}
+      {/* ============================================================ */}
+      {!isMobile && !readOnly && currentHibobValues.length > 0 && (
+        <div className="space-y-1.5">
+          {/* Column headers */}
+          <div className="grid grid-cols-[1fr_28px_1fr_32px] gap-3 items-center px-4 py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                HiBob Value
               </span>
             </div>
-          )}
+            <div />
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Payroll Match
+              </span>
+            </div>
+            <div />
+          </div>
+
+          {/* Mapping rows */}
+          {currentHibobValues.map((hVal) => {
+            const mappedValue = hibobToPayroll.get(hVal);
+            const isMapped = !!mappedValue;
+
+            return (
+              <div
+                key={hVal}
+                className={cn(
+                  "group grid grid-cols-[1fr_28px_1fr_32px] gap-3 items-center px-4 py-3 rounded-xl border transition-all",
+                  isMapped
+                    ? "bg-violet-50/30 border-violet-100 hover:border-violet-200"
+                    : "bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm"
+                )}
+              >
+                {/* HiBob value */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-slate-800 truncate">
+                    {hVal}
+                  </span>
+                </div>
+
+                {/* Arrow */}
+                <ArrowRight className={cn(
+                  "w-4 h-4 shrink-0 transition-colors",
+                  isMapped ? "text-[#7C1CFF]" : "text-slate-300"
+                )} />
+
+                {/* Payroll searchable select */}
+                <PayrollSelect
+                  selectedValue={mappedValue || null}
+                  allPayrollValues={currentPayrollValues}
+                  onSelect={(pv) => handleSelectMatch(hVal, pv)}
+                  currentHibobValue={hVal}
+                  payrollToHibobList={payrollToHibobList}
+                />
+
+                {/* Status indicator — check swaps to X on row hover */}
+                <div className="flex items-center justify-center w-8">
+                  {isMapped ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-500 group-hover:hidden" />
+                      <button
+                        onClick={() => handleRemoveMapping(hVal)}
+                        className="hidden group-hover:flex w-6 h-6 rounded-full items-center justify-center bg-red-50 hover:bg-red-100 transition-colors"
+                        title="Remove mapping"
+                      >
+                        <X className="w-3.5 h-3.5 text-red-500" />
+                      </button>
+                    </>
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* Desktop Read-only: Two-column hover-highlight view            */}
+      {/* ============================================================ */}
+      {!isMobile && readOnly && (currentHibobValues.length > 0 || currentPayrollValues.length > 0) && (
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left column — HiBob values */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-orange-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                HiBob
+              </span>
+            </div>
+            {currentHibobValues.map((hVal) => {
+              const mappedPayroll = hibobToPayroll.get(hVal);
+              const isMapped = !!mappedPayroll;
+              const isHighlighted =
+                hoveredHibob === hVal ||
+                (hoveredPayroll !== null && mappedPayroll === hoveredPayroll);
+              const isDimmed =
+                !isHighlighted &&
+                (hoveredHibob !== null || hoveredPayroll !== null);
+
+              return (
+                <div
+                  key={hVal}
+                  onMouseEnter={() => setHoveredHibob(hVal)}
+                  onMouseLeave={() => setHoveredHibob(null)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 cursor-default",
+                    isHighlighted
+                      ? "bg-violet-50 border-[#7C1CFF] shadow-[0_0_0_3px_rgba(124,28,255,0.1)] scale-[1.01]"
+                      : isDimmed
+                      ? "bg-slate-50/60 border-slate-100 text-slate-400"
+                      : isMapped
+                      ? "bg-violet-50/50 border-violet-200 text-slate-800"
+                      : "bg-slate-50 border-slate-200 text-slate-500"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate">{hVal}</span>
+                    {isMapped && (
+                      <Check className={cn(
+                        "w-3.5 h-3.5 shrink-0 transition-colors duration-200",
+                        isHighlighted ? "text-emerald-500" : isDimmed ? "text-emerald-300" : "text-emerald-500"
+                      )} />
+                    )}
+                  </div>
+                  {isMapped && (
+                    <span className={cn(
+                      "text-[10px] mt-0.5 block truncate transition-all duration-200",
+                      isHighlighted
+                        ? "text-[#7C1CFF] font-semibold"
+                        : isDimmed
+                        ? "text-slate-300"
+                        : "text-[#7C1CFF]/60"
+                    )}>
+                      → {mappedPayroll}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right column — Payroll values */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Payroll
+              </span>
+            </div>
+            {currentPayrollValues.map((pVal) => {
+              const connectedHibobValues = payrollToHibobList.get(pVal) || [];
+              const hasConnections = connectedHibobValues.length > 0;
+              const isHighlighted =
+                hoveredPayroll === pVal ||
+                (hoveredHibob !== null && connectedHibobValues.includes(hoveredHibob));
+              const isDimmed =
+                !isHighlighted &&
+                (hoveredHibob !== null || hoveredPayroll !== null);
+
+              return (
+                <div
+                  key={pVal}
+                  onMouseEnter={() => setHoveredPayroll(pVal)}
+                  onMouseLeave={() => setHoveredPayroll(null)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 cursor-default",
+                    isHighlighted
+                      ? "bg-emerald-50 border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.1)] scale-[1.01]"
+                      : isDimmed
+                      ? "bg-slate-50/60 border-slate-100 text-slate-400"
+                      : hasConnections
+                      ? "bg-emerald-50/50 border-emerald-200 text-slate-800"
+                      : "bg-slate-50 border-slate-200 text-slate-500"
+                  )}
+                >
+                  <span className="truncate block">{pVal}</span>
+                  {connectedHibobValues.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {connectedHibobValues.map((hv) => (
+                        <span
+                          key={hv}
+                          className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all duration-200",
+                            isHighlighted || hoveredHibob === hv
+                              ? "bg-violet-200 text-[#7C1CFF]"
+                              : isDimmed
+                              ? "bg-slate-100 text-slate-400"
+                              : "bg-violet-100 text-[#7C1CFF]/70"
+                          )}
+                        >
+                          ← {hv}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* Wizard prev/next navigation */}
-      {!readOnly && !selectedHibob && (
+      {!readOnly && (
         <div className="mt-3 space-y-2">
           {/* Unmapped note — reassures user that skipping is fine */}
           {unmappedCount > 0 && catTotal > 0 && (
@@ -771,10 +750,7 @@ export function MappingConnector({
             {/* Previous category */}
             {prevCategory ? (
               <button
-                onClick={() => {
-                  onCategoryChange(prevCategory.key);
-                  setSelectedHibob(null);
-                }}
+                onClick={() => onCategoryChange(prevCategory.key)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -787,10 +763,7 @@ export function MappingConnector({
             {/* Next category or Submit */}
             {nextCategory ? (
               <button
-                onClick={() => {
-                  onCategoryChange(nextCategory.key);
-                  setSelectedHibob(null);
-                }}
+                onClick={() => onCategoryChange(nextCategory.key)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[#7C1CFF] bg-violet-50 hover:bg-violet-100 transition-colors group"
               >
                 {nextCategory.label}
@@ -821,5 +794,151 @@ export function MappingConnector({
         </div>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PayrollSelect — Searchable single-select popover with hints        */
+/* ------------------------------------------------------------------ */
+
+function PayrollSelect({
+  selectedValue,
+  allPayrollValues,
+  onSelect,
+  currentHibobValue,
+  payrollToHibobList,
+}: {
+  selectedValue: string | null;
+  allPayrollValues: string[];
+  onSelect: (payrollValue: string | null) => void;
+  currentHibobValue: string;
+  payrollToHibobList: Map<string, string[]>;
+}) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const filteredPayroll = useMemo(() => {
+    if (!search.trim()) return allPayrollValues;
+    const q = search.toLowerCase();
+    return allPayrollValues.filter((pv) => pv.toLowerCase().includes(q));
+  }, [allPayrollValues, search]);
+
+  // Reset search when popover closes
+  useEffect(() => {
+    if (!open) setSearch("");
+  }, [open]);
+
+  const handleSelect = (pVal: string) => {
+    if (pVal === selectedValue) {
+      // Clicking same value = unmap
+      onSelect(null);
+    } else {
+      onSelect(pVal);
+    }
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-1.5 min-h-[36px] w-full rounded-xl border px-3 py-1.5 text-sm text-left transition-colors",
+            selectedValue
+              ? "bg-white border-violet-200 hover:border-violet-300"
+              : "bg-white border-dashed border-slate-300 hover:border-slate-400"
+          )}
+        >
+          {selectedValue ? (
+            <span className="text-slate-800 truncate">{selectedValue}</span>
+          ) : (
+            <span className="text-slate-400">Select match...</span>
+          )}
+          <ChevronDown className="w-4 h-4 text-slate-400 ml-auto shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[300px] p-0"
+        align="start"
+        side="bottom"
+        sideOffset={4}
+      >
+        {/* Search header */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
+          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search payroll values..."
+            className="flex-1 text-sm bg-transparent outline-none placeholder:text-slate-300"
+            autoFocus
+          />
+          {selectedValue && (
+            <button
+              type="button"
+              onClick={() => { onSelect(null); setOpen(false); }}
+              className="text-[11px] text-red-400 hover:text-red-500 font-medium whitespace-nowrap transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Scrollable item list */}
+        <div className="max-h-[260px] overflow-y-auto py-1">
+          {filteredPayroll.length === 0 ? (
+            <div className="px-3 py-4 text-center text-xs text-slate-400">
+              No values match &ldquo;{search}&rdquo;
+            </div>
+          ) : (
+            filteredPayroll.map((pVal) => {
+              const isSelected = pVal === selectedValue;
+              // Show which OTHER HiBob values already map to this payroll value
+              const otherHibobUsers = (payrollToHibobList.get(pVal) || [])
+                .filter((hv) => hv !== currentHibobValue);
+
+              return (
+                <button
+                  key={pVal}
+                  type="button"
+                  onClick={() => handleSelect(pVal)}
+                  className={cn(
+                    "flex items-start gap-3 px-3 py-2 w-full text-left transition-colors",
+                    isSelected
+                      ? "bg-violet-50 hover:bg-violet-100"
+                      : "hover:bg-slate-50"
+                  )}
+                >
+                  {/* Check icon or empty space */}
+                  <div className="w-4 h-4 shrink-0 mt-0.5 flex items-center justify-center">
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-[#7C1CFF]" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span
+                      className={cn(
+                        "text-sm block truncate",
+                        isSelected ? "text-slate-800 font-medium" : "text-slate-600"
+                      )}
+                    >
+                      {pVal}
+                    </span>
+                    {otherHibobUsers.length > 0 && (
+                      <span className="text-[10px] text-slate-400 block truncate mt-0.5">
+                        also mapped from {otherHibobUsers.slice(0, 2).join(", ")}
+                        {otherHibobUsers.length > 2 && ` +${otherHibobUsers.length - 2}`}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
