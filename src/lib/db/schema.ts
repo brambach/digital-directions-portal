@@ -110,6 +110,12 @@ export const signoffTypeEnum = pgEnum("signoff_type", [
   "go_live",
 ]);
 
+export const syncComponentStatusEnum = pgEnum("sync_component_status", [
+  "not_started",
+  "in_progress",
+  "built",
+]);
+
 // Users Table (Simplified - Clerk is source of truth for profile data)
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -183,6 +189,11 @@ export const projects = pgTable(
     phaseTemplateId: uuid("phase_template_id").references(() => phaseTemplates.id, {
       onDelete: "set null",
     }),
+
+    // Build sync component statuses
+    employeeUpsertStatus: syncComponentStatusEnum("employee_upsert_status").notNull().default("not_started"),
+    leaveSyncStatus: syncComponentStatusEnum("leave_sync_status").notNull().default("not_started"),
+    paySlipStatus: syncComponentStatusEnum("pay_slip_status").notNull().default("not_started"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

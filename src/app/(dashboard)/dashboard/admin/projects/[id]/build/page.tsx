@@ -1,14 +1,14 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags, releaseNotes, signoffs, projectPhases } from "@/lib/db/schema";
+import { projects, clientFlags, releaseNotes, signoffs } from "@/lib/db/schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { AdminFlagSection } from "@/components/admin-flag-section";
-import { ProjectPhaseManager } from "@/components/project-phase-manager";
 import { ReleaseNoteEditor } from "@/components/release-note-editor";
 import { BuildSpecPublishDialog } from "@/components/build-spec-publish-dialog";
+import { BuildSyncComponents } from "@/components/build-sync-components";
 import { deriveStageStatus } from "@/lib/lifecycle";
 import { ClipboardCheck, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -29,8 +29,7 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
 
   const status = deriveStageStatus("build", project.currentStage);
 
-  // Fetch all data in parallel
-  const [unresolvedFlags, allNotes, phases, buildSignoff] = await Promise.all([
+  const [unresolvedFlags, allNotes, buildSignoff] = await Promise.all([
     db
       .select()
       .from(clientFlags)
@@ -42,11 +41,6 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
       .orderBy(desc(releaseNotes.createdAt)),
     db
       .select()
-      .from(projectPhases)
-      .where(eq(projectPhases.projectId, id))
-      .orderBy(projectPhases.orderIndex),
-    db
-      .select()
       .from(signoffs)
       .where(and(eq(signoffs.projectId, id), eq(signoffs.type, "build_spec")))
       .limit(1),
@@ -54,7 +48,6 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
 
   const signoff = buildSignoff[0] ?? null;
 
-  // Serialize for client components
   const serializedNotes = allNotes.map((n) => ({
     ...n,
     publishedAt: n.publishedAt?.toISOString() ?? null,
@@ -71,12 +64,6 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
       }
     : null;
 
-  const serializedPhases = phases.map((p) => ({
-    id: p.id,
-    name: p.name,
-    status: p.status,
-  }));
-
   return (
     <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-6 lg:p-10 space-y-6">
       <LifecycleStepper
@@ -89,7 +76,7 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
         stage="build"
         status={status}
         title="Integration Build"
-        description="Manage build phases, publish release notes, and handle the build spec sign-off."
+        description="Track sync component progress, publish build updates, and manage the build spec sign-off."
         isAdmin={true}
         projectId={id}
         backHref={`/dashboard/admin/projects/${id}`}
@@ -111,10 +98,7 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
                   </p>
                 </div>
               </div>
-              <BuildSpecPublishDialog
-                projectId={id}
-                existingSignoff={serializedSignoff}
-              />
+              <BuildSpecPublishDialog projectId={id} existingSignoff={serializedSignoff} />
             </div>
           ) : signoff ? (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
@@ -129,25 +113,25 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
                   </p>
                 </div>
               </div>
-              <BuildSpecPublishDialog
-                projectId={id}
-                existingSignoff={serializedSignoff}
-              />
+              <BuildSpecPublishDialog projectId={id} existingSignoff={serializedSignoff} />
             </div>
           ) : null}
 
-          {/* Phase Management */}
+          {/* Sync Components */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm">Build Phases</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Sync Components</h3>
               {!signoff && (
-                <BuildSpecPublishDialog
-                  projectId={id}
-                  existingSignoff={serializedSignoff}
-                />
+                <BuildSpecPublishDialog projectId={id} existingSignoff={serializedSignoff} />
               )}
             </div>
-            <ProjectPhaseManager projectId={id} isAdmin={true} />
+            <BuildSyncComponents
+              projectId={id}
+              employeeUpsertStatus={project.employeeUpsertStatus}
+              leaveSyncStatus={project.leaveSyncStatus}
+              paySlipStatus={project.paySlipStatus}
+              isAdmin={true}
+            />
           </div>
 
           {/* Release Notes */}
@@ -155,7 +139,6 @@ export default async function AdminBuildPage({ params }: { params: Promise<{ id:
             <ReleaseNoteEditor
               projectId={id}
               notes={serializedNotes}
-              phases={serializedPhases}
             />
           </div>
 

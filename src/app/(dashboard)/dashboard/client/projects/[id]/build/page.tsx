@@ -6,7 +6,6 @@ import {
   clientFlags,
   releaseNotes,
   signoffs,
-  projectPhases,
 } from "@/lib/db/schema";
 import { eq, and, isNull, isNotNull, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -15,10 +14,11 @@ import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
 import { BuildSpecSignoffBanner } from "@/components/build-spec-signoff-banner";
+import { BuildSyncComponents } from "@/components/build-sync-components";
 import { ReleaseNoteCard } from "@/components/release-note-card";
-import { ProjectPhaseStepper } from "@/components/project-phase-stepper";
 import { deriveStageStatus } from "@/lib/lifecycle";
-import { FileText } from "lucide-react";
+import { FileText, ArrowRight, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +46,7 @@ export default async function ClientBuildPage({
 
   const status = deriveStageStatus("build", project.currentStage);
 
-  // Fetch all data in parallel
-  const [flags, publishedNotes, phases, buildSignoff] = await Promise.all([
+  const [flags, publishedNotes, buildSignoff] = await Promise.all([
     db
       .select()
       .from(clientFlags)
@@ -59,11 +58,6 @@ export default async function ClientBuildPage({
         and(eq(releaseNotes.projectId, id), isNotNull(releaseNotes.publishedAt))
       )
       .orderBy(desc(releaseNotes.publishedAt)),
-    db
-      .select()
-      .from(projectPhases)
-      .where(eq(projectPhases.projectId, id))
-      .orderBy(projectPhases.orderIndex),
     db
       .select()
       .from(signoffs)
@@ -89,14 +83,8 @@ export default async function ClientBuildPage({
       }
     : null;
 
-  const serializedPhases = phases.map((p) => ({
-    id: p.id,
-    name: p.name,
-    status: p.status,
-  }));
-
-  // Get phase names for release note tags
-  const phaseMap = Object.fromEntries(phases.map((p) => [p.id, p.name]));
+  // Last update = most recent published release note
+  const lastUpdate = publishedNotes[0]?.publishedAt ?? null;
 
   return (
     <div className="min-h-full bg-[#F4F5F9] px-7 py-6 space-y-6">
@@ -115,41 +103,47 @@ export default async function ClientBuildPage({
         stage="build"
         status={status}
         title="Integration Build"
-        description="Track the progress of your integration build and view release notes from our team."
+        description="Track the progress of your integration build and view updates from our team."
         isAdmin={false}
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
         <div className="space-y-8">
-          {/* Diji Hero */}
+          {/* Hero */}
           <div className="flex flex-col items-center text-center py-6 border-b border-slate-100">
             <DigiMascot variant="construction" className="w-40 md:w-52 mb-5" />
             <h3 className="text-base font-bold text-slate-800 mb-1.5">
               We&apos;re building your integration
             </h3>
             <p className="text-sm text-slate-500 max-w-sm">
-              Our team is hard at work. You&apos;ll see progress updates and release notes here as
-              each milestone is completed.
+              Our team is hard at work. You&apos;ll see progress updates here as each part of your integration is completed.
             </p>
+            {lastUpdate && (
+              <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-400">
+                <Clock className="w-3.5 h-3.5" />
+                Last update {formatDistanceToNow(new Date(lastUpdate), { addSuffix: true })}
+              </div>
+            )}
           </div>
 
-          {/* Build Spec Sign-Off (only shown when admin has published one) */}
+          {/* Build Spec Sign-Off */}
           {serializedSignoff && status !== "locked" && (
             <BuildSpecSignoffBanner projectId={id} signoff={serializedSignoff} />
           )}
 
-          {/* Phase Progress Stepper (read-only for clients) */}
-          {phases.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="font-bold text-slate-900 text-sm mb-4">Build Progress</h3>
-              <ProjectPhaseStepper
-                projectId={id}
-                isAdmin={false}
-              />
-            </div>
-          )}
+          {/* Sync Components (read-only) */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+            <h3 className="font-bold text-slate-900 text-sm">Your Integration</h3>
+            <BuildSyncComponents
+              projectId={id}
+              employeeUpsertStatus={project.employeeUpsertStatus}
+              leaveSyncStatus={project.leaveSyncStatus}
+              paySlipStatus={project.paySlipStatus}
+              isAdmin={false}
+            />
+          </div>
 
-          {/* Release Notes Feed */}
+          {/* Build Updates Feed */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-[#7C1CFF]" />
@@ -166,20 +160,29 @@ export default async function ClientBuildPage({
                 <FileText className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                 <p className="text-sm font-semibold text-slate-500">No updates yet</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Our team will post updates here as milestones are completed.
+                  Our team will post updates here as parts of your integration are completed.
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {serializedNotes.map((note) => (
-                  <ReleaseNoteCard
-                    key={note.id}
-                    note={note}
-                    phaseName={note.phaseId ? phaseMap[note.phaseId] ?? null : null}
-                  />
+                  <ReleaseNoteCard key={note.id} note={note} />
                 ))}
               </div>
             )}
+          </div>
+
+          {/* What's next */}
+          <div className="bg-violet-50 border border-violet-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <ArrowRight className="w-3.5 h-3.5 text-[#7C1CFF]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-violet-800">What&apos;s next: UAT</p>
+              <p className="text-sm text-violet-700 mt-0.5">
+                Once the build is complete, you&apos;ll be invited to test the integration using your real data. We&apos;ll guide you through every scenario — no technical knowledge required.
+              </p>
+            </div>
           </div>
 
           {/* Flag button */}
