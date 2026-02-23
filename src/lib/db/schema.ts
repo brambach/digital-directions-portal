@@ -723,6 +723,19 @@ export const helpArticles = pgTable("help_articles", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const goLiveChecklist = pgTable("go_live_checklist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  // JSON: array of { id, title, completedAt?, completedBy? }
+  adminItems: text("admin_items").notNull().default("[]"),
+  // JSON: array of { id, title, completedAt?, completedBy? }
+  clientItems: text("client_items").notNull().default("[]"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  projectIdx: index("go_live_checklist_project_idx").on(table.projectId),
+}));
+
 export const goLiveEvents = pgTable("go_live_events", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
@@ -948,6 +961,10 @@ export const clientFlagsRelations = relations(clientFlags, ({ one }) => ({
 }));
 
 export const helpArticlesRelations = relations(helpArticles, ({}) => ({}));
+
+export const goLiveChecklistRelations = relations(goLiveChecklist, ({ one }) => ({
+  project: one(projects, { fields: [goLiveChecklist.projectId], references: [projects.id] }),
+}));
 
 export const goLiveEventsRelations = relations(goLiveEvents, ({ one }) => ({
   project: one(projects, { fields: [goLiveEvents.projectId], references: [projects.id] }),

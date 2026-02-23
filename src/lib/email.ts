@@ -1080,3 +1080,111 @@ export async function sendUatEmail(params: {
     return { success: false, error: String(error) };
   }
 }
+
+// Go-Live Email (for go-live stage state changes)
+export async function sendGoLiveEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+  event: "checklist_ready" | "checklist_complete" | "go_live_triggered" | "monitoring_active";
+  isAdmin?: boolean;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  const basePath = params.isAdmin ? "admin" : "client";
+
+  const eventConfig = {
+    checklist_ready: {
+      subject: `Go-Live checklist ready: ${params.projectName}`,
+      heading: "Go-Live Checklist Is Ready",
+      gradientColors: "#7C1CFF 0%, #6316CC 100%",
+      body: `<p>The pre-go-live checklist for <strong>${params.projectName}</strong> is ready for you to complete.</p>
+        <p>Please review and complete all your checklist items so we can proceed with the go-live.</p>`,
+      ctaText: "View Checklist",
+      ctaUrl: `${APP_URL}/dashboard/${basePath}/projects/${params.projectId}/go-live`,
+      ctaColor: "#7C1CFF",
+    },
+    checklist_complete: {
+      subject: `Checklist items completed: ${params.projectName}`,
+      heading: "Checklist Items Completed",
+      gradientColors: "#7C1CFF 0%, #6316CC 100%",
+      body: `<p>All checklist items on the other side have been completed for <strong>${params.projectName}</strong>.</p>
+        <p>Please check the go-live page — once both sides are complete, go-live can be triggered.</p>`,
+      ctaText: "View Go-Live",
+      ctaUrl: `${APP_URL}/dashboard/${basePath}/projects/${params.projectId}/go-live`,
+      ctaColor: "#7C1CFF",
+    },
+    go_live_triggered: {
+      subject: `Your integration is LIVE: ${params.projectName}`,
+      heading: "Your Integration Is Live!",
+      gradientColors: "#10B981 0%, #059669 100%",
+      body: `<p>Congratulations! The integration for <strong>${params.projectName}</strong> has been switched to production and is now live.</p>
+        <p>Log in to the portal to see the celebration and review the monitoring dashboard.</p>`,
+      ctaText: "View Go-Live",
+      ctaUrl: `${APP_URL}/dashboard/${basePath}/projects/${params.projectId}/go-live`,
+      ctaColor: "#10B981",
+    },
+    monitoring_active: {
+      subject: `Monitoring period active: ${params.projectName}`,
+      heading: "Post Go-Live Monitoring",
+      gradientColors: "#7C1CFF 0%, #6316CC 100%",
+      body: `<p>The 48-72 hour monitoring period for <strong>${params.projectName}</strong> is now active.</p>
+        <p>Our team is monitoring the integration closely. If you notice any issues, please raise a support ticket immediately.</p>`,
+      ctaText: "View Dashboard",
+      ctaUrl: `${APP_URL}/dashboard/${basePath}/projects/${params.projectId}/go-live`,
+      ctaColor: "#7C1CFF",
+    },
+  };
+
+  const config = eventConfig[params.event];
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: config.subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, ${config.gradientColors}); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">${config.heading}</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            ${config.body}
+            <p>
+              <a href="${config.ctaUrl}" style="display: inline-block; background: ${config.ctaColor}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">${config.ctaText}</a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+              If you have any questions, simply reply to this email or log in to the portal.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return { success: false, error: result.error.message || String(result.error) };
+    }
+
+    console.log(`Go-live email (${params.event}) sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending go-live email:", error);
+    return { success: false, error: String(error) };
+  }
+}

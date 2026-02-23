@@ -1,12 +1,13 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags } from "@/lib/db/schema";
+import { projects, clientFlags, goLiveChecklist, goLiveEvents } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
+import { ClientGoLiveContent } from "@/components/client-go-live-content";
 import { deriveStageStatus } from "@/lib/lifecycle";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +26,40 @@ export default async function ClientGoLivePage({ params }: { params: Promise<{ i
 
   const status = deriveStageStatus("go_live", project.currentStage);
 
-  const flags = await db
-    .select()
-    .from(clientFlags)
-    .where(and(eq(clientFlags.projectId, id), isNull(clientFlags.resolvedAt)));
+  const [flags, checklistRows, eventRows] = await Promise.all([
+    db
+      .select()
+      .from(clientFlags)
+      .where(and(eq(clientFlags.projectId, id), isNull(clientFlags.resolvedAt))),
+    db
+      .select()
+      .from(goLiveChecklist)
+      .where(eq(goLiveChecklist.projectId, id))
+      .limit(1),
+    db
+      .select()
+      .from(goLiveEvents)
+      .where(eq(goLiveEvents.projectId, id))
+      .limit(1),
+  ]);
+
+  const checklist = checklistRows[0] ?? null;
+  const goLiveEvent = eventRows[0] ?? null;
+
+  const serializedChecklist = checklist
+    ? {
+        ...checklist,
+        createdAt: checklist.createdAt.toISOString(),
+        updatedAt: checklist.updatedAt.toISOString(),
+      }
+    : null;
+
+  const serializedEvent = goLiveEvent
+    ? {
+        ...goLiveEvent,
+        celebratedAt: goLiveEvent.celebratedAt.toISOString(),
+      }
+    : null;
 
   return (
     <div className="min-h-full bg-[#F4F5F9] px-7 py-6 space-y-6">
@@ -47,11 +78,17 @@ export default async function ClientGoLivePage({ params }: { params: Promise<{ i
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 9</p>
-          <p className="text-xs text-violet-500 mt-1">Pre-go-live checklist, production switch, and celebration!</p>
+        <div className="space-y-8">
+          <ClientGoLiveContent
+            projectId={id}
+            projectName={project.name}
+            checklist={serializedChecklist}
+            goLiveEvent={serializedEvent}
+            currentUserId={user.id}
+            goLiveDate={project.goLiveDate?.toISOString() ?? null}
+          />
         </div>
-        {status !== "locked" && (
+        {status !== "locked" && !goLiveEvent && (
           <div className="flex justify-end pt-2">
             <ClientFlagButton projectId={id} />
           </div>
