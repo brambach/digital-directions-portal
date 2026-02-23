@@ -588,7 +588,15 @@ export const dataMappingConfigs = pgTable("data_mapping_configs", {
   projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
   payrollSystem: payrollSystemEnum("payroll_system").notNull().default("keypay"),
   status: stageStatusEnum("status").notNull().default("active"),
+  // JSON by category: {"leave_types": ["Annual Leave", ...], ...}
+  hibobValues: text("hibob_values"),
+  // JSON by category: {"leave_types": ["Annual Leave", "Personal/Carer's Leave", ...], ...}
+  payrollValues: text("payroll_values"),
+  // Admin review notes for request_changes flow
+  reviewNotes: text("review_notes"),
   submittedAt: timestamp("submitted_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
   exportedAt: timestamp("exported_at"),

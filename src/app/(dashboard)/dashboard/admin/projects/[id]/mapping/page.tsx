@@ -5,6 +5,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
+import { AdminMappingContent } from "@/components/admin-mapping-content";
 import { deriveStageStatus } from "@/lib/lifecycle";
 
 export const dynamic = "force-dynamic";
@@ -39,10 +40,7 @@ export default async function AdminMappingPage({ params }: { params: Promise<{ i
         projectId={id}
         backHref={`/dashboard/admin/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 6</p>
-          <p className="text-xs text-violet-500 mt-1">Visual data mapping tool, admin review, and CSV export for Workato.</p>
-        </div>
+        <AdminMappingContent projectId={id} projectName={project.name} />
       </StageCard>
     </div>
   );

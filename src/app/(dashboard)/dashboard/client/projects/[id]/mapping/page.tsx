@@ -5,6 +5,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { StageCard } from "@/components/stage-card";
+import { ClientMappingContent } from "@/components/client-mapping-content";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
 import { deriveStageStatus } from "@/lib/lifecycle";
@@ -47,10 +48,7 @@ export default async function ClientMappingPage({ params }: { params: Promise<{ 
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 6</p>
-          <p className="text-xs text-violet-500 mt-1">Visual data mapping tool — HiBob values on the left, payroll values on the right.</p>
-        </div>
+        <ClientMappingContent projectId={id} />
         {status !== "locked" && (
           <div className="flex justify-end pt-2">
             <ClientFlagButton projectId={id} />
