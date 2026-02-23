@@ -9,9 +9,16 @@ import { StageCard } from "@/components/stage-card";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { ClientFlagButton } from "@/components/client-flag-button";
 import { BuildSpecSignoffBanner } from "@/components/build-spec-signoff-banner";
-import { BuildSyncComponents, SYNC_COMPONENTS } from "@/components/build-sync-components";
+import { BuildSyncComponents } from "@/components/build-sync-components";
+import { Users, Calendar, FileText } from "lucide-react";
 import { deriveStageStatus } from "@/lib/lifecycle";
 import { Clock, ArrowRight } from "lucide-react";
+
+const UAT_SCENARIOS = [
+  { label: "Employee Upsert", icon: Users },
+  { label: "Leave Request Sync", icon: Calendar },
+  { label: "Pay Slip Upload", icon: FileText },
+];
 import { format, formatDistanceToNow } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -256,7 +263,7 @@ export default async function ClientBuildPage({
 
             {/* Scenario pills — mirror the three sync components using the same icons */}
             <div className="flex flex-wrap gap-2 pl-10">
-              {SYNC_COMPONENTS.map(({ label, icon: Icon }) => (
+              {UAT_SCENARIOS.map(({ label, icon: Icon }) => (
                 <span
                   key={label}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-violet-200 text-violet-700 shadow-sm"

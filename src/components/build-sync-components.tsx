@@ -19,7 +19,7 @@ interface BuildSyncComponentsProps {
   layout?: "grid" | "list";
 }
 
-export const SYNC_COMPONENTS: {
+const SYNC_COMPONENTS: {
   key: SyncComponentKey;
   label: string;
   description: string;
