@@ -1,18 +1,15 @@
 import { cn } from "@/lib/utils";
 
 // Variants map to actual filenames in /public/images/digi/
-// Note: digi_neutral.png is a duplicate — diji_neutral.png is the canonical file.
 const VARIANTS = {
-  neutral:      "/images/digi/diji_neutral.png",
-  peeking:      "/images/digi/diji_peeking.png",
-  construction: "/images/digi/diji_construction.png",
-  celebrating:  "/images/digi/diji_celebrating.png",
-  thinking:     "/images/digi/diji_thinking.png",
-  confused:     "/images/digi/diji_confused.png",
-  sleeping:     "/images/digi/diji_sleeping.png",
+  neutral:      "/images/digi/digi_neutral.png",
+  construction: "/images/digi/digi_construction.png",
+  celebrating:  "/images/digi/digi_celebrating.png",
+  confused:     "/images/digi/digi_confused.png",
+  sleeping:     "/images/digi/digi_sleeping.png",
 } as const;
 
-export type DijiVariant = keyof typeof VARIANTS;
+export type DigiVariant = keyof typeof VARIANTS;
 
 const SIZES = {
   xs:  { px: 48,  cls: "w-12"  },
@@ -22,24 +19,24 @@ const SIZES = {
   xl:  { px: 240, cls: "w-60"  },
 } as const;
 
-export type DijiSize = keyof typeof SIZES;
+export type DigiSize = keyof typeof SIZES;
 
-interface DijiMascotProps {
-  variant?: DijiVariant;
-  size?: DijiSize;
+interface DigiMascotProps {
+  variant?: DigiVariant;
+  size?: DigiSize;
   className?: string;
   alt?: string;
 }
 
-export function DijiMascot({
+export function DigiMascot({
   variant = "neutral",
   size = "md",
   className,
   alt,
-}: DijiMascotProps) {
+}: DigiMascotProps) {
   const src = VARIANTS[variant];
   const { px, cls } = SIZES[size];
-  const altText = alt ?? `Diji the bear — ${variant}`;
+  const altText = alt ?? `Digi the bear — ${variant}`;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element

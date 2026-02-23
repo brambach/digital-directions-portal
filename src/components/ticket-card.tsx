@@ -2,7 +2,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, User, Clock, AlertTriangle, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 
 interface TicketCardProps {
   ticket: {
@@ -115,7 +115,7 @@ export function TicketList({ tickets, basePath, showClient = true, emptyMessage 
   if (tickets.length === 0) {
     return (
       <div className="py-12 text-center bg-white border border-slate-100 rounded-2xl flex flex-col items-center">
-        <DijiMascot variant="neutral" size="sm" className="mb-3" />
+        <DigiMascot variant="neutral" size="sm" className="mb-3" />
         <p className="text-[13px] font-semibold text-slate-700">{emptyMessage}</p>
       </div>
     );

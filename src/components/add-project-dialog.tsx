@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { SelectPhaseTemplateDialog } from "@/components/select-phase-template-dialog";
 
 interface Client {
   id: string;
@@ -34,8 +33,6 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
-  const [phaseTemplateDialogOpen, setPhaseTemplateDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -73,10 +70,7 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
       });
       setOpen(false);
       toast.success("Project created successfully");
-
-      // Open phase template selector
-      setCreatedProjectId(data.id);
-      setPhaseTemplateDialogOpen(true);
+      router.refresh();
     } catch (error) {
       console.error("Error creating project:", error);
       toast.error("Failed to create project. Please try again.");
@@ -206,22 +200,6 @@ export function AddProjectDialog({ clients }: { clients: Client[] }) {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Phase Template Selection Dialog */}
-      {createdProjectId && (
-        <SelectPhaseTemplateDialog
-          projectId={createdProjectId}
-          open={phaseTemplateDialogOpen}
-          onOpenChange={(open) => {
-            setPhaseTemplateDialogOpen(open);
-            if (!open) {
-              // Refresh after closing phase template dialog
-              router.refresh();
-              setCreatedProjectId(null);
-            }
-          }}
-        />
-      )}
     </>
   );
 }

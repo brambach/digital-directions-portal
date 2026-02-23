@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { projects, clients } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 import {
   FolderOpen,
   Clock,
@@ -67,7 +67,7 @@ export default async function ClientProjectsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {clientProjects.length === 0 ? (
             <div className="col-span-full py-20 text-center bg-white border border-slate-100 rounded-2xl flex flex-col items-center justify-center">
-              <DijiMascot variant="neutral" size="sm" className="mb-4" />
+              <DigiMascot variant="neutral" size="sm" className="mb-4" />
               <h3 className="text-[13px] font-semibold text-slate-700">No active projects found</h3>
               <p className="text-[12px] text-slate-400 mt-1">Your projects will appear here once started</p>
             </div>

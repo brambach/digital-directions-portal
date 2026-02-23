@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { DijiMascot } from "@/components/diji-mascot";
+import { DigiMascot } from "@/components/digi-mascot";
 import {
   Check,
   ChevronRight,
@@ -16,7 +16,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import { stageLabel } from "@/lib/lifecycle";
+import { stageLabel, prevStage, stageSlug } from "@/lib/lifecycle";
 
 export type StageStatus = "locked" | "active" | "in_review" | "approved" | "complete";
 
@@ -116,8 +116,14 @@ export function StageCard({
         const data = await res.json();
         throw new Error(data.error || "Failed to lock stage");
       }
-      toast.success("Stage rolled back");
-      router.refresh();
+      const prev = prevStage(stage);
+      toast.success(prev ? `Rolled back to ${stageLabel(prev)}` : "Stage rolled back");
+      const slug = prev ? stageSlug(prev) : null;
+      if (slug) {
+        router.push(`${backHref}/${slug}`);
+      } else {
+        router.push(backHref);
+      }
       onLock?.();
     } catch (err: any) {
       toast.error(err.message);
@@ -143,7 +149,7 @@ export function StageCard({
       <div
         className={cn(
           "bg-white rounded-2xl border shadow-sm overflow-hidden",
-          status === "locked" ? "border-slate-200 opacity-75" : "border-slate-100"
+          status === "locked" ? "border-slate-200" : "border-slate-100"
         )}
       >
         {/* Header */}
@@ -198,9 +204,9 @@ export function StageCard({
         {/* Body */}
         <div className="p-6">
           {status === "locked" ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <DijiMascot variant="sleeping" size="sm" className="mb-4" />
-              <h3 className="text-base font-bold text-slate-600 mb-1">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <DigiMascot variant="sleeping" size="xl" className="mb-6" />
+              <h3 className="text-lg font-bold text-slate-600 mb-2">
                 Stage Locked
               </h3>
               <p className="text-sm text-slate-400 max-w-sm">

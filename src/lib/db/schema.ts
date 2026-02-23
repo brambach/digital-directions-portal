@@ -165,7 +165,7 @@ export const projects = pgTable(
     dueDate: timestamp("due_date"),
 
     // Lifecycle stage
-    currentStage: lifecycleStageEnum("current_stage").default("pre_sales").notNull(),
+    currentStage: lifecycleStageEnum("current_stage").default("discovery").notNull(),
 
     // Payroll system for this project
     payrollSystem: payrollSystemEnum("payroll_system"),
@@ -540,6 +540,8 @@ export const discoveryResponses = pgTable("discovery_responses", {
   templateId: uuid("template_id").references(() => discoveryTemplates.id, { onDelete: "restrict" }).notNull(),
   // JSON: { [questionId]: answer }
   responses: text("responses").notNull().default("{}"),
+  // JSON: project-specific copy of sections/questions (overrides template at start time)
+  sections: text("sections"),
   status: stageStatusEnum("status").notNull().default("active"),
   submittedAt: timestamp("submitted_at"),
   reviewedAt: timestamp("reviewed_at"),

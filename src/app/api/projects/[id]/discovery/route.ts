@@ -55,10 +55,18 @@ export async function GET(
       .where(eq(discoveryTemplates.id, response.templateId))
       .limit(1);
 
+    // Use project-specific sections if stored, otherwise fall back to template
+    const resolvedSections = response.sections
+      ? JSON.parse(response.sections)
+      : template
+        ? JSON.parse(template.sections || "[]")
+        : [];
+
     return NextResponse.json({
       response: {
         ...response,
         responses: JSON.parse(response.responses || "{}"),
+        sections: resolvedSections,
       },
       template: template
         ? { ...template, sections: JSON.parse(template.sections || "[]") }
@@ -82,7 +90,7 @@ export async function POST(
     await requireAdmin();
     const { id: projectId } = await params;
     const body = await request.json();
-    const { templateId } = body;
+    const { templateId, sections: customSections } = body;
 
     if (!templateId) {
       return NextResponse.json(
@@ -129,6 +137,11 @@ export async function POST(
       );
     }
 
+    // Resolve sections: use custom (edited) if provided, otherwise copy from template
+    const finalSections = customSections
+      ? JSON.stringify(customSections)
+      : template.sections;
+
     // Create discovery response
     const [response] = await db
       .insert(discoveryResponses)
@@ -136,6 +149,7 @@ export async function POST(
         projectId,
         templateId,
         responses: "{}",
+        sections: finalSections,
         status: "active",
       })
       .returning();

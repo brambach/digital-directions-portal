@@ -1,3 +1,4 @@
+import { DigiMascot } from "@/components/digi-mascot";
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { projects, clientFlags } from "@/lib/db/schema";
@@ -47,9 +48,14 @@ export default async function ClientBuildPage({ params }: { params: Promise<{ id
         projectId={id}
         backHref={`/dashboard/client/projects/${id}`}
       >
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-6 text-center">
-          <p className="text-sm font-semibold text-violet-700">Coming in Sprint 7</p>
-          <p className="text-xs text-violet-500 mt-1">Release notes, build progress, and build spec sign-off.</p>
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <DigiMascot variant="construction" className="w-48 md:w-64 mb-6" />
+          <h3 className="text-base font-bold text-slate-800 mb-2">
+            We&apos;re building your integration
+          </h3>
+          <p className="text-sm text-slate-500 max-w-sm">
+            Our team is hard at work. You&apos;ll receive updates here as each milestone is completed.
+          </p>
         </div>
         {status !== "locked" && (
           <div className="flex justify-end pt-2">
