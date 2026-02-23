@@ -45,25 +45,42 @@ const COMPONENTS: {
 
 const STATUS_CONFIG: Record<
   SyncComponentStatus,
-  { label: string; icon: React.ElementType; className: string; dotClass: string }
+  {
+    label: string;
+    icon: React.ElementType;
+    badgeClass: string;
+    barClass: string;
+    cardClass: string;
+    iconBgClass: string;
+    iconClass: string;
+  }
 > = {
   not_started: {
     label: "Not started",
     icon: Circle,
-    className: "text-slate-400 bg-slate-50 border-slate-200",
-    dotClass: "bg-slate-300",
+    badgeClass: "text-slate-400 bg-slate-50 border-slate-200",
+    barClass: "bg-slate-200",
+    cardClass: "border-slate-100 bg-white",
+    iconBgClass: "bg-slate-100",
+    iconClass: "text-slate-400",
   },
   in_progress: {
     label: "In progress",
     icon: Clock,
-    className: "text-amber-600 bg-amber-50 border-amber-200",
-    dotClass: "bg-amber-400",
+    badgeClass: "text-amber-600 bg-amber-50 border-amber-200",
+    barClass: "bg-amber-400 animate-pulse",
+    cardClass: "border-amber-100 bg-amber-50/20",
+    iconBgClass: "bg-amber-100",
+    iconClass: "text-amber-600",
   },
   built: {
     label: "Built",
     icon: CheckCircle2,
-    className: "text-emerald-600 bg-emerald-50 border-emerald-200",
-    dotClass: "bg-emerald-500",
+    badgeClass: "text-emerald-600 bg-emerald-50 border-emerald-200",
+    barClass: "bg-emerald-500",
+    cardClass: "border-emerald-100 bg-emerald-50/30",
+    iconBgClass: "bg-emerald-100",
+    iconClass: "text-emerald-600",
   },
 };
 
@@ -109,7 +126,7 @@ export function BuildSyncComponents({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {COMPONENTS.map(({ key, label, description, icon: Icon }) => {
         const status = statuses[key];
         const config = STATUS_CONFIG[status];
@@ -120,73 +137,53 @@ export function BuildSyncComponents({
           <div
             key={key}
             className={cn(
-              "flex items-center gap-4 bg-white rounded-2xl border p-4 transition-all",
-              status === "built"
-                ? "border-emerald-100 bg-emerald-50/30"
-                : status === "in_progress"
-                ? "border-amber-100 bg-amber-50/20"
-                : "border-slate-100",
-              isAdmin && "cursor-pointer hover:border-slate-300",
+              "relative rounded-xl border overflow-hidden transition-all duration-200",
+              config.cardClass,
+              isAdmin && "cursor-pointer hover:shadow-sm",
               isUpdating && "opacity-60"
             )}
             onClick={() => isAdmin && cycleStatus(key)}
             title={isAdmin ? "Click to advance status" : undefined}
           >
-            {/* Icon */}
+            {/* Left accent bar */}
             <div
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                status === "built"
-                  ? "bg-emerald-100"
-                  : status === "in_progress"
-                  ? "bg-amber-100"
-                  : "bg-slate-100"
+                "absolute left-0 top-0 bottom-0 w-[3px]",
+                config.barClass
               )}
-            >
-              <Icon
-                className={cn(
-                  "w-5 h-5",
-                  status === "built"
-                    ? "text-emerald-600"
-                    : status === "in_progress"
-                    ? "text-amber-600"
-                    : "text-slate-400"
-                )}
-              />
-            </div>
+            />
 
-            {/* Text */}
-            <div className="flex-1 min-w-0">
-              <p
+            <div className="flex items-center gap-3 px-4 py-3 pl-5">
+              {/* Icon */}
+              <div
                 className={cn(
-                  "text-sm font-semibold",
-                  status === "built" ? "text-emerald-800" : "text-slate-800"
+                  "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                  config.iconBgClass
                 )}
               >
-                {label}
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">{description}</p>
-            </div>
+                <Icon className={cn("w-4 h-4", config.iconClass)} />
+              </div>
 
-            {/* Status badge */}
-            <div
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0",
-                config.className
-              )}
-            >
-              <StatusIcon className="w-3 h-3" />
-              {config.label}
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 leading-tight">{label}</p>
+                <p className="text-xs text-slate-500 mt-0.5 leading-tight">{description}</p>
+              </div>
+
+              {/* Status badge */}
+              <div
+                className={cn(
+                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border flex-shrink-0",
+                  config.badgeClass
+                )}
+              >
+                <StatusIcon className="w-3 h-3" />
+                {config.label}
+              </div>
             </div>
           </div>
         );
       })}
-
-      {isAdmin && (
-        <p className="text-xs text-slate-400 text-center pt-1">
-          Click any component to advance its status
-        </p>
-      )}
     </div>
   );
 }
