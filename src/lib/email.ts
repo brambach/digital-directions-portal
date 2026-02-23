@@ -731,3 +731,245 @@ export async function sendBobConfigEmail(params: {
     return { success: false, error: String(error) };
   }
 }
+
+// Build Phase Completed Email (notifies clients when a build phase is marked complete)
+export async function sendPhaseCompletedEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+  phaseName: string;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: `Build Update: "${params.phaseName}" phase completed — ${params.projectName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #7C1CFF 0%, #6316CC 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Build Phase Completed</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            <p>Great news! The <strong>${params.phaseName}</strong> phase of your <strong>${params.projectName}</strong> integration build has been completed.</p>
+            <p>Log in to the portal to view the latest progress and any release notes from our team.</p>
+            <p>
+              <a href="${APP_URL}/dashboard/client/projects/${params.projectId}/build" style="display: inline-block; background: #7C1CFF; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">View Build Progress</a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+              If you have any questions, log in to the portal to send us a message.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return { success: false, error: result.error.message || String(result.error) };
+    }
+
+    console.log(`Phase completed email sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending phase completed email:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+// Build Release Note Email (notifies clients when a release note is published)
+export async function sendBuildReleaseNoteEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+  noteTitle: string;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: `New Update: ${params.noteTitle} — ${params.projectName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #7C1CFF 0%, #6316CC 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">New Release Note</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            <p>The Digital Directions team has published a new update for your <strong>${params.projectName}</strong> integration:</p>
+            <div style="background: white; border-left: 4px solid #7C1CFF; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0;">
+              <p style="margin: 0; font-weight: 600; color: #1e1e2e;">${params.noteTitle}</p>
+            </div>
+            <p>
+              <a href="${APP_URL}/dashboard/client/projects/${params.projectId}/build" style="display: inline-block; background: #7C1CFF; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">Read Full Update</a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+              Log in to the portal to read the full release note and track build progress.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return { success: false, error: result.error.message || String(result.error) };
+    }
+
+    console.log(`Release note email sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending release note email:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+// Build Spec Published Email (notifies clients the build spec is ready to sign)
+export async function sendBuildSpecPublishedEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: `Action Required: Build Spec ready for sign-off — ${params.projectName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #7C1CFF 0%, #6316CC 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Build Spec Ready</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            <p>Your <strong>${params.projectName}</strong> integration build is complete! The Digital Directions team has prepared a Build Specification document for your review.</p>
+            <p>Please review the spec and provide your sign-off to proceed to User Acceptance Testing (UAT).</p>
+            <p>
+              <a href="${APP_URL}/dashboard/client/projects/${params.projectId}/build" style="display: inline-block; background: #7C1CFF; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">Review &amp; Sign Off</a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+              This sign-off is required to proceed to the UAT stage.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return { success: false, error: result.error.message || String(result.error) };
+    }
+
+    console.log(`Build spec published email sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending build spec published email:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+// Build Spec Signed Email (notifies DD admins when client signs the build spec)
+export async function sendBuildSpecSignedEmail(params: {
+  to: string;
+  recipientName: string;
+  projectName: string;
+  projectId: string;
+  clientName: string;
+}): Promise<EmailResult> {
+  if (!resend) {
+    console.log("Resend not configured, skipping email");
+    return { success: false, error: "Email not configured" };
+  }
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.to,
+      subject: `Build Spec signed: ${params.projectName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Build Spec Signed Off</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="margin-top: 0;">Hi ${params.recipientName},</p>
+            <p><strong>${params.clientName}</strong> has signed off on the Build Specification for <strong>${params.projectName}</strong>.</p>
+            <p>You can now advance the project to the UAT stage.</p>
+            <p>
+              <a href="${APP_URL}/dashboard/admin/projects/${params.projectId}/build" style="display: inline-block; background: #10B981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">View Project</a>
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
+            Digital Directions &bull; HR Consulting &amp; Implementation
+          </p>
+        </body>
+        </html>
+      `,
+    });
+
+    if (result.error) {
+      console.error("Resend API error:", result.error);
+      return { success: false, error: result.error.message || String(result.error) };
+    }
+
+    console.log(`Build spec signed email sent to ${params.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending build spec signed email:", error);
+    return { success: false, error: String(error) };
+  }
+}
