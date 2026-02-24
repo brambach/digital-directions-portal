@@ -88,7 +88,7 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      className="flex-1 overflow-y-auto no-scrollbar px-4 py-3 space-y-3"
       role="log"
       aria-live="polite"
     >
