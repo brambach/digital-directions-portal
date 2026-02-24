@@ -2,12 +2,17 @@
 
 import { ClientSidebar } from "./client-sidebar";
 import { ClientHeader } from "./client-header";
+import { DigiChat } from "@/components/digi-chat/digi-chat";
 
 interface ClientShellProps {
     children: React.ReactNode;
+    chatProps?: {
+        clientId: string;
+        projects: Array<{ id: string; name: string }>;
+    };
 }
 
-export default function ClientShell({ children }: ClientShellProps) {
+export default function ClientShell({ children, chatProps }: ClientShellProps) {
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[#F4F5F9]">
             {/* Sidebar */}
@@ -20,6 +25,14 @@ export default function ClientShell({ children }: ClientShellProps) {
                 <ClientHeader />
                 {children}
             </main>
+
+            {/* Digi AI Chat */}
+            {chatProps && (
+                <DigiChat
+                    clientId={chatProps.clientId}
+                    projects={chatProps.projects}
+                />
+            )}
         </div>
     );
 }

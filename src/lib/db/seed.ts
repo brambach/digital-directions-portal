@@ -23,6 +23,7 @@ import {
   provisioningSteps,
   bobConfigChecklist,
   uatTemplates,
+  helpArticles,
 } from "./schema";
 
 const db = drizzle(sql);
@@ -860,6 +861,240 @@ async function seed() {
 
     console.log(`✓ Created KeyPay UAT template: ${keypayUatTemplate.name} (${keypayUatScenarios.length} scenarios)`);
 
+    // ── Help Articles (Digi AI Knowledge Base) ──────────────────────────
+    const helpArticlesData = [
+      {
+        title: "Getting Started with the DD Portal",
+        slug: "getting-started",
+        content: `Welcome to the Digital Directions Portal! This is your central hub for managing your HiBob integration project.
+
+After logging in, you'll see your dashboard with an overview of your active projects, recent activity, and any outstanding items that need your attention.
+
+Use the sidebar to navigate between sections:
+- **Dashboard** — Your project overview and key metrics
+- **Projects** — View detailed progress on each integration project
+- **Tickets** — Submit and track support requests
+- **Messages** — Communicate with the Digital Directions team
+
+Each project page shows your current lifecycle stage, uploaded files, messages, and integration health status. You can track exactly where your project is at any time.`,
+        category: "portal",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Understanding Your Project Dashboard",
+        slug: "project-dashboard",
+        content: `Your project dashboard provides a real-time view of your HiBob integration progress.
+
+At the top of each project page, you'll see the **lifecycle stage indicator** showing which of the 9 stages your project is currently in. Completed stages are marked with a tick, and your current stage is highlighted.
+
+Key sections on your project page:
+- **Project Details** — Your project name, payroll system, start date, and due date
+- **Files** — Documents shared between your team and Digital Directions
+- **Messages** — Direct communication channel with the DD team
+- **Integration Health** — Live status of connected services (HiBob, payroll, Workato)
+
+If you see any flags or action items, these indicate something needs your attention — such as completing a questionnaire or reviewing a data mapping.`,
+        category: "portal",
+        publishedAt: new Date(),
+      },
+      {
+        title: "How to Submit a Support Ticket",
+        slug: "submit-support-ticket",
+        content: `If you need help or have an issue, you can submit a support ticket directly from the portal.
+
+To create a ticket:
+1. Navigate to the **Tickets** page from the sidebar
+2. Click the **New Ticket** button
+3. Fill in a clear title and detailed description of your issue
+4. Select the ticket type (General Support, Project Issue, Feature Request, or Bug Report)
+5. Choose a priority level based on urgency
+6. Optionally link the ticket to a specific project
+7. Click **Create Ticket**
+
+Our team will be notified immediately and will respond as soon as possible. You can track the status of your tickets on the Tickets page — they'll show as Open, In Progress, Waiting on Client, or Resolved.
+
+You'll receive notifications when there are updates to your tickets.`,
+        category: "portal",
+        publishedAt: new Date(),
+      },
+      {
+        title: "The 9 Stages of Your Integration Project",
+        slug: "nine-integration-stages",
+        content: `Every HiBob integration project at Digital Directions follows a proven 9-stage lifecycle:
+
+1. **Pre-Sales** — We scope out your requirements and prepare a proposal.
+2. **Discovery** — You complete a questionnaire about your organisation, payroll setup, and integration needs.
+3. **System Provisioning** — You grant our team access to HiBob, your payroll system, and Workato.
+4. **HiBob Configuration** — You confirm your HiBob setup (departments, leave types, employee fields) is ready for integration.
+5. **Data Mapping** — You map your HiBob values to the corresponding payroll system values (leave types, locations, pay categories).
+6. **Integration Build** — Our team builds and configures the Workato recipes that sync your data.
+7. **User Acceptance Testing (UAT)** — You test the integration with real data and confirm everything works correctly.
+8. **Go-Live** — We switch the integration to production. Your data starts syncing automatically.
+9. **Ongoing Support** — We monitor and maintain your integration with a support package.
+
+Your current stage is always visible on your project dashboard. Each stage has specific tasks and milestones — the portal will guide you through what to do at each step.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Completing the Discovery Questionnaire",
+        slug: "discovery-questionnaire",
+        content: `The Discovery stage is one of the most important steps in your integration project. This is where we learn about your organisation's specific setup and requirements.
+
+During Discovery, you'll receive a questionnaire covering:
+- **Company details** — Your organisational structure, locations, and departments
+- **Payroll setup** — How your payroll system is configured, pay frequencies, and special requirements
+- **Employee data** — Which fields you need synced between HiBob and payroll
+- **Leave management** — Your leave types, approval workflows, and any custom leave policies
+- **Banking and superannuation** — How employee payment details should be mapped
+
+Tips for completing the questionnaire:
+- Answer as thoroughly as possible — the more detail you provide, the smoother the build phase will be
+- If you're unsure about a question, make a note and our team will help clarify
+- You can save your progress and come back later
+- Once submitted, our team will review your responses and may follow up with questions
+
+After your responses are approved, we'll move to System Provisioning.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "What Happens During UAT",
+        slug: "uat-testing",
+        content: `User Acceptance Testing (UAT) is your chance to verify that the integration works correctly before going live.
+
+During UAT, you'll test scenarios such as:
+- **Employee sync** — Create or update an employee in HiBob and verify the data appears correctly in your payroll system
+- **Leave requests** — Submit leave in HiBob and confirm it syncs to payroll
+- **Banking details** — Update bank account information and verify it flows through
+- **Payroll processing** — Run a test payroll cycle to check everything calculates correctly
+
+How to complete UAT:
+1. We'll provide you with a set of test scenarios in the portal
+2. Follow each scenario step by step
+3. Mark each test as passed or failed
+4. If a test fails, add notes describing what went wrong
+5. Our team will investigate and fix any issues
+6. Re-test failed scenarios after fixes are applied
+
+UAT typically takes 1-2 weeks depending on the complexity of your integration. We recommend testing with real employee data (in a sandbox environment) for the most accurate results.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "How HiBob Connects to Your Payroll System",
+        slug: "hibob-payroll-connection",
+        content: `Digital Directions uses Workato, an enterprise integration platform, to connect HiBob with your payroll system. Here's a simplified overview of how it works.
+
+**What gets synced:**
+- **Employee data** — New hires, updates to personal details, terminations
+- **Leave requests** — Approved leave from HiBob flows to payroll automatically
+- **Banking details** — Employee bank account information for payroll processing
+- **Superannuation** — Super fund details and contribution settings
+
+**How the sync works:**
+1. When a change is made in HiBob (e.g., a new employee is added), a webhook notification is sent
+2. Workato picks up the notification and processes the change
+3. The data is mapped from HiBob's format to your payroll system's format
+4. The payroll system is updated automatically
+
+**Sync frequency:**
+- Employee changes sync in near real-time during business hours
+- Bulk operations (like initial employee loads) are processed in scheduled batches
+- Leave requests sync as they're approved in HiBob
+
+**Important notes:**
+- The integration is one-directional: HiBob → Payroll (not the other way around)
+- HiBob remains your source of truth for employee data
+- Changes made directly in the payroll system may be overwritten on the next sync`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Common Integration Questions",
+        slug: "integration-faq",
+        content: `Here are answers to frequently asked questions about your HiBob integration:
+
+**How long does the project take?**
+A typical integration takes 4-8 weeks from Discovery to Go-Live, depending on complexity. Multi-country or multi-payroll setups may take longer.
+
+**What if my data changes during the build?**
+That's completely normal. Changes in HiBob during the build phase won't affect the integration — we'll do a full data sync before Go-Live.
+
+**Can I add more fields later?**
+Yes. After Go-Live, additional fields or features can be added as part of your support package or as a separate project.
+
+**What happens if the sync fails?**
+Workato includes error handling and retry logic. If a sync fails, our team is notified and will investigate. The portal's integration health dashboard shows you the current status at all times.
+
+**Do I need to do anything after Go-Live?**
+Day-to-day, the integration runs automatically. You should continue managing employees in HiBob as normal. If you notice any sync issues, raise a support ticket.
+
+**Is my data secure?**
+Yes. All data is encrypted in transit and at rest. Workato is SOC 2 Type II certified, and we follow strict data handling practices.`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Understanding Integration Health Monitoring",
+        slug: "integration-health",
+        content: `The Integration Health section on your project page shows the real-time status of all services connected to your integration.
+
+**Status indicators:**
+- **Healthy** (green) — All services are operating normally
+- **Degraded** (amber) — A service is experiencing minor issues but is still functional
+- **Down** (red) — A service is experiencing a significant outage
+- **Unknown** (grey) — Unable to determine the status
+
+**What's monitored:**
+- **HiBob** — The HR platform where your employee data lives
+- **Payroll system** — Your payroll provider (KeyPay, MYOB, etc.)
+- **Workato** — The integration platform that connects the two
+
+**What to do if you see an issue:**
+- **Degraded status**: Usually temporary. Monitor for resolution — most degrade issues resolve within an hour.
+- **Down status**: Our team is automatically notified. If it affects your payroll processing, raise an urgent support ticket.
+- **Unknown status**: This usually means a health check couldn't complete. It doesn't necessarily mean there's a problem.
+
+Health checks run every 5 minutes, so the dashboard always shows current information.`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "When to Contact Digital Directions",
+        slug: "when-to-contact",
+        content: `Digital Directions is here to help throughout your integration journey. Here's a guide on the best way to get support:
+
+**Use Digi (this chat) for:**
+- Quick questions about the portal or your project
+- Understanding what stage your project is in
+- General information about how HiBob integrations work
+- Finding the right knowledge base article
+
+**Submit a support ticket for:**
+- Technical issues with your integration (sync failures, data mismatches)
+- Requesting changes to your integration configuration
+- Reporting bugs or unexpected behaviour
+- Feature requests or enhancement ideas
+
+**Reach out directly for:**
+- Urgent production issues affecting payroll processing
+- Questions about your contract or support package
+- Escalations that need immediate attention
+
+**Tips for faster resolution:**
+- Include specific details (employee IDs, dates, error messages) in your ticket
+- Attach screenshots if relevant
+- Indicate the business impact and urgency
+- For payroll-critical issues, always mark as "Urgent" priority`,
+        category: "support",
+        publishedAt: new Date(),
+      },
+    ];
+
+    await db.insert(helpArticles).values(helpArticlesData);
+    console.log(`✓ Created ${helpArticlesData.length} help articles for Digi knowledge base`);
+
     console.log("");
     console.log("✅ Seed completed successfully!");
     console.log("");
@@ -877,6 +1112,7 @@ async function seed() {
     console.log(`  - Provisioning steps (verified for TechCorp, partial for Meridian)`);
     console.log(`  - 1 Bob Config checklist (approved, TechCorp)`);
     console.log(`  - 1 KeyPay UAT template (3 scenarios)`);
+    console.log(`  - ${helpArticlesData.length} help articles (Digi knowledge base)`);
 
     console.log("");
     console.log("🎉 Dashboards are now ready with realistic data!");

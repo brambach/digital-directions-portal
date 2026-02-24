@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -60,6 +60,27 @@ export function CreateTicketDialog({
     projectId: defaultProjectId || "",
     clientId: defaultClientId || "",
   });
+
+  // Check for Digi chat escalation data
+  useEffect(() => {
+    const stored = sessionStorage.getItem("digi_escalation");
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || prev.title,
+          description: data.description || prev.description,
+          projectId: data.projectId || prev.projectId,
+          type: "general_support",
+        }));
+        setOpen(true);
+        sessionStorage.removeItem("digi_escalation");
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
