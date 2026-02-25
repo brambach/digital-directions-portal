@@ -18,27 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+    <html lang="en">
       <body className={cn(geist.className, "antialiased")}>
         <ClerkProvider
           appearance={{
             baseTheme: undefined,
             variables: {
-              colorPrimary: "#7C3AED",
-              colorBackground: "#151921",
-              colorText: "white",
-              colorTextSecondary: "#94a3b8",
-              colorInputBackground: "#0B0E14",
-              colorInputText: "white",
+              colorPrimary: "#7C1CFF",
               borderRadius: "0.75rem",
             },
             elements: {
-              card: "shadow-none border border-white/10",
-              headerTitle: "text-white",
-              headerSubtitle: "text-slate-400",
-              formButtonPrimary: "bg-purple-600 hover:bg-purple-700 text-sm font-semibold transition-all duration-200",
-              formFieldInput: "border-white/10 bg-slate-950 text-white focus:border-purple-600 focus:ring-purple-600/10",
-              footerActionLink: "text-purple-400 hover:text-purple-500",
+              formButtonPrimary: "bg-[#7C1CFF] hover:bg-[#6B0FEE] text-sm font-semibold transition-all duration-200",
+              footerActionLink: "text-[#7C1CFF] hover:text-[#6B0FEE]",
             },
           }}
         >
