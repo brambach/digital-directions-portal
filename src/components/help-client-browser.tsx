@@ -14,7 +14,7 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
 import { LoomEmbed } from "@/components/loom-embed";
 
 interface Article {
@@ -237,7 +237,7 @@ export function HelpClientBrowser() {
       {/* Search Header */}
       <div className="bg-white rounded-2xl border border-slate-100 p-8">
         <div className="flex items-center gap-4">
-          <DigiMascot variant="neutral" size="sm" />
+          <DigiFloat variant="neutral" size="sm" />
           <div className="flex-1">
             <h2 className="text-[17px] font-bold text-slate-800 mb-1">
               How can we help?
@@ -296,7 +296,7 @@ export function HelpClientBrowser() {
         </div>
       ) : articles.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <DigiMascot variant="confused" size="sm" className="mx-auto mb-4" />
+          <DigiFloat variant="confused" size="sm" className="mx-auto mb-4" />
           <p className="text-[15px] font-semibold text-slate-700">No articles found</p>
           <p className="text-[13px] text-slate-400 mt-1">
             {search

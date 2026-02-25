@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
 import { Badge } from "@/components/ui/badge";
 
 const CreateTicketDialog = dynamicImport(
@@ -270,7 +270,7 @@ export default async function AdminTicketsPage() {
           <Card className="rounded-2xl border-slate-100 overflow-hidden">
             {standardTickets.length === 0 ? (
               <div className="py-14 text-center flex flex-col items-center">
-                <DigiMascot variant="celebrating" size="sm" className="mb-3" />
+                <DigiFloat variant="celebrating" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">Queue Clear</p>
                 <p className="text-[12px] text-slate-400 mt-1">No standard priority tickets pending.</p>
               </div>

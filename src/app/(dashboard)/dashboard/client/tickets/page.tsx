@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth";
 import { Mail } from "lucide-react";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OpenDigiButton } from "@/components/open-digi-button";
@@ -26,7 +26,7 @@ export default async function ClientTicketsPage() {
         <Card className="rounded-2xl border-slate-100 overflow-hidden bg-gradient-to-br from-white via-white to-violet-50/40">
           <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div className="flex-shrink-0">
-              <DigiMascot variant="neutral" size="sm" />
+              <DigiFloat variant="neutral" size="sm" />
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="text-lg font-bold text-slate-900 mb-1">Need help? Ask Digi first</h2>

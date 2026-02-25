@@ -17,7 +17,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn, formatMinutesToHours } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
 
 export const dynamic = "force-dynamic";
 
@@ -213,7 +213,7 @@ export default async function ClientDashboard() {
 
             {clientProjects.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <DigiMascot variant="neutral" size="sm" className="mb-3" />
+                <DigiFloat variant="neutral" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">No projects yet</p>
                 <p className="text-[12px] text-slate-400 mt-1">Your projects will appear here once started</p>
               </div>
@@ -268,7 +268,7 @@ export default async function ClientDashboard() {
 
               {pendingTickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <DigiMascot variant="celebrating" size="sm" className="mb-3" />
+                  <DigiFloat variant="celebrating" size="sm" className="mb-3" />
                   <p className="text-[13px] font-semibold text-slate-700">All caught up!</p>
                   <p className="text-[12px] text-slate-400 mt-1">No tickets need your attention</p>
                 </div>
