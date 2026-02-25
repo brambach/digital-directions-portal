@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Plus, LogOut } from "lucide-react";
+import { Plus, LogOut } from "lucide-react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
+import { GlobalSearch } from "@/components/global-search";
 
 export function AdminHeader() {
     const { user } = useUser();
@@ -30,14 +31,7 @@ export function AdminHeader() {
         <header className="h-[60px] flex items-center justify-between px-6 border-b border-slate-100 bg-white z-30 flex-shrink-0 sticky top-0">
             {/* Left: Search */}
             <div className="flex items-center gap-3 flex-1 max-w-sm">
-                <div className="relative group w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search clients, projects, tickets…"
-                        className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-violet-300 focus:ring-2 focus:ring-violet-100 rounded-lg text-[13px] text-slate-700 placeholder:text-slate-400 outline-none transition-all"
-                    />
-                </div>
+                <GlobalSearch role="admin" />
             </div>
 
             {/* Right Tools */}

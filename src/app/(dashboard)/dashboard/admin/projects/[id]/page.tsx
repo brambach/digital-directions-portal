@@ -1,10 +1,10 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clients, integrationMonitors, messages, clientFlags } from "@/lib/db/schema";
+import { projects, clients, integrationMonitors, clientFlags } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, MessageSquare, Link as LinkIcon, User, Activity, CheckCircle, AlertCircle, Layout, Pencil, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Link as LinkIcon, User, Activity, CheckCircle, AlertCircle, Layout, Pencil, RefreshCw } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
@@ -60,12 +60,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
     .from(integrationMonitors)
     .where(and(eq(integrationMonitors.projectId, id), isNull(integrationMonitors.deletedAt)))
     .orderBy(desc(integrationMonitors.createdAt));
-
-  const messagesCount = await db
-    .select({ id: messages.id })
-    .from(messages)
-    .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
-    .then((rows) => rows.length);
 
   const unresolvedFlags = await db
     .select()
@@ -161,17 +155,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
               {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d remaining`}
             </p>
           )}
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-violet-600" />
-            </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Messages</p>
-          </div>
-          <p className="text-lg font-bold text-slate-900">{messagesCount}</p>
-          <p className="text-xs text-slate-400 mt-1">Communications</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">

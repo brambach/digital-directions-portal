@@ -23,6 +23,7 @@ import {
   provisioningSteps,
   bobConfigChecklist,
   uatTemplates,
+  uatResults,
   helpArticles,
 } from "./schema";
 
@@ -44,6 +45,7 @@ async function seed() {
   try {
     // Clear existing data (in reverse order of dependencies)
     console.log("Clearing existing data...");
+    await db.delete(uatResults);
     await db.delete(uatTemplates);
     await db.delete(discoveryResponses);
     await db.delete(discoveryTemplates);
@@ -63,6 +65,7 @@ async function seed() {
     await db.delete(agencies);
     await db.delete(templatePhases);
     await db.delete(phaseTemplates);
+    await db.delete(helpArticles);
 
     console.log("✓ Cleared existing data");
 
@@ -873,7 +876,7 @@ After logging in, you'll see your dashboard with an overview of your active proj
 Use the sidebar to navigate between sections:
 - **Dashboard** — Your project overview and key metrics
 - **Projects** — View detailed progress on each integration project
-- **Tickets** — Submit and track support requests
+- **Support** — Contact the Digital Directions team for help
 - **Messages** — Communicate with the Digital Directions team
 
 Each project page shows your current lifecycle stage, uploaded files, messages, and integration health status. You can track exactly where your project is at any time.`,
@@ -898,22 +901,21 @@ If you see any flags or action items, these indicate something needs your attent
         publishedAt: new Date(),
       },
       {
-        title: "How to Submit a Support Ticket",
-        slug: "submit-support-ticket",
-        content: `If you need help or have an issue, you can submit a support ticket directly from the portal.
+        title: "How to Get Support",
+        slug: "getting-support",
+        content: `If you need help or have an issue, the Digital Directions team is here for you.
 
-To create a ticket:
-1. Navigate to the **Tickets** page from the sidebar
-2. Click the **New Ticket** button
-3. Fill in a clear title and detailed description of your issue
-4. Select the ticket type (General Support, Project Issue, Feature Request, or Bug Report)
-5. Choose a priority level based on urgency
-6. Optionally link the ticket to a specific project
-7. Click **Create Ticket**
+**Chat with Digi first**
+Digi is our AI assistant available from the chat bubble in the bottom-right corner. Digi can answer most questions instantly — from project status to integration help. Start here for the fastest response.
 
-Our team will be notified immediately and will respond as soon as possible. You can track the status of your tickets on the Tickets page — they'll show as Open, In Progress, Waiting on Client, or Resolved.
+**Email the support team**
+For issues Digi can't resolve, email us directly at support@digitaldirections-help.freshdesk.com. We respond within 4 business hours.
 
-You'll receive notifications when there are updates to your tickets.`,
+**Tips for faster resolution:**
+- Include specific details (employee names, dates, error messages)
+- Attach screenshots if relevant
+- Describe the business impact so we can prioritise appropriately
+- For urgent payroll-critical issues, mention that clearly in your email subject line`,
         category: "portal",
         publishedAt: new Date(),
       },
@@ -1028,7 +1030,7 @@ Yes. After Go-Live, additional fields or features can be added as part of your s
 Workato includes error handling and retry logic. If a sync fails, our team is notified and will investigate. The portal's integration health dashboard shows you the current status at all times.
 
 **Do I need to do anything after Go-Live?**
-Day-to-day, the integration runs automatically. You should continue managing employees in HiBob as normal. If you notice any sync issues, raise a support ticket.
+Day-to-day, the integration runs automatically. You should continue managing employees in HiBob as normal. If you notice any sync issues, email our support team at support@digitaldirections-help.freshdesk.com.
 
 **Is my data secure?**
 Yes. All data is encrypted in transit and at rest. Workato is SOC 2 Type II certified, and we follow strict data handling practices.`,
@@ -1053,7 +1055,7 @@ Yes. All data is encrypted in transit and at rest. Workato is SOC 2 Type II cert
 
 **What to do if you see an issue:**
 - **Degraded status**: Usually temporary. Monitor for resolution — most degrade issues resolve within an hour.
-- **Down status**: Our team is automatically notified. If it affects your payroll processing, raise an urgent support ticket.
+- **Down status**: Our team is automatically notified. If it affects your payroll processing, email support@digitaldirections-help.freshdesk.com immediately.
 - **Unknown status**: This usually means a health check couldn't complete. It doesn't necessarily mean there's a problem.
 
 Health checks run every 5 minutes, so the dashboard always shows current information.`,
@@ -1071,23 +1073,280 @@ Health checks run every 5 minutes, so the dashboard always shows current informa
 - General information about how HiBob integrations work
 - Finding the right knowledge base article
 
-**Submit a support ticket for:**
+**Email support@digitaldirections-help.freshdesk.com for:**
 - Technical issues with your integration (sync failures, data mismatches)
 - Requesting changes to your integration configuration
 - Reporting bugs or unexpected behaviour
 - Feature requests or enhancement ideas
-
-**Reach out directly for:**
 - Urgent production issues affecting payroll processing
 - Questions about your contract or support package
-- Escalations that need immediate attention
+
+We respond within 4 business hours. For urgent payroll-critical issues, say so clearly in your email subject line.
 
 **Tips for faster resolution:**
-- Include specific details (employee IDs, dates, error messages) in your ticket
+- Include specific details (employee IDs, dates, error messages)
 - Attach screenshots if relevant
-- Indicate the business impact and urgency
-- For payroll-critical issues, always mark as "Urgent" priority`,
+- Describe the business impact so we can prioritise appropriately`,
         category: "support",
+        publishedAt: new Date(),
+      },
+      {
+        title: "What Is Data Mapping and Why Does It Matter?",
+        slug: "data-mapping-explained",
+        content: `Data mapping is the process of telling the integration how values in HiBob correspond to values in your payroll system. It's one of the most important steps in the project — getting it right means your payroll runs cleanly from day one.
+
+## What gets mapped?
+
+The most common mapping tables are:
+
+- **Leave types** — e.g. HiBob's "Annual Leave" maps to KeyPay's "Annual Leave (Full Time)"
+- **Locations** — e.g. HiBob's "Sydney Office" maps to a payroll work location or branch
+- **Pay categories** — how different types of pay are classified in your payroll system
+- **Employee records** — linking each HiBob employee to their corresponding payroll employee ID
+
+> note: The mapping step happens in the portal. You'll be invited to review and confirm the mappings before they go live.
+
+## Why does it matter?
+
+If a value in HiBob doesn't have a matching entry in the mapping table, the sync will either fail or skip that record. This is the most common reason employees don't sync correctly after go-live.
+
+## Common mistakes to avoid
+
+- **Typos or name mismatches** — "Annual Leave" vs "Annual leave" (capital L) are treated as different values
+- **Unmapped new values** — if you later add a new leave type or location in HiBob, it won't sync until it's added to the mapping table
+- **Deleted payroll values** — if a pay category is removed from your payroll system but still referenced in HiBob, syncs for that value will fail
+
+> tip: When you complete the mapping stage in the portal, review every row carefully. If you're unsure what a payroll value means, ask the team before submitting.
+
+## After go-live
+
+Mapping tables are maintained as a living document. If your organisation changes — new locations, new leave types, restructured departments — the mapping tables need to be updated too. This is typically handled as part of your ongoing support.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "What to Expect on Go-Live Day",
+        slug: "go-live-day",
+        content: `Go-live is the moment your integration switches from testing mode to production — real employee data starts flowing from HiBob to your payroll system automatically.
+
+## What happens on go-live day
+
+1. **The team activates your Workato recipes** — the integration recipes are switched from stopped to running in production
+2. **An initial data load runs** — all active employees are synced across to make sure payroll starts with a clean, up-to-date dataset
+3. **Webhooks go live** — from this point, changes in HiBob (new starters, updates, leave requests) will automatically flow through to payroll
+4. **You confirm everything looks correct** — we ask you to spot-check a handful of employee records in your payroll system
+
+> note: Go-live is coordinated with your team in advance. We'll confirm the date and time together so it doesn't clash with payroll processing.
+
+## What to check after go-live
+
+- **Employee records** — do headcounts match between HiBob and payroll?
+- **Leave balances** — are they showing correctly?
+- **Bank account details** — spot-check a few employees
+- **Any employees flagged during UAT** — confirm their records look right
+
+> warning: Don't make bulk changes in payroll directly after go-live. Let the integration settle for a day or two, then verify the data is clean before making any manual adjustments.
+
+## Your first payroll run
+
+Your first live payroll run after go-live is important. Run it as normal, but keep an eye out for anything unexpected. If something looks off, email the support team straight away — don't process until you're comfortable.
+
+## What if something goes wrong?
+
+That's what the team is here for. Email support@digitaldirections-help.freshdesk.com immediately. We monitor go-live days closely and can respond quickly.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "System Provisioning — Access We Need and Why",
+        slug: "system-provisioning",
+        content: `System Provisioning is the stage where you grant the Digital Directions team access to the systems needed to build your integration. Nothing gets built until we have the right access in place.
+
+## What access do we need?
+
+### HiBob
+We need access to your HiBob instance to understand your data structure, field configurations, and to set up the webhook connection. Specifically:
+- An API service user with read access to employee data
+- Access to review your leave types, departments, locations, and custom fields
+
+### Your payroll system
+We need access to read your payroll configuration and create/update employee records. The exact access level depends on your payroll system, but typically:
+- An admin or integration user account
+- API credentials (usually an API key or OAuth token)
+
+### Workato
+We manage the Workato environment on your behalf. You'll receive a shared connection so you can view recipe status and integration health in the portal.
+
+> note: All credentials are stored securely and encrypted. We only request the minimum access needed to build and maintain your integration.
+
+## Why does this take time?
+
+Provisioning often gets delayed because:
+- IT teams need to approve access requests
+- API credentials need to be generated by a system admin
+- MFA or IP whitelisting needs to be configured
+
+> tip: As soon as you reach this stage, loop in your IT team or system administrator. The faster access is provisioned, the sooner the build can begin.
+
+## What if I'm not sure what access to grant?
+
+The portal's Provisioning stage lists each access requirement with instructions. If you're unsure about anything, email the support team and we'll walk you through it.`,
+        category: "lifecycle",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Why Didn't My Employee Sync?",
+        slug: "employee-not-syncing",
+        content: `If an employee isn't appearing in your payroll system after a change in HiBob, there are a few common reasons. Work through these before contacting support.
+
+## 1. Required fields are missing in HiBob
+
+The integration requires certain fields to be populated before an employee can sync. Common required fields include:
+- Employment type
+- Start date
+- Location
+- Pay rate or salary
+- Tax file number (for new starters)
+
+If any of these are missing or incomplete in HiBob, the sync will be skipped.
+
+> tip: Check the employee's HiBob profile and make sure all fields are filled in completely before expecting a sync.
+
+## 2. The employee's status in HiBob
+
+Only employees in an **active** or **onboarding** status will sync. Employees in draft or inactive status are intentionally excluded.
+
+## 3. The value isn't mapped
+
+If the employee has a leave type, location, or pay category that isn't in your mapping table, the integration won't know how to translate it — and will skip the record or log an error.
+
+Check that all the employee's values exist in the mapping tables. See **What Is Data Mapping and Why Does It Matter?** for more detail.
+
+## 4. The webhook queue hasn't processed yet
+
+Changes don't happen instantly. HiBob sends a notification (webhook) when something changes, and the integration processes these in batches on a regular schedule. Depending on when the change was made, it may take a few minutes to process.
+
+> note: If it's been more than 15 minutes and the employee still hasn't synced, it's likely not a timing issue.
+
+## 5. The employee already exists in payroll with a conflict
+
+If there's already an employee record in payroll with the same details, the integration may be unable to create a duplicate. This sometimes happens during the transition from manual to automated payroll management.
+
+## Still not syncing?
+
+If you've checked all of the above and the employee still isn't syncing, email support@digitaldirections-help.freshdesk.com with:
+- The employee's name and HiBob ID
+- What change you made and when
+- What you expected to happen`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Why HiBob Is the Source of Truth",
+        slug: "hibob-source-of-truth",
+        content: `One of the most important things to understand about your integration is that it is **one-directional**: data flows from HiBob into your payroll system, not the other way around.
+
+## What this means in practice
+
+HiBob is the authoritative record for your employee data. The payroll system is a downstream consumer of that data. This means:
+
+- **Make changes in HiBob** — not in payroll. Updates made directly in payroll may be overwritten the next time the integration runs
+- **New starters go into HiBob first** — the integration will create them in payroll automatically
+- **Terminations are managed in HiBob** — if termination sync is configured, offboarding an employee in HiBob will update payroll accordingly
+- **Leave is approved in HiBob** — approved leave flows through to payroll automatically
+
+> warning: If you update a field directly in your payroll system (e.g. change an employee's address or bank account in payroll without updating HiBob), the next sync will overwrite it with the HiBob value.
+
+## What data does NOT come from HiBob?
+
+Some payroll data is owned by the payroll system and is not managed through the integration:
+
+- **Year-to-date figures** — payroll history stays in payroll
+- **Tax declarations and tax settings** — managed in payroll unless your setup includes tax sync
+- **Pay run results and payslips** — generated by payroll and not written back to HiBob
+- **Manual adjustments** — one-off payroll corrections stay in payroll
+
+## A useful rule of thumb
+
+> note: If the data describes the employee as a person (name, address, bank account, employment type, leave), manage it in HiBob. If the data describes their pay history or tax position, that lives in payroll.`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Adding a New Starter — What to Expect",
+        slug: "adding-new-starter",
+        content: `When you add a new employee in HiBob, the integration will automatically create them in your payroll system — you don't need to enter them twice.
+
+## The flow
+
+1. **Create the employee in HiBob** — fill in all required fields (name, start date, employment type, location, pay rate, bank details, super fund)
+2. **HiBob sends a notification** — when the employee is saved, HiBob sends a webhook event to the integration
+3. **The integration processes the event** — it creates the employee record in your payroll system with the mapped data
+4. **The employee appears in payroll** — ready for their first pay run
+
+> tip: Make sure all required fields are complete in HiBob before the employee's start date. Incomplete profiles won't sync.
+
+## How long does it take?
+
+The integration processes changes in batches on a regular schedule. In most cases, a new employee will appear in payroll within a few minutes of being created in HiBob during business hours.
+
+## What if they don't appear?
+
+See **Why Didn't My Employee Sync?** for a checklist of common causes.
+
+## Bank account and superannuation details
+
+These are included in the initial sync if they're entered in HiBob at the time the employee is created. If they're added later, they'll sync on the next update.
+
+> warning: Always verify bank account details in payroll before processing the employee's first pay run. Confirm with the employee directly if you're unsure.
+
+## Onboarding employees
+
+If your HiBob setup includes an onboarding workflow, employees may be in a pending or onboarding status before they become fully active. The integration typically syncs employees once they reach active status — confirm this behaviour with the team if you're unsure.`,
+        category: "integrations",
+        publishedAt: new Date(),
+      },
+      {
+        title: "How the Sync Works: Webhooks and the Queue",
+        slug: "webhooks-and-sync",
+        content: `Understanding how data moves from HiBob to your payroll system helps set the right expectations — particularly around timing.
+
+## Webhooks: how changes are detected
+
+When something changes in HiBob (an employee is updated, leave is approved, a new starter is added), HiBob automatically sends a notification to the integration platform. These notifications are called **webhooks**.
+
+A webhook is essentially HiBob saying: "Hey, something just changed — here's what happened."
+
+## The webhook queue
+
+Rather than processing each webhook the instant it arrives, the integration uses a **webhook queue**. Incoming events are held in the queue and processed in batches on a regular schedule throughout the day.
+
+> note: This means changes are not instant. There is typically a short delay between making a change in HiBob and it appearing in your payroll system.
+
+This design is intentional — it makes the integration more reliable and prevents issues if HiBob sends multiple updates for the same employee in quick succession.
+
+## Processing schedule
+
+The queue is processed automatically throughout business hours and at scheduled intervals outside of them. In most cases, you can expect changes to flow through within a few minutes during the business day.
+
+> tip: If you make a change in HiBob and need it in payroll urgently, allow at least 15 minutes before checking. If it hasn't synced after that, it may indicate an issue worth investigating.
+
+## What triggers a sync?
+
+The following events in HiBob will trigger a webhook and queue an update:
+
+- **Employee created** — new starter added
+- **Employee updated** — any field change on an active employee
+- **Leave request approved** — leave flows to payroll
+- **Leave request cancelled** — cancellation is reflected in payroll
+- **Employee terminated** — if termination sync is configured
+
+## What does NOT trigger a sync?
+
+- Changes made directly in the payroll system (these don't notify HiBob)
+- Draft employees not yet set to active status
+- Changes to fields that aren't included in the integration scope`,
+        category: "integrations",
         publishedAt: new Date(),
       },
     ];

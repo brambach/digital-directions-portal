@@ -8,7 +8,6 @@ import {
     Users,
     FolderKanban,
     Ticket,
-    MessageSquare,
     Settings,
     BookOpen,
     BarChart2,
@@ -31,7 +30,6 @@ export function AdminSidebar() {
                 { label: "Clients", href: "/dashboard/admin/clients", icon: Users },
                 { label: "Projects", href: "/dashboard/admin/projects", icon: FolderKanban },
                 { label: "Tickets", href: "/dashboard/admin/tickets", icon: Ticket },
-                { label: "Messages", href: "/dashboard/admin/messages", icon: MessageSquare, badge: "8" },
             ]
         },
         {

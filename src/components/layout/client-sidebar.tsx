@@ -7,7 +7,6 @@ import {
     LayoutDashboard,
     FolderKanban,
     Ticket,
-    MessageSquare,
     HelpCircle,
     Calculator,
     Plug,
@@ -28,8 +27,7 @@ export function ClientSidebar() {
             items: [
                 { label: "Dashboard", href: "/dashboard/client", icon: LayoutDashboard },
                 { label: "Projects", href: "/dashboard/client/projects", icon: FolderKanban },
-                { label: "Tickets", href: "/dashboard/client/tickets", icon: Ticket },
-                { label: "Messages", href: "/dashboard/client/messages", icon: MessageSquare },
+                { label: "Support", href: "/dashboard/client/tickets", icon: Ticket },
             ]
         },
         {

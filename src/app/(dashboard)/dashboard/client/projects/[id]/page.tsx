@@ -1,13 +1,12 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, messages, users, clientFlags } from "@/lib/db/schema";
-import { eq, isNull, and, desc } from "drizzle-orm";
+import { projects, clientFlags } from "@/lib/db/schema";
+import { eq, isNull, and } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
-  MessageSquare,
   Activity,
   HelpCircle,
   Plus,
@@ -15,9 +14,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { MessageForm } from "@/components/message-form";
-import { clerkClient } from "@clerk/nextjs/server";
-import { MessageList } from "@/components/message-list";
 import { IntegrationHealthGrid } from "@/components/integration-health-grid";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
@@ -57,61 +53,6 @@ export default async function ClientProjectDetailPage({
   if (!project) {
     notFound();
   }
-
-  // Fetch messages with sender details
-  const projectMessagesRaw = await db
-    .select({
-      id: messages.id,
-      content: messages.content,
-      read: messages.read,
-      createdAt: messages.createdAt,
-      senderId: messages.senderId,
-      senderClerkId: users.clerkId,
-      senderRole: users.role,
-    })
-    .from(messages)
-    .leftJoin(users, eq(messages.senderId, users.id))
-    .where(and(eq(messages.projectId, id), isNull(messages.deletedAt)))
-    .orderBy(desc(messages.createdAt))
-    .limit(10);
-
-  const clerkIds = [
-    ...new Set(
-      projectMessagesRaw.map((m) => m.senderClerkId).filter(Boolean)
-    ),
-  ] as string[];
-  const clerk = await clerkClient();
-  const clerkUsers =
-    clerkIds.length > 0
-      ? await Promise.all(
-          clerkIds.map(async (cid) => {
-            try {
-              return await clerk.users.getUser(cid);
-            } catch {
-              return null;
-            }
-          })
-        )
-      : [];
-  const clerkUserMap = new Map(
-    clerkUsers
-      .filter((u): u is NonNullable<typeof u> => u !== null)
-      .map((u) => [u.id, u])
-  );
-
-  const projectMessages = projectMessagesRaw.map((message) => {
-    const clerkUser = message.senderClerkId
-      ? clerkUserMap.get(message.senderClerkId)
-      : null;
-    return {
-      ...message,
-      senderName: clerkUser
-        ? `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
-          "Team Member"
-        : "Team Member",
-      senderAvatar: clerkUser?.imageUrl || null,
-    };
-  });
 
   // Fetch unresolved flags
   const flags = await db
@@ -337,31 +278,6 @@ export default async function ClientProjectDetailPage({
               )}
             </div>
 
-            {/* Project Chat */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-4 px-1">
-                <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
-                  <MessageSquare
-                    className="w-4 h-4 text-sky-600"
-                    strokeWidth={2}
-                  />
-                </div>
-                <h2 className="text-[15px] font-bold text-slate-800">
-                  Project Chat
-                </h2>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden flex flex-col h-[600px]">
-                <div className="flex-1 overflow-y-auto no-scrollbar p-4">
-                  <MessageList
-                    projectId={id}
-                    initialMessages={projectMessages}
-                  />
-                </div>
-                <div className="p-4 bg-slate-50 border-t border-slate-100">
-                  <MessageForm projectId={id} />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

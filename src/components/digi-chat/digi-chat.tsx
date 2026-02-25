@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ChatMessage } from "@/lib/chat/types";
 import { ChatBubble } from "./chat-bubble";
 import { ChatPanel } from "./chat-panel";
@@ -15,7 +14,6 @@ interface DigiChatProps {
 }
 
 export function DigiChat({ clientId, projects }: DigiChatProps) {
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -96,7 +94,8 @@ export function DigiChat({ clientId, projects }: DigiChatProps) {
         }
 
         // Check if Digi suggested escalation
-        if (assistantContent.toLowerCase().includes("support ticket")) {
+        const lower = assistantContent.toLowerCase();
+        if (lower.includes("support@") || lower.includes("email the") || lower.includes("email support")) {
           setShowEscalation(true);
         }
       } catch {
@@ -109,26 +108,6 @@ export function DigiChat({ clientId, projects }: DigiChatProps) {
     },
     [messages, selectedProjectId]
   );
-
-  const handleOpenTicket = useCallback(() => {
-    const userMessages = messages.filter((m) => m.role === "user");
-    const summary = messages
-      .slice(-6)
-      .map((m) => `${m.role === "user" ? "Client" : "Digi"}: ${m.content}`)
-      .join("\n\n");
-
-    sessionStorage.setItem(
-      "digi_escalation",
-      JSON.stringify({
-        title: `Question from Digi chat: ${userMessages[0]?.content.slice(0, 80) || "Support request"}`,
-        description: `Escalated from Digi AI assistant.\n\nConversation summary:\n${summary}`,
-        projectId: selectedProjectId || "",
-      })
-    );
-
-    router.push("/dashboard/client/tickets");
-    setIsOpen(false);
-  }, [messages, selectedProjectId, router]);
 
   // Suppress clientId usage warning — used for future expansion
   void clientId;
@@ -153,7 +132,6 @@ export function DigiChat({ clientId, projects }: DigiChatProps) {
 
         {showEscalation && !isStreaming && (
           <EscalationBanner
-            onOpenTicket={handleOpenTicket}
             onDismiss={() => setShowEscalation(false)}
           />
         )}

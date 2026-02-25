@@ -9,6 +9,9 @@ import {
   ArrowRight,
   Video,
   ArrowLeft,
+  Lightbulb,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DigiMascot } from "@/components/digi-mascot";
@@ -39,9 +42,25 @@ const CATEGORY_COLORS: Record<string, string> = {
   support: "bg-amber-50 text-amber-700 border-amber-100",
 };
 
+const BOLD_RE = /\*\*(.+?)\*\*/g;
+const bold = (text: string) =>
+  text.replace(BOLD_RE, '<strong class="font-semibold text-slate-800">$1</strong>');
+
+function stripMarkdown(content: string): string {
+  return content
+    .replace(BOLD_RE, "$1")
+    .replace(/^#{1,3} /gm, "")
+    .replace(/^[-*] /gm, "")
+    .replace(/^\d+\. /gm, "")
+    .replace(/^> (?:tip|warning|note|important): ?/gim, "")
+    .replace(/^> /gm, "")
+    .replace(/\n+/g, " ")
+    .trim();
+}
+
 function renderMarkdown(content: string) {
-  // Simple markdown rendering: headings, bold, lists, paragraphs
   return content.split("\n").map((line, i) => {
+    // Headings
     if (line.startsWith("### ")) {
       return (
         <h3 key={i} className="text-[15px] font-bold text-slate-800 mt-5 mb-2">
@@ -63,34 +82,74 @@ function renderMarkdown(content: string) {
         </h1>
       );
     }
+
+    // Callout boxes: > tip: / > warning: / > note: / > (plain)
+    if (line.startsWith("> ")) {
+      const text = line.replace(/^> /, "");
+      const tipMatch = text.match(/^tip:\s*(.*)/i);
+      const warningMatch = text.match(/^warning:\s*(.*)/i);
+      const noteMatch = text.match(/^(?:note|important):\s*(.*)/i);
+      if (tipMatch) {
+        return (
+          <div key={i} className="flex gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl my-2">
+            <Lightbulb className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[13px] text-amber-900 leading-relaxed" dangerouslySetInnerHTML={{ __html: bold(tipMatch[1]) }} />
+          </div>
+        );
+      }
+      if (warningMatch) {
+        return (
+          <div key={i} className="flex gap-3 p-3.5 bg-red-50 border border-red-200 rounded-xl my-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[13px] text-red-900 leading-relaxed" dangerouslySetInnerHTML={{ __html: bold(warningMatch[1]) }} />
+          </div>
+        );
+      }
+      if (noteMatch) {
+        return (
+          <div key={i} className="flex gap-3 p-3.5 bg-violet-50 border border-violet-200 rounded-xl my-2">
+            <Info className="w-4 h-4 text-violet-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[13px] text-violet-900 leading-relaxed" dangerouslySetInnerHTML={{ __html: bold(noteMatch[1]) }} />
+          </div>
+        );
+      }
+      // Plain blockquote
+      return (
+        <div key={i} className="pl-4 border-l-4 border-slate-200 my-2">
+          <p className="text-[14px] text-slate-500 italic leading-relaxed" dangerouslySetInnerHTML={{ __html: bold(text) }} />
+        </div>
+      );
+    }
+
+    // Bullet lists
     if (line.startsWith("- ") || line.startsWith("* ")) {
+      const html = line.replace(/^[-*] /, "").replace(BOLD_RE, '<strong class="font-semibold text-slate-800">$1</strong>');
       return (
-        <li key={i} className="text-[14px] text-slate-600 leading-relaxed ml-4 list-disc">
-          {line.replace(/^[-*] /, "")}
-        </li>
+        <li key={i} className="text-[14px] text-slate-600 leading-relaxed ml-4 list-disc" dangerouslySetInnerHTML={{ __html: html }} />
       );
     }
+
+    // Numbered steps — styled with violet circle badge
     if (line.match(/^\d+\. /)) {
+      const match = line.match(/^(\d+)\. /);
+      const num = match ? match[1] : "•";
+      const html = line.replace(/^\d+\. /, "").replace(BOLD_RE, '<strong class="font-semibold text-slate-800">$1</strong>');
       return (
-        <li key={i} className="text-[14px] text-slate-600 leading-relaxed ml-4 list-decimal">
-          {line.replace(/^\d+\. /, "")}
-        </li>
+        <div key={i} className="flex items-start gap-3 my-1.5">
+          <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[11px] font-bold flex-shrink-0 mt-0.5">
+            {num}
+          </div>
+          <p className="text-[14px] text-slate-600 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: html }} />
+        </div>
       );
     }
+
     if (line.trim() === "") {
       return <div key={i} className="h-3" />;
     }
-    // Bold text
-    const withBold = line.replace(
-      /\*\*(.+?)\*\*/g,
-      '<strong class="font-semibold text-slate-800">$1</strong>'
-    );
+
     return (
-      <p
-        key={i}
-        className="text-[14px] text-slate-600 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: withBold }}
-      />
+      <p key={i} className="text-[14px] text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: bold(line) }} />
     );
   });
 }
@@ -274,7 +333,7 @@ export function HelpClientBrowser() {
                 {article.title}
               </h3>
               <p className="text-[13px] text-slate-500 line-clamp-2">
-                {article.content.substring(0, 150)}...
+                {stripMarkdown(article.content).substring(0, 150)}…
               </p>
             </button>
           ))}

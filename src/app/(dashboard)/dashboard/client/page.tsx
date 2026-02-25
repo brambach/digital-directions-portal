@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, messages, clients, tickets, integrationMonitors } from "@/lib/db/schema";
+import { projects, clients, tickets, integrationMonitors } from "@/lib/db/schema";
 import { eq, isNull, and, desc, count, inArray } from "drizzle-orm";
 import Link from "next/link";
 import {
@@ -10,7 +10,6 @@ import {
   Clock,
   ArrowUpRight,
   ChevronRight,
-  MessageSquare,
   AlertCircle,
   CheckCircle2,
   HelpCircle,
@@ -77,24 +76,6 @@ export default async function ClientDashboard() {
     )
     .orderBy(desc(tickets.createdAt))
     .limit(4);
-
-  const recentMessages = projectIds.length === 0 ? [] : await db
-    .select({
-      id: messages.id,
-      content: messages.content,
-      createdAt: messages.createdAt,
-      projectName: projects.name,
-    })
-    .from(messages)
-    .leftJoin(projects, eq(messages.projectId, projects.id))
-    .where(
-      and(
-        isNull(messages.deletedAt),
-        inArray(messages.projectId, projectIds)
-      )
-    )
-    .orderBy(desc(messages.createdAt))
-    .limit(5);
 
   const STATS = [
     {
@@ -325,55 +306,6 @@ export default async function ClientDashboard() {
               )}
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-sky-600" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-bold text-slate-800">Recent Activity</h2>
-                    <p className="text-[12px] text-slate-400">Latest updates from your team</p>
-                  </div>
-                </div>
-                <Link
-                  href="/dashboard/client/messages"
-                  className="flex items-center gap-1 text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors"
-                >
-                  See all <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-
-              {recentMessages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <DigiMascot variant="neutral" size="sm" className="mb-3" />
-                  <p className="text-[13px] font-semibold text-slate-700">No recent activity</p>
-                  <p className="text-[12px] text-slate-400 mt-1">Messages and updates will show here</p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {recentMessages.map((msg) => (
-                    <Link
-                      key={msg.id}
-                      href="/dashboard/client/messages"
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-50 transition-colors">
-                        <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-violet-600 transition-colors" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-slate-800 truncate">{msg.projectName || "Message"}</p>
-                        <p className="text-[11px] text-slate-400 truncate">{msg.content.substring(0, 50)}</p>
-                      </div>
-                      <span className="text-[11px] text-slate-400 flex-shrink-0">
-                        {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
