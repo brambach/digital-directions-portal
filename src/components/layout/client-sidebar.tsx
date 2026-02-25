@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, LayoutGroup } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
@@ -52,20 +53,29 @@ export function ClientSidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 group",
+                    "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-colors duration-150 group",
                     active
-                        ? "bg-violet-50 text-violet-700 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.15)]"
+                        ? "text-violet-700"
                         : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                 )}
             >
-                <item.icon
-                    strokeWidth={active ? 2 : 1.75}
-                    className={cn(
-                        "w-[17px] h-[17px] flex-shrink-0 transition-colors",
-                        active ? "text-violet-600" : "text-slate-400 group-hover:text-slate-600"
-                    )}
-                />
-                <span className="flex-1">{item.label}</span>
+                {active && (
+                    <motion.div
+                        layoutId="active-nav-bg-client"
+                        className="absolute inset-0 bg-violet-50 rounded-xl shadow-[inset_0_0_0_1px_rgba(139,92,246,0.15)]"
+                        transition={{ type: "spring", stiffness: 350, damping: 35 }}
+                    />
+                )}
+                <span className="relative z-10 flex items-center gap-3 w-full">
+                    <item.icon
+                        strokeWidth={active ? 2 : 1.75}
+                        className={cn(
+                            "w-[17px] h-[17px] flex-shrink-0 transition-colors",
+                            active ? "text-violet-600" : "text-slate-400 group-hover:text-slate-600"
+                        )}
+                    />
+                    <span className="flex-1">{item.label}</span>
+                </span>
             </Link>
         );
     };
@@ -86,6 +96,7 @@ export function ClientSidebar() {
             <div className="mx-5 h-px bg-slate-100 mb-4" />
 
             {/* Navigation Groups */}
+            <LayoutGroup>
             <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-6 pt-1">
                 {navGroups.map((group) => (
                     <div key={group.title} className="space-y-1">
@@ -98,6 +109,7 @@ export function ClientSidebar() {
                     </div>
                 ))}
             </div>
+            </LayoutGroup>
 
             {/* Footer */}
             <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-center">
