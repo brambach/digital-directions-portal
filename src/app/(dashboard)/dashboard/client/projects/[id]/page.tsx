@@ -79,33 +79,25 @@ export default async function ClientProjectDetailPage({
 
   return (
     <div className="min-h-full bg-[#F4F5F9]">
-      {/* Page Header */}
-      <div className="bg-white border-b border-slate-100 px-7 py-5">
+      {/* Page Header — Pattern A with back nav */}
+      <div className="bg-white border-b border-slate-100 px-7 py-5 flex-shrink-0">
+        <Link
+          href="/dashboard/client/projects"
+          className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500 hover:text-slate-800 mb-3 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Projects
+        </Link>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/client/projects"
-              className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-0.5">
-                Project
-              </p>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                {project.name}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard/client/tickets">
-              <Button size="sm" className="rounded-full font-semibold bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200 shadow-none">
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Get Support
-              </Button>
-            </Link>
-          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {project.name}
+          </h1>
+          <Link href="/dashboard/client/tickets">
+            <Button variant="outline" size="sm" className="border-[#7C1CFF] text-[#7C1CFF] hover:bg-violet-50">
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Get Support
+            </Button>
+          </Link>
         </div>
       </div>
 

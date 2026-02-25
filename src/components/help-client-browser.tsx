@@ -261,8 +261,10 @@ export function HelpClientBrowser() {
       {/* Category Tabs */}
       <div className="flex items-center gap-2">
         {CATEGORIES.map((cat) => (
-          <button
+          <Button
             key={cat.value}
+            variant="ghost"
+            size="sm"
             onClick={() => setCategoryFilter(cat.value)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all border",
@@ -273,7 +275,7 @@ export function HelpClientBrowser() {
           >
             <span>{cat.icon}</span>
             {cat.label}
-          </button>
+          </Button>
         ))}
       </div>
 

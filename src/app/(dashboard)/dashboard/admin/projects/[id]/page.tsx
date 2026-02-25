@@ -69,7 +69,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
     );
 
   const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
-    planning: { color: "bg-purple-50 text-purple-700", label: "Planning", icon: Layout },
+    planning: { color: "bg-violet-50 text-[#7C1CFF]", label: "Planning", icon: Layout },
     in_progress: { color: "bg-emerald-50 text-emerald-600", label: "In Progress", icon: Activity },
     review: { color: "bg-amber-50 text-amber-600", label: "Under Review", icon: CheckCircle },
     completed: { color: "bg-slate-50 text-slate-600", label: "Completed", icon: CheckCircle },
@@ -83,13 +83,17 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
   const daysLeft = project.dueDate ? differenceInDays(new Date(project.dueDate), now) : null;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-6 lg:p-10 space-y-6 no-scrollbar">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard/admin/projects" className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm border border-slate-100 text-slate-400 hover:text-slate-700">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
+    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] no-scrollbar">
+      {/* Page Header — Pattern A with back nav */}
+      <div className="bg-white border-b border-slate-100 px-7 py-5 flex-shrink-0">
+        <Link
+          href="/dashboard/admin/projects"
+          className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500 hover:text-slate-800 mb-3 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Projects
+        </Link>
+        <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{project.name}</h1>
@@ -102,23 +106,25 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
               {project.clientName} &middot; {project.description || "HiBob integration project"}
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {stageSlug(project.currentStage) === null && (
-            <StageAdvanceButton projectId={project.id} currentStage={project.currentStage} />
-          )}
-          <EditProjectDialog
-            project={{
-              id: project.id,
-              name: project.name,
-              description: project.description,
-              startDate: project.startDate,
-              dueDate: project.dueDate,
-            }}
-          />
-          <UpdateStatusDialog projectId={project.id} currentStatus={project.status} />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {stageSlug(project.currentStage) === null && (
+              <StageAdvanceButton projectId={project.id} currentStage={project.currentStage} />
+            )}
+            <EditProjectDialog
+              project={{
+                id: project.id,
+                name: project.name,
+                description: project.description,
+                startDate: project.startDate,
+                dueDate: project.dueDate,
+              }}
+            />
+            <UpdateStatusDialog projectId={project.id} currentStatus={project.status} />
+          </div>
         </div>
       </div>
+
+      <div className="p-6 lg:p-10 space-y-6">
 
       {/* Lifecycle Stepper */}
       <LifecycleStepper
@@ -190,6 +196,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
             integrations={integrations}
           />
         </div>
+      </div>
       </div>
     </div>
   );

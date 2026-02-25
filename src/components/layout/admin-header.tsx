@@ -6,6 +6,7 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
 import { GlobalSearch } from "@/components/global-search";
+import { Button } from "@/components/ui/button";
 
 export function AdminHeader() {
     const { user } = useUser();
@@ -36,13 +37,12 @@ export function AdminHeader() {
 
             {/* Right Tools */}
             <div className="flex items-center gap-1">
-                <Link
-                    href="/dashboard/admin/tickets/new"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[13px] font-medium transition-colors mr-2"
-                >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>New</span>
-                </Link>
+                <Button asChild size="sm" className="mr-2">
+                    <Link href="/dashboard/admin/tickets/new">
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        New
+                    </Link>
+                </Button>
 
                 <NotificationBell />
 
