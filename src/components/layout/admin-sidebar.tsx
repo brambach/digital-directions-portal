@@ -10,8 +10,8 @@ import {
     Ticket,
     MessageSquare,
     Settings,
-    Shield,
-    HelpCircle,
+    BookOpen,
+    BarChart2,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -35,11 +35,16 @@ export function AdminSidebar() {
             ]
         },
         {
+            title: "TOOLS",
+            items: [
+                { label: "Reports", href: "/dashboard/admin/reports", icon: BarChart2 },
+                { label: "Help Articles", href: "/dashboard/admin/help", icon: BookOpen },
+            ]
+        },
+        {
             title: "SYSTEM",
             items: [
                 { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
-                { label: "Security", href: "/dashboard/admin/security", icon: Shield },
-                { label: "Help Center", href: "/dashboard/admin/help", icon: HelpCircle },
             ]
         }
     ];

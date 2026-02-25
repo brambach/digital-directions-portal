@@ -9,6 +9,8 @@ import {
     Ticket,
     MessageSquare,
     HelpCircle,
+    Calculator,
+    Plug,
 } from "lucide-react";
 
 export function ClientSidebar() {
@@ -31,9 +33,16 @@ export function ClientSidebar() {
             ]
         },
         {
+            title: "TOOLS",
+            items: [
+                { label: "ROI Calculator", href: "/dashboard/client/roi", icon: Calculator },
+                { label: "Connectors", href: "/dashboard/client/connectors", icon: Plug },
+            ]
+        },
+        {
             title: "SUPPORT",
             items: [
-                { label: "Help Center", href: "/dashboard/client/help", icon: HelpCircle },
+                { label: "Help Centre", href: "/dashboard/client/help", icon: HelpCircle },
             ]
         }
     ];
