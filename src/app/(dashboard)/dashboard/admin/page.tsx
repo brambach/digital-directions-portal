@@ -19,6 +19,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnimatedProgressBar } from "@/components/animated-progress-bar";
 import { DigiFloat } from "@/components/motion/digi-float";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
+import { CountUp } from "@/components/motion/count-up";
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +125,8 @@ export default async function AdminDashboard() {
   return (
     <div className="min-h-full bg-[#F4F5F9]">
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="animate-enter bg-white border-b border-slate-100 px-7 py-5">
+      <FadeIn>
+      <div className="bg-white border-b border-slate-100 px-7 py-5">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Overview</p>
@@ -136,22 +140,21 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
+      </FadeIn>
 
-      <div className="px-7 py-6 space-y-6">
+      <StaggerContainer className="px-7 py-6 space-y-6">
 
         {/* ── Stat Cards ───────────────────────────────────────────────── */}
+        <StaggerItem>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {STATS.map((stat, i) => (
+          {STATS.map((stat) => {
+            const numericValue = parseFloat(stat.value);
+            const isInteger = Number.isInteger(numericValue);
+            return (
             <Link
               key={stat.label}
               href={stat.href}
-              className={cn(
-                "animate-enter group bg-white rounded-2xl border border-slate-100 p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200",
-                i === 0 && "delay-100",
-                i === 1 && "delay-150",
-                i === 2 && "delay-200",
-                i === 3 && "delay-300",
-              )}
+              className="group bg-white rounded-2xl border border-slate-100 p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", stat.iconBg)}>
@@ -160,7 +163,13 @@ export default async function AdminDashboard() {
                 <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">{stat.value}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                {isInteger ? (
+                  <CountUp value={numericValue} />
+                ) : (
+                  stat.value
+                )}
+              </p>
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-[12px] text-slate-400">{stat.sub}</span>
                 <span className={cn(
@@ -171,14 +180,17 @@ export default async function AdminDashboard() {
                 </span>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
+        </StaggerItem>
 
         {/* ── Main Grid ────────────────────────────────────────────────── */}
+        <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
           {/* Project Pipeline */}
-          <div className="animate-enter delay-300 lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
@@ -238,7 +250,7 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Recent Tickets */}
-          <div className="animate-enter delay-500 lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center">
@@ -284,12 +296,14 @@ export default async function AdminDashboard() {
             </div>
           </div>
         </div>
+        </StaggerItem>
 
         {/* ── Actions Needed ───────────────────────────────────────────── */}
+        <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Unassigned Tickets */}
-          <div className="animate-enter delay-500 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
@@ -353,7 +367,7 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Pending Invites */}
-          <div className="animate-enter delay-500 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
@@ -411,8 +425,9 @@ export default async function AdminDashboard() {
             )}
           </div>
         </div>
+        </StaggerItem>
 
-      </div>
+      </StaggerContainer>
     </div>
   );
 }

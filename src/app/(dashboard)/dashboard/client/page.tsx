@@ -18,6 +18,10 @@ import { formatDistanceToNow } from "date-fns";
 import { cn, formatMinutesToHours } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DigiFloat } from "@/components/motion/digi-float";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
+import { CountUp } from "@/components/motion/count-up";
+import { AmberPulse } from "@/components/motion/amber-pulse";
 
 export const dynamic = "force-dynamic";
 
@@ -165,10 +169,14 @@ export default async function ClientDashboard() {
         </div>
       </div>
 
-      <div className="px-7 py-6 space-y-6">
+      <StaggerContainer className="px-7 py-6 space-y-6">
         {/* ── Stat Cards ─────────────────────────────────────────── */}
+        <StaggerItem>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {STATS.map((stat) => {
+            const numericValue = parseInt(stat.value, 10);
+            const isNumeric = !isNaN(numericValue) && stat.value === numericValue.toString();
+            return (
             <Link
               key={stat.label}
               href={stat.href}
@@ -181,15 +189,20 @@ export default async function ClientDashboard() {
                 <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">{stat.value}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                {isNumeric ? <CountUp value={numericValue} /> : stat.value}
+              </p>
               <div className="mt-3">
                 <span className="text-[12px] text-slate-400">{stat.sub}</span>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
+        </StaggerItem>
 
         {/* ── Main Grid ──────────────────────────────────────────── */}
+        <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Active Projects */}
           <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
@@ -248,6 +261,7 @@ export default async function ClientDashboard() {
           {/* Right Column: Action Required + Recent Activity */}
           <div className="lg:col-span-5 space-y-5">
             {/* Action Required */}
+            <AmberPulse active={pendingTickets.length > 0} className="rounded-2xl">
             <div className="bg-white rounded-2xl border border-slate-100 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
@@ -305,10 +319,12 @@ export default async function ClientDashboard() {
                 </div>
               )}
             </div>
+            </AmberPulse>
 
           </div>
         </div>
-      </div>
+        </StaggerItem>
+      </StaggerContainer>
     </div>
   );
 }
