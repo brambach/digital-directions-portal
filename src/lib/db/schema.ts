@@ -960,6 +960,29 @@ export const clientFlagsRelations = relations(clientFlags, ({ one }) => ({
   project: one(projects, { fields: [clientFlags.projectId], references: [projects.id] }),
 }));
 
+// ROI Configs Table (per-client ROI calculator inputs)
+export const roiConfigs = pgTable("roi_configs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .references(() => clients.id, { onDelete: "cascade" })
+    .notNull()
+    .unique(),
+  hoursSavedPerPayRun: integer("hours_saved_per_pay_run").default(0).notNull(),
+  employeeCount: integer("employee_count").default(0).notNull(),
+  payRunsPerYear: integer("pay_runs_per_year").default(26).notNull(),
+  hourlyRate: integer("hourly_rate").default(50).notNull(), // in dollars
+  costOfManualErrors: integer("cost_of_manual_errors").default(0).notNull(), // per year in dollars
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const roiConfigsRelations = relations(roiConfigs, ({ one }) => ({
+  client: one(clients, {
+    fields: [roiConfigs.clientId],
+    references: [clients.id],
+  }),
+}));
+
 export const helpArticlesRelations = relations(helpArticles, ({}) => ({}));
 
 export const goLiveChecklistRelations = relations(goLiveChecklist, ({ one }) => ({

@@ -3,17 +3,14 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
-  Ticket,
-  Layers,
-  ChevronsUpDown,
-  Gem,
   BarChart2,
-  Receipt,
-  Zap,
   Settings,
   HelpCircle,
   MessageSquare,
-  ShieldCheck
+  ShieldCheck,
+  BookOpen,
+  Plug,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth";
@@ -34,15 +31,18 @@ export async function Sidebar() {
     { href: "/dashboard/client/tickets", label: "Messages", icon: MessageSquare },
   ];
 
-  const toolsItems = [
-    { href: "#", label: "Analytics", icon: BarChart2 },
-    { href: "#", label: "Invoices", icon: Receipt },
-    { href: "#", label: "Automation", icon: Zap, secondaryBadge: "BETA" },
+  const toolsItems = isAdmin ? [
+    { href: "/dashboard/admin/reports", label: "Reports", icon: BarChart2 },
+    { href: "/dashboard/admin/help", label: "Help Articles", icon: BookOpen },
+  ] : [
+    { href: "/dashboard/client/roi", label: "ROI Calculator", icon: Calculator },
+    { href: "/dashboard/client/connectors", label: "Connectors", icon: Plug },
   ];
 
-  const supportItems = [
-    { href: "#", label: "Settings", icon: Settings },
-    { href: "#", label: "Help Center", icon: HelpCircle },
+  const supportItems = isAdmin ? [
+    { href: "/dashboard/admin/settings", label: "Settings", icon: Settings },
+  ] : [
+    { href: "/dashboard/client/help", label: "Help Centre", icon: HelpCircle },
   ];
 
   return (
@@ -86,12 +86,12 @@ export async function Sidebar() {
           </nav>
         </div>
 
-        {/* Support */}
+        {/* Tools */}
         <div>
-          <div className="px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Support</div>
+          <div className="px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Tools</div>
           <nav className="space-y-1">
-            {supportItems.map((item) => (
-              <a
+            {toolsItems.map((item) => (
+              <Link
                 key={item.label}
                 href={item.href}
                 className={cn(
@@ -101,7 +101,27 @@ export async function Sidebar() {
               >
                 <item.icon className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
                 {item.label}
-              </a>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Support */}
+        <div>
+          <div className="px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Support</div>
+          <nav className="space-y-1">
+            {supportItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200",
+                  "text-gray-500 hover:bg-gray-50 hover:text-gray-900 group"
+                )}
+              >
+                <item.icon className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                {item.label}
+              </Link>
             ))}
           </nav>
         </div>
