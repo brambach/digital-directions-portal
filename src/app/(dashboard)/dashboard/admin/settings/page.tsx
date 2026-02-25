@@ -3,6 +3,7 @@ import { User, FileQuestion } from "lucide-react";
 import { DiscoveryTemplateList } from "@/components/discovery-template-list";
 import { AdminProfileForm } from "@/components/admin-profile-form";
 import { Card } from "@/components/ui/card";
+import { FadeIn } from "@/components/motion/fade-in";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function AdminSettingsPage() {
 
       <div className="p-8 space-y-8 pb-8">
         {/* Profile Card */}
-        <div className="animate-enter delay-100">
+        <FadeIn>
           <div className="flex items-center gap-2 mb-4 px-1">
             <User className="w-4 h-4 text-slate-400" />
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">My Profile</span>
@@ -27,16 +28,16 @@ export default async function AdminSettingsPage() {
           <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden max-w-lg">
             <AdminProfileForm />
           </Card>
-        </div>
+        </FadeIn>
 
         {/* Discovery Templates */}
-        <div className="animate-enter delay-200">
+        <FadeIn delay={0.1}>
           <div className="flex items-center gap-2 mb-4 px-1">
             <FileQuestion className="w-4 h-4 text-slate-400" />
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Discovery Templates</span>
           </div>
           <DiscoveryTemplateList />
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

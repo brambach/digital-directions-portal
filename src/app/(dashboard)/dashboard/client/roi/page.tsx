@@ -4,7 +4,10 @@ import { roiConfigs, clients } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { Calculator, TrendingUp, DollarSign, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
+import { CountUp } from "@/components/motion/count-up";
 
 export const dynamic = "force-dynamic";
 
@@ -64,8 +67,9 @@ export default async function ClientRoiPage() {
 
       <div className="px-7 py-6 space-y-6">
         {!hasConfig ? (
+          <FadeIn>
           <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <DigiMascot variant="neutral" size="md" className="mx-auto mb-4" />
+            <DigiFloat variant="neutral" size="md" className="mx-auto mb-4" />
             <h2 className="text-[17px] font-bold text-slate-800 mb-2">
               ROI Calculator Coming Soon
             </h2>
@@ -74,9 +78,11 @@ export default async function ClientRoiPage() {
               you&apos;ll see a breakdown of how much time and money your integration saves.
             </p>
           </div>
+          </FadeIn>
         ) : (
-          <>
+          <StaggerContainer className="space-y-6">
             {/* Hero Savings Card */}
+            <StaggerItem>
             <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-8 text-white">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
@@ -89,14 +95,17 @@ export default async function ClientRoiPage() {
               </div>
 
               <p className="text-5xl font-bold tracking-tight mb-2">
-                ${annualSavings.toLocaleString()}
+                <CountUp value={annualSavings} prefix="$" duration={1.2} />
               </p>
               <p className="text-white/70 text-[14px]">
                 per year across time savings and error reduction
               </p>
             </div>
 
+            </StaggerItem>
+
             {/* Breakdown Cards */}
+            <StaggerItem>
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
               <div className="bg-white rounded-2xl border border-slate-100 p-5">
                 <div className="flex items-start justify-between mb-4">
@@ -106,7 +115,7 @@ export default async function ClientRoiPage() {
                 </div>
                 <p className="text-[13px] font-medium text-slate-500 mb-1">Monthly Savings</p>
                 <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
-                  ${monthlySavings.toLocaleString()}
+                  <CountUp value={monthlySavings} prefix="$" />
                 </p>
                 <p className="text-[12px] text-slate-400 mt-2">Estimated per month</p>
               </div>
@@ -119,7 +128,7 @@ export default async function ClientRoiPage() {
                 </div>
                 <p className="text-[13px] font-medium text-slate-500 mb-1">Hours Saved</p>
                 <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
-                  {totalHoursSavedPerYear}
+                  <CountUp value={totalHoursSavedPerYear} />
                 </p>
                 <p className="text-[12px] text-slate-400 mt-2">Per year</p>
               </div>
@@ -132,7 +141,7 @@ export default async function ClientRoiPage() {
                 </div>
                 <p className="text-[13px] font-medium text-slate-500 mb-1">Employees</p>
                 <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
-                  {employees}
+                  <CountUp value={employees} />
                 </p>
                 <p className="text-[12px] text-slate-400 mt-2">Managed via integration</p>
               </div>
@@ -145,13 +154,16 @@ export default async function ClientRoiPage() {
                 </div>
                 <p className="text-[13px] font-medium text-slate-500 mb-1">Error Savings</p>
                 <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
-                  ${errorCost.toLocaleString()}
+                  <CountUp value={errorCost} prefix="$" />
                 </p>
                 <p className="text-[12px] text-slate-400 mt-2">Avoided annually</p>
               </div>
             </div>
 
+            </StaggerItem>
+
             {/* How It's Calculated */}
+            <StaggerItem>
             <div className="bg-white rounded-2xl border border-slate-100 p-6">
               <h3 className="text-[15px] font-bold text-slate-800 mb-4">How This Is Calculated</h3>
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 font-mono text-[13px] text-slate-600 space-y-2">
@@ -166,7 +178,8 @@ export default async function ClientRoiPage() {
                 The actual formula may be refined over time.
               </p>
             </div>
-          </>
+            </StaggerItem>
+          </StaggerContainer>
         )}
       </div>
     </div>

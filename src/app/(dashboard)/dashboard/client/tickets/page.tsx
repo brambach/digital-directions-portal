@@ -4,6 +4,7 @@ import { DigiFloat } from "@/components/motion/digi-float";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OpenDigiButton } from "@/components/open-digi-button";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +21,10 @@ export default async function ClientTicketsPage() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Support</h1>
       </div>
 
-      <div className="px-7 py-6 space-y-6 max-w-2xl">
+      <StaggerContainer className="px-7 py-6 space-y-6 max-w-2xl">
 
         {/* Digi Hero CTA */}
+        <StaggerItem>
         <Card className="rounded-2xl border-slate-100 overflow-hidden bg-gradient-to-br from-white via-white to-violet-50/40">
           <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div className="flex-shrink-0">
@@ -41,7 +43,10 @@ export default async function ClientTicketsPage() {
           </div>
         </Card>
 
+        </StaggerItem>
+
         {/* Contact Support */}
+        <StaggerItem>
         <Card className="rounded-2xl border-slate-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email Support</p>
@@ -65,8 +70,9 @@ export default async function ClientTicketsPage() {
             </a>
           </div>
         </Card>
+        </StaggerItem>
 
-      </div>
+      </StaggerContainer>
     </div>
   );
 }

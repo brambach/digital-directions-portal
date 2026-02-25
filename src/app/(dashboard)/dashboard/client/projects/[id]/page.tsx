@@ -19,6 +19,7 @@ import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 import {
   LIFECYCLE_STAGES,
   stageGuidance,
@@ -101,15 +102,19 @@ export default async function ClientProjectDetailPage({
         </div>
       </div>
 
-      <div className="px-7 py-6 space-y-6">
+      <StaggerContainer className="px-7 py-6 space-y-6">
         {/* Lifecycle Stepper */}
+        <StaggerItem>
         <LifecycleStepper
           currentStage={project.currentStage}
           projectId={id}
           basePath="/dashboard/client/projects"
         />
 
+        </StaggerItem>
+
         {/* Flag banners */}
+        <StaggerItem>
         <DdFlagBanner
           flags={flags.map((f) => ({
             ...f,
@@ -118,7 +123,10 @@ export default async function ClientProjectDetailPage({
           projectId={id}
         />
 
+        </StaggerItem>
+
         {/* Main Grid */}
+        <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column — Main Content */}
           <div className="lg:col-span-8 space-y-6">
@@ -272,7 +280,8 @@ export default async function ClientProjectDetailPage({
 
           </div>
         </div>
-      </div>
+        </StaggerItem>
+      </StaggerContainer>
     </div>
   );
 }

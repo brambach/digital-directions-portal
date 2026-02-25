@@ -1,6 +1,8 @@
 import { requireAuth } from "@/lib/auth";
 import { Plug } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +105,7 @@ export default async function ClientConnectorsPage() {
 
       <div className="px-7 py-6 space-y-6">
         {/* Intro */}
+        <FadeIn>
         <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-8 text-white">
           <h2 className="text-[20px] font-bold mb-2">Integrations We Offer</h2>
           <p className="text-white/80 text-[14px] max-w-2xl">
@@ -111,13 +114,15 @@ export default async function ClientConnectorsPage() {
           </p>
         </div>
 
+        </FadeIn>
+
         {/* Connector Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {CONNECTORS.map((connector) => {
             const statusConfig = STATUS_CONFIG[connector.status];
             return (
+              <StaggerItem key={connector.name}>
               <div
-                key={connector.name}
                 className={cn(
                   "bg-white rounded-2xl border border-slate-100 p-6 transition-all",
                   connector.status === "available"
@@ -151,11 +156,13 @@ export default async function ClientConnectorsPage() {
                   {connector.description}
                 </p>
               </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
 
         {/* CTA */}
+        <FadeIn delay={0.3}>
         <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">
           <p className="text-[15px] font-semibold text-slate-700 mb-1">
             Need a connector not listed here?
@@ -164,6 +171,7 @@ export default async function ClientConnectorsPage() {
             Reach out to your Digital Directions team to discuss custom integration options.
           </p>
         </div>
+        </FadeIn>
       </div>
     </div>
   );

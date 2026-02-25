@@ -11,10 +11,10 @@ import { TicketStatusBadge, TicketPriorityBadge, TicketTypeBadge } from "@/compo
 import { TicketActions } from "@/components/ticket-actions";
 import { TicketCommentForm } from "@/components/ticket-comment-form";
 import Image from "next/image";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FadeIn } from "@/components/motion/fade-in";
 
 export const dynamic = "force-dynamic";
 
@@ -130,8 +130,6 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F4F5F9] no-scrollbar">
-      <AnimateOnScroll />
-
       {/* Page Header — Pattern A with back nav */}
       <div className="bg-white border-b border-slate-100 px-7 py-5 flex-shrink-0">
         <Link
@@ -170,7 +168,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
       <div className="p-8 space-y-6">
         <div className="grid grid-cols-12 gap-8">
           {/* Main Content Column */}
-          <div className="col-span-12 lg:col-span-8 space-y-6 animate-enter delay-100">
+          <FadeIn className="col-span-12 lg:col-span-8 space-y-6">
 
             {/* Ticket Body Card */}
             <Card className="rounded-2xl border-slate-100 shadow-sm overflow-visible">
@@ -216,7 +214,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                 const author = getUserInfo(comment.authorId);
 
                 return (
-                  <div key={comment.id} className="flex gap-4 animate-enter" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  <div key={comment.id} className="flex gap-4">
                     <div className="flex-shrink-0 mt-1">
                       {author?.avatar ? (
                         <Image src={author.avatar} alt="" width={36} height={36} className="rounded-full border border-slate-100 shadow-sm" />
@@ -252,7 +250,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
 
               {/* Resolution Card */}
               {ticket.resolution && (
-                <div className="flex gap-4 animate-enter">
+                <div className="flex gap-4">
                   <div className="flex-shrink-0 mt-1">
                     <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center border border-emerald-200 text-emerald-600">
                       <CheckCircle className="w-5 h-5" />
@@ -275,10 +273,10 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                 </div>
               )}
             </div>
-          </div>
+          </FadeIn>
 
           {/* Right Sidebar */}
-          <div className="col-span-12 lg:col-span-4 space-y-5 animate-enter delay-200">
+          <FadeIn delay={0.15} className="col-span-12 lg:col-span-4 space-y-5">
 
             {/* Details Card */}
             <div className="space-y-1">
@@ -398,7 +396,7 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                 </div>
               </Card>
             </div>
-          </div>
+          </FadeIn>
         </div>
       </div>
     </div>

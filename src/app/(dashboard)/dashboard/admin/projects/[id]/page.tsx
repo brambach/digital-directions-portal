@@ -14,6 +14,8 @@ import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { AdminFlagSection } from "@/components/admin-flag-section";
 import { StageAdvanceButton } from "@/components/stage-advance-button";
 import { stageSlug } from "@/lib/lifecycle";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 
 const EditProjectDialog = dynamicImport(
   () => import("@/components/edit-project-dialog").then((mod) => ({ default: mod.EditProjectDialog })),
@@ -124,16 +126,20 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
         </div>
       </div>
 
-      <div className="p-6 lg:p-10 space-y-6">
+      <StaggerContainer className="p-6 lg:p-10 space-y-6">
 
       {/* Lifecycle Stepper */}
+      <StaggerItem>
       <LifecycleStepper
         currentStage={project.currentStage}
         projectId={id}
         basePath="/dashboard/admin/projects"
       />
 
+      </StaggerItem>
+
       {/* Flags */}
+      <StaggerItem>
       <AdminFlagSection
         flags={unresolvedFlags.map((f) => ({
           id: f.id,
@@ -144,7 +150,10 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
         projectId={id}
       />
 
+      </StaggerItem>
+
       {/* Stats Row */}
+      <StaggerItem>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-2.5 mb-3">
@@ -186,7 +195,10 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
         </div>
       </div>
 
+      </StaggerItem>
+
       {/* Connected Systems */}
+      <StaggerItem>
       <div>
         <h3 className="text-base font-bold text-slate-900 mb-3">Connected Systems</h3>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
@@ -197,7 +209,8 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           />
         </div>
       </div>
-      </div>
+      </StaggerItem>
+      </StaggerContainer>
     </div>
   );
 }

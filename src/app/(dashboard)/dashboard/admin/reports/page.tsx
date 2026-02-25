@@ -13,7 +13,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
+import { CountUp } from "@/components/motion/count-up";
+import { AnimatedBar, AnimatedSegmentBar } from "@/components/motion/animated-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -191,10 +194,14 @@ export default async function AdminReportsPage() {
         </div>
       </div>
 
-      <div className="px-7 py-6 space-y-6">
+      <StaggerContainer className="px-7 py-6 space-y-6">
         {/* Stat Cards */}
+        <StaggerItem>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {STATS.map((stat) => {
+            const numericValue = parseInt(stat.value, 10);
+            const isNumeric = !isNaN(numericValue) && stat.value === numericValue.toString();
+            return (
             <div
               key={stat.label}
               className="bg-white rounded-2xl border border-slate-100 p-5"
@@ -205,13 +212,18 @@ export default async function AdminReportsPage() {
                 </div>
               </div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">{stat.value}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                {isNumeric ? <CountUp value={numericValue} /> : stat.value}
+              </p>
               <p className="text-[12px] text-slate-400 mt-2">{stat.sub}</p>
             </div>
-          ))}
+            );
+          })}
         </div>
+        </StaggerItem>
 
         {/* Charts Row */}
+        <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Project Pipeline */}
           <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
@@ -248,10 +260,7 @@ export default async function AdminReportsPage() {
                       </div>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn("h-full rounded-full transition-all duration-500", STAGE_COLORS[stage])}
-                        style={{ width: `${pct}%` }}
-                      />
+                      <AnimatedBar width={pct} className={STAGE_COLORS[stage]} />
                     </div>
                   </div>
                 );
@@ -290,19 +299,14 @@ export default async function AdminReportsPage() {
 
               {/* Visual bar summary */}
               {totalTickets > 0 && (
-                <div className="mt-4 flex h-3 rounded-full overflow-hidden bg-slate-100">
-                  {Object.entries(TICKET_STATUS_COLORS).map(([status, color]) => {
-                    const pct = totalTickets > 0 ? ((ticketStatusCounts[status] || 0) / totalTickets) * 100 : 0;
-                    if (pct === 0) return null;
-                    return (
-                      <div
-                        key={status}
-                        className={cn("h-full first:rounded-l-full last:rounded-r-full", color)}
-                        style={{ width: `${pct}%` }}
-                      />
-                    );
-                  })}
-                </div>
+                <AnimatedSegmentBar
+                  className="mt-4"
+                  segments={Object.entries(TICKET_STATUS_COLORS).map(([status, color]) => ({
+                    key: status,
+                    color,
+                    pct: totalTickets > 0 ? ((ticketStatusCounts[status] || 0) / totalTickets) * 100 : 0,
+                  }))}
+                />
               )}
             </div>
 
@@ -336,7 +340,10 @@ export default async function AdminReportsPage() {
           </div>
         </div>
 
+        </StaggerItem>
+
         {/* Resolution Metrics */}
+        <StaggerItem>
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <div className="flex items-center gap-2.5 mb-6">
             <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -350,18 +357,18 @@ export default async function AdminReportsPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-center">
-              <p className="text-2xl font-bold text-slate-900 tabular-nums">{openTickets}</p>
+              <p className="text-2xl font-bold text-slate-900 tabular-nums"><CountUp value={openTickets} /></p>
               <p className="text-[12px] text-slate-500 mt-1">Currently Open</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-center">
               <p className="text-2xl font-bold text-violet-600 tabular-nums">
-                {ticketStatusCounts["in_progress"] || 0}
+                <CountUp value={ticketStatusCounts["in_progress"] || 0} />
               </p>
               <p className="text-[12px] text-slate-500 mt-1">In Progress</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-center">
               <p className="text-2xl font-bold text-emerald-600 tabular-nums">
-                {resolvedTickets}
+                <CountUp value={resolvedTickets} />
               </p>
               <p className="text-[12px] text-slate-500 mt-1">Resolved</p>
             </div>
@@ -373,7 +380,8 @@ export default async function AdminReportsPage() {
             </div>
           </div>
         </div>
-      </div>
+        </StaggerItem>
+      </StaggerContainer>
     </div>
   );
 }

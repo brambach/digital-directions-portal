@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DigiFloat } from "@/components/motion/digi-float";
+import { FadeIn } from "@/components/motion/fade-in";
 
 // Lazy load dialog for better performance
 const AddClientDialog = dynamicImport(
@@ -125,7 +126,7 @@ export default async function ClientsPage() {
 
       <div className="p-8 space-y-8">
       {/* Directory Table */}
-      <div className="animate-enter delay-100">
+      <FadeIn>
         <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
           <div className="bg-white px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2 text-[10px] font-bold text-[#7C1CFF] uppercase tracking-widest">
@@ -208,7 +209,7 @@ export default async function ClientsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </FadeIn>
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FadeIn } from "@/components/motion/fade-in";
 
 const AddProjectDialog = dynamicImport(
   () => import("@/components/add-project-dialog").then((mod) => ({ default: mod.AddProjectDialog })),
@@ -115,7 +116,7 @@ export default async function ProjectsPage() {
         {/* Kanban Grid */}
         <div className="flex gap-6 overflow-x-auto pb-10 no-scrollbar">
           {statusColumns.map((column, colIdx) => (
-            <div key={column.key} className="flex-shrink-0 w-[320px] animate-enter" style={{ animationDelay: `${colIdx * 0.1}s` }}>
+            <FadeIn key={column.key} delay={colIdx * 0.1} className="flex-shrink-0 w-[320px]">
               {/* Column Header */}
               <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2">
@@ -144,7 +145,7 @@ export default async function ProjectsPage() {
                   ))
                 )}
               </div>
-            </div>
+            </FadeIn>
           ))}
         </div>
       </div>

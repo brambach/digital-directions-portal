@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
 import { DigiFloat } from "@/components/motion/digi-float";
+import { FadeIn } from "@/components/motion/fade-in";
+import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
+import { CountUp } from "@/components/motion/count-up";
 import { Badge } from "@/components/ui/badge";
 
 const CreateTicketDialog = dynamicImport(
@@ -142,14 +145,15 @@ export default async function AdminTicketsPage() {
         </div>
       </div>
 
-      <div className="px-7 py-6 space-y-6">
+      <StaggerContainer className="px-7 py-6 space-y-6">
 
         {/* Stats Row */}
+        <StaggerItem>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-5 rounded-2xl border-slate-100 flex items-center justify-between hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all">
             <div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">Active Queue</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">{criticalTickets.length + standardTickets.length}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums"><CountUp value={criticalTickets.length + standardTickets.length} /></p>
             </div>
             <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center">
               <MessageSquare className="w-[18px] h-[18px] text-violet-600" strokeWidth={2} />
@@ -158,7 +162,7 @@ export default async function AdminTicketsPage() {
           <Card className={cn("p-5 rounded-2xl border-slate-100 flex items-center justify-between transition-all", criticalTickets.length > 0 ? "hover:border-rose-200 hover:shadow-md hover:shadow-rose-500/5 border-rose-100" : "hover:border-slate-200")}>
             <div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">Critical & High</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">{criticalTickets.length}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums"><CountUp value={criticalTickets.length} /></p>
             </div>
             <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", criticalTickets.length > 0 ? "bg-rose-100" : "bg-slate-100")}>
               <ShieldAlert className={cn("w-[18px] h-[18px]", criticalTickets.length > 0 ? "text-rose-600" : "text-slate-400")} strokeWidth={2} />
@@ -167,7 +171,7 @@ export default async function AdminTicketsPage() {
           <Card className="p-5 rounded-2xl border-slate-100 flex items-center justify-between hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-500/5 transition-all">
             <div>
               <p className="text-[13px] font-medium text-slate-500 mb-1">Resolved</p>
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">{resolvedTickets.length}</p>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums"><CountUp value={resolvedTickets.length} /></p>
             </div>
             <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
               <CheckCircle className="w-[18px] h-[18px] text-emerald-600" strokeWidth={2} />
@@ -175,8 +179,11 @@ export default async function AdminTicketsPage() {
           </Card>
         </div>
 
+        </StaggerItem>
+
         {/* Priority Queue Section */}
         {criticalTickets.length > 0 && (
+          <StaggerItem>
           <div className="space-y-3">
             <div className="flex items-center gap-2.5 px-1">
               <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center">
@@ -254,9 +261,11 @@ export default async function AdminTicketsPage() {
               })}
             </Card>
           </div>
+          </StaggerItem>
         )}
 
         {/* Standard Queue */}
+        <StaggerItem>
         <div className="space-y-3">
           <div className="flex items-center gap-2.5 px-1">
             <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
@@ -343,8 +352,11 @@ export default async function AdminTicketsPage() {
           </Card>
         </div>
 
+        </StaggerItem>
+
         {/* Resolution Archive */}
         {resolvedTickets.length > 0 && (
+          <StaggerItem>
           <div className="space-y-3">
             <div className="flex items-center gap-2.5 px-1">
               <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -399,8 +411,9 @@ export default async function AdminTicketsPage() {
               ))}
             </Card>
           </div>
+          </StaggerItem>
         )}
-      </div>
+      </StaggerContainer>
     </div>
   );
 }
