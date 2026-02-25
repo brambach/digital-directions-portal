@@ -5,23 +5,31 @@ import { eq, and, isNull, desc, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { clerkClient } from "@clerk/nextjs/server";
-import { ArrowLeft, CheckCircle, Clock, FileText, Download, User, MoreHorizontal, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, User, MessageSquare } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { TicketStatusBadge, TicketPriorityBadge, TicketTypeBadge } from "@/components/ticket-status-badge";
 import { TicketCommentForm } from "@/components/ticket-comment-form";
 import Image from "next/image";
-import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+function getStatusMessage(status: string) {
+  switch (status) {
+    case "open": return { label: "Submitted", description: "Your request has been received and will be reviewed shortly.", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-100", icon: "amber" };
+    case "in_progress": return { label: "We're working on this", description: "A team member is actively looking into your request.", color: "text-violet-700", bg: "bg-violet-50", border: "border-violet-100", icon: "violet" };
+    case "waiting_on_client": return { label: "We need your input", description: "We've replied and need more information from you to continue.", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-100", icon: "amber" };
+    case "resolved": return { label: "Resolved", description: "This issue has been resolved.", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-100", icon: "emerald" };
+    case "closed": return { label: "Closed", description: "This request is closed.", color: "text-slate-600", bg: "bg-slate-50", border: "border-slate-100", icon: "slate" };
+    default: return { label: status, description: "", color: "text-slate-600", bg: "bg-slate-50", border: "border-slate-100", icon: "slate" };
+  }
+}
 
 export default async function ClientTicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const currentUser = await requireAuth();
   const { id } = await params;
 
-  // Fetch ticket and verify owner
   const ticket = await db
     .select({
       id: tickets.id,
@@ -49,7 +57,7 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
     notFound();
   }
 
-  // Fetch comments (Exclude internal notes)
+  // Fetch comments (exclude internal notes)
   const comments = await db
     .select({
       id: ticketComments.id,
@@ -91,7 +99,6 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
     if (!userId) return { name: "Support Team", avatar: null, isStaff: true };
     const dbU = dbUserMap.get(userId);
     if (!dbU) return { name: "User", avatar: null, isStaff: false };
-
     const clerkU = dbU.clerkId ? clerkUserMap.get(dbU.clerkId) : null;
     return {
       name: clerkU ? `${clerkU.firstName} ${clerkU.lastName}`.trim() : "User",
@@ -100,174 +107,158 @@ export default async function ClientTicketDetailPage({ params }: { params: Promi
     };
   }
 
-  const assignee = getUserInfo(ticket.assignedTo);
-  const resolver = getUserInfo(ticket.resolvedBy);
+  const statusMsg = getStatusMessage(ticket.status);
+  const isResolved = ticket.status === "resolved" || ticket.status === "closed";
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F4F5F9] p-8 space-y-8 no-scrollbar relative font-geist">
-      <AnimateOnScroll />
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-enter delay-100">
+    <div className="min-h-full bg-[#F4F5F9]">
+      {/* Page Header */}
+      <div className="bg-white border-b border-slate-100 px-7 py-4">
         <Link
           href="/dashboard/client/tickets"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-wider"
         >
           <ArrowLeft className="w-3 h-3" />
-          Back to Requests
+          Back to Help Centre
         </Link>
-
-        {/* Simple Client Actions */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="rounded-xl border-gray-200 text-gray-700 font-semibold" disabled={ticket.status === 'resolved' || ticket.status === 'closed'}>
-            Mark Resolved
-          </Button>
-        </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-8">
-        {/* Main Content */}
-        <div className="col-span-12 lg:col-span-8 space-y-6 animate-enter delay-200">
-          {/* Ticket Body */}
-          <Card className="rounded-xl border-gray-100 shadow-sm overflow-visible bg-white">
-            <div className="p-8">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight mb-2">
-                  {ticket.title} <span className="text-lg text-gray-400 font-medium ml-2">#{ticket.id.slice(0, 8)}</span>
-                </h1>
-                <p className="text-sm text-gray-500 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Submitted on {format(new Date(ticket.createdAt), "MMMM d, yyyy 'at' h:mm a")}
-                </p>
-              </div>
+      <div className="px-7 py-6 max-w-4xl mx-auto space-y-6">
 
-              <div className="prose prose-sm max-w-none text-gray-600 mb-8 leading-relaxed">
-                <p className="whitespace-pre-wrap">{ticket.description}</p>
-              </div>
-
-              {/* Mock Attachments */}
-              <div className="flex gap-4 mb-8">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 min-w-[200px] cursor-not-allowed opacity-70">
-                  <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm border border-gray-50">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-gray-900 truncate">No Attachments</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reply Input */}
-              <div className="bg-gray-50/50 rounded-xl p-1 border border-transparent focus-within:border-purple-100 focus-within:bg-white focus-within:shadow-md transition-all">
-                <TicketCommentForm ticketId={id} isAdmin={false} />
+        {/* Ticket Header */}
+        <div>
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+                {ticket.title}
+              </h1>
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                <span className="text-[12px] text-slate-400 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {format(new Date(ticket.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                </span>
+                <TicketTypeBadge type={ticket.type} size="sm" />
+                <TicketPriorityBadge priority={ticket.priority} size="sm" />
               </div>
             </div>
+          </div>
+
+          {/* Status Banner */}
+          <Card className={cn("rounded-xl p-4 flex items-center gap-3", statusMsg.bg, statusMsg.border)}>
+            {statusMsg.icon === "emerald" ? (
+              <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            ) : statusMsg.icon === "violet" ? (
+              <div className="w-5 h-5 rounded-full border-2 border-violet-400 border-t-transparent animate-spin flex-shrink-0" />
+            ) : (
+              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            )}
+            <div>
+              <p className={cn("text-[13px] font-bold", statusMsg.color)}>{statusMsg.label}</p>
+              <p className="text-[12px] text-slate-500">{statusMsg.description}</p>
+            </div>
           </Card>
+        </div>
 
-          {/* Conversation Feed */}
-          <div className="space-y-6">
-            {comments.map((comment, idx) => {
-              const author = getUserInfo(comment.authorId);
-              const isStaff = author.isStaff;
-
-              return (
-                <div key={comment.id} className="flex gap-4 animate-enter" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <div className="flex-shrink-0 mt-1">
-                    {author.avatar ? (
-                      <Image src={author.avatar} alt="" width={36} height={36} className="rounded-full border border-gray-100 shadow-sm" />
-                    ) : (
-                      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center border text-xs font-bold", isStaff ? "bg-purple-50 border-purple-100 text-purple-700" : "bg-gray-100 border-gray-200 text-gray-500")}>
-                        {author.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{author.name}</span>
-                        {isStaff && (
-                          <span className="text-[9px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-full font-bold border border-purple-100 uppercase tracking-wide">Support Team</span>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400 font-medium">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
-                    </div>
-                    <Card className={cn("p-5 rounded-xl border-gray-100 shadow-sm relative", isStaff ? "bg-purple-50/10" : "bg-white")}>
-                      <div className="prose prose-sm max-w-none text-gray-700">
-                        <p className="whitespace-pre-wrap">{comment.content}</p>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              );
-            })}
-
-            {ticket.resolution && (
-              <div className="flex gap-4 animate-enter">
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center border border-emerald-200 text-emerald-600">
-                    <CheckCircle className="w-5 h-5" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-900">Issue Resolved</span>
-                      {resolver && <span className="text-xs text-gray-400">by {resolver.name}</span>}
-                    </div>
-                    {ticket.resolvedAt && <span className="text-xs text-gray-400 font-medium">{formatDistanceToNow(new Date(ticket.resolvedAt), { addSuffix: true })}</span>}
-                  </div>
-                  <Card className="p-5 rounded-xl border-emerald-100 bg-emerald-50/30 shadow-sm">
-                    <div className="prose prose-sm max-w-none text-emerald-900">
-                      <p className="whitespace-pre-wrap font-medium">{ticket.resolution}</p>
-                    </div>
-                  </Card>
-                </div>
+        {/* Original Request */}
+        <Card className="rounded-2xl border-slate-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Original Request</p>
+          </div>
+          <div className="p-6">
+            <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
+              <p className="whitespace-pre-wrap">{ticket.description}</p>
+            </div>
+            {ticket.projectName && (
+              <div className="mt-4 pt-4 border-t border-slate-50">
+                <span className="text-[12px] text-slate-400">Related project: </span>
+                <span className="text-[12px] font-medium text-slate-700">{ticket.projectName}</span>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Sidebar */}
-        <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter delay-300">
-          <div className="space-y-1">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2 mb-2">Request Details</h3>
-            <Card className="p-5 rounded-xl border-gray-100 shadow-sm bg-white">
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Status</label>
-                  <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 flex items-center justify-between">
-                    <TicketStatusBadge status={ticket.status} size="sm" />
-                  </div>
+        {/* Resolution Banner */}
+        {ticket.resolution && (
+          <Card className="rounded-2xl border-emerald-100 bg-emerald-50/50 overflow-hidden">
+            <div className="px-6 py-4 border-b border-emerald-100 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <p className="text-[13px] font-bold text-emerald-800">Issue Resolved</p>
+              {ticket.resolvedAt && (
+                <span className="text-[11px] text-emerald-600 ml-auto">
+                  {formatDistanceToNow(new Date(ticket.resolvedAt), { addSuffix: true })}
+                </span>
+              )}
+            </div>
+            <div className="p-6">
+              <p className="text-[13px] text-emerald-900 whitespace-pre-wrap leading-relaxed font-medium">{ticket.resolution}</p>
+            </div>
+          </Card>
+        )}
+
+        {/* Conversation */}
+        {(comments.length > 0 || !isResolved) && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+              <MessageSquare className="w-4 h-4 text-slate-400" />
+              <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">
+                Conversation {comments.length > 0 && `(${comments.length})`}
+              </h2>
+            </div>
+
+            {/* Reply Form — placed above conversation for easy access */}
+            {!isResolved && (
+              <Card className="rounded-2xl border-slate-100 overflow-hidden">
+                <div className="p-4">
+                  <TicketCommentForm ticketId={id} isAdmin={false} />
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Ticket Type</label>
-                  <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 flex items-center justify-between">
-                    <TicketTypeBadge type={ticket.type} size="sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Priority</label>
-                  <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 flex items-center justify-between">
-                    <TicketPriorityBadge priority={ticket.priority} size="sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Assigned Agent</label>
-                  <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 flex items-center gap-2">
-                    {assignee.avatar ? (
-                      <Image src={assignee.avatar} alt="" width={24} height={24} className="rounded-full" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="w-3 h-3 text-gray-500" />
+              </Card>
+            )}
+
+            {/* Comment Bubbles */}
+            <div className="space-y-3">
+              {comments.map((comment) => {
+                const author = getUserInfo(comment.authorId);
+                const isStaff = author.isStaff;
+
+                return (
+                  <div key={comment.id} className={cn("flex gap-3", isStaff ? "flex-row" : "flex-row-reverse")}>
+                    {/* Avatar */}
+                    <div className="flex-shrink-0 mt-1">
+                      {author.avatar ? (
+                        <Image src={author.avatar} alt="" width={32} height={32} className="rounded-full border border-slate-100" />
+                      ) : (
+                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold", isStaff ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-500")}>
+                          {author.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bubble */}
+                    <div className={cn("max-w-[75%] min-w-[200px]")}>
+                      <div className={cn(
+                        "rounded-2xl px-4 py-3",
+                        isStaff
+                          ? "bg-white border border-slate-100 rounded-tl-md"
+                          : "bg-[#7C1CFF] text-white rounded-tr-md"
+                      )}>
+                        <p className={cn("text-[13px] whitespace-pre-wrap leading-relaxed", isStaff ? "text-slate-700" : "text-white")}>
+                          {comment.content}
+                        </p>
                       </div>
-                    )}
-                    <span className="text-sm font-medium text-gray-900">{assignee.name || "Pending Assignment"}</span>
+                      <div className={cn("flex items-center gap-2 mt-1 px-1", isStaff ? "justify-start" : "justify-end")}>
+                        <span className="text-[11px] text-slate-400 font-medium">{author.name}</span>
+                        {isStaff && (
+                          <span className="text-[9px] bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded-full font-bold border border-violet-100">DD Team</span>
+                        )}
+                        <span className="text-[11px] text-slate-300">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </Card>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

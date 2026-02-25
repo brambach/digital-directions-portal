@@ -36,6 +36,13 @@ export function DigiChat({ clientId, projects }: DigiChatProps) {
     }
   }, [isOpen]);
 
+  // Allow external components to open the chat via custom event
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener("digi:open", handleOpen);
+    return () => window.removeEventListener("digi:open", handleOpen);
+  }, []);
+
   const sendMessage = useCallback(
     async (userMessage: string) => {
       setError(null);

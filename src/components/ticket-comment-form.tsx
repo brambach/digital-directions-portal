@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface TicketCommentFormProps {
   ticketId: string;
@@ -69,13 +70,14 @@ export function TicketCommentForm({ ticketId, isAdmin = false }: TicketCommentFo
         )}
         {!isAdmin && <div />}
 
-        <button
+        <Button
           type="submit"
-          className="bg-gray-900 text-white px-5 py-2 rounded-lg transition-all hover:bg-gray-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          size="sm"
+          className="rounded-full font-semibold px-5"
           disabled={loading || !content.trim()}
         >
-          {loading ? "Sending..." : "Add Comment"}
-        </button>
+          {loading ? "Sending..." : "Reply"}
+        </Button>
       </div>
     </form>
   );

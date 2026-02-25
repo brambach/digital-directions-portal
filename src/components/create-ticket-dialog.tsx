@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Project {
@@ -52,6 +52,7 @@ export function CreateTicketDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isEscalation, setIsEscalation] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -74,6 +75,7 @@ export function CreateTicketDialog({
           projectId: data.projectId || prev.projectId,
           type: "general_support",
         }));
+        setIsEscalation(true);
         setOpen(true);
         sessionStorage.removeItem("digi_escalation");
       } catch {
@@ -105,7 +107,6 @@ export function CreateTicketDialog({
         throw new Error(error.error || "Failed to create ticket");
       }
 
-      // Reset form and close dialog
       setFormData({
         title: "",
         description: "",
@@ -114,6 +115,7 @@ export function CreateTicketDialog({
         projectId: defaultProjectId || "",
         clientId: defaultClientId || "",
       });
+      setIsEscalation(false);
       setOpen(false);
       router.refresh();
       toast.success("Ticket created successfully");
@@ -125,22 +127,47 @@ export function CreateTicketDialog({
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setIsEscalation(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="rounded-xl font-semibold">
-          <Plus className="w-4 h-4 mr-2" />
-          New Ticket
+        <Button size="sm" variant={isAdmin ? "default" : "outline"} className="rounded-full font-semibold">
+          <Plus className="w-4 h-4 mr-1.5" />
+          {isAdmin ? "New Ticket" : "Create Ticket"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] bg-white border border-slate-200">
+      <DialogContent className="sm:max-w-[600px] bg-white border border-slate-200 rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-slate-900">Create Support Ticket</DialogTitle>
+          <DialogTitle className="text-slate-900">
+            {isEscalation ? "Escalate to Support" : "Create Support Ticket"}
+          </DialogTitle>
           <DialogDescription className="text-slate-500">
-            Describe your issue or request and we&apos;ll get back to you as soon as possible.
+            {isEscalation
+              ? "Digi wasn\u2019t able to resolve this \u2014 a team member will follow up."
+              : "Describe your issue or request and we\u2019ll get back to you as soon as possible."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+
+        {/* Escalation Banner */}
+        {isEscalation && (
+          <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-100 rounded-xl mt-1">
+            <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+              <MessageCircle className="w-4 h-4 text-violet-600" />
+            </div>
+            <div>
+              <p className="text-[12px] font-bold text-violet-800">Escalated from Digi chat</p>
+              <p className="text-[11px] text-violet-600">The conversation summary has been included below.</p>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -149,6 +176,7 @@ export function CreateTicketDialog({
               placeholder="Brief summary of your issue"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="rounded-xl"
             />
           </div>
 
@@ -161,6 +189,7 @@ export function CreateTicketDialog({
               rows={4}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="rounded-xl"
             />
           </div>
 
@@ -171,7 +200,7 @@ export function CreateTicketDialog({
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,7 +218,7 @@ export function CreateTicketDialog({
                 value={formData.priority}
                 onValueChange={(value) => setFormData({ ...formData, priority: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -209,7 +238,7 @@ export function CreateTicketDialog({
                 value={formData.projectId}
                 onValueChange={(value) => setFormData({ ...formData, projectId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -232,7 +261,7 @@ export function CreateTicketDialog({
                 value={formData.clientId}
                 onValueChange={(value) => setFormData({ ...formData, clientId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
                 <SelectContent>
@@ -250,16 +279,18 @@ export function CreateTicketDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              className="rounded-full"
+              onClick={() => handleOpenChange(false)}
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              className="rounded-full"
               disabled={loading}
             >
-              {loading ? "Creating..." : "Create Ticket"}
+              {loading ? "Creating..." : isEscalation ? "Submit to Support" : "Create Ticket"}
             </Button>
           </div>
         </form>

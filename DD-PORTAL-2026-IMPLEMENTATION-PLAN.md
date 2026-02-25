@@ -998,75 +998,84 @@ Admin applies a provisioning template when setting up a project. The specialist'
 - Diji `celebrating` variant
 - Post-go-live monitoring activation
 
-### Sprint 10 — Freshdesk Integration
-> **Model: Opus** — External API integration with bidirectional sync, webhook handling, and error states. Edge cases matter here and Opus handles them better.
-
-**Goal:** Tickets are backed by Freshdesk.
-- Freshdesk API integration
-- Update all ticket API routes
-- Bidirectional comment sync
-- Freshdesk webhook handler
-- Remove old time-tracking UI
-- *Blocked until Freshdesk account confirmed — check with Jack*
-
-### Sprint 11 — Support Features
-> **Model: Sonnet** — Help centre is mostly content/CRUD. Reporting dashboards and ROI calculator are well-defined at this point. Connector library is static for MVP.
-
-**Goal:** Ongoing support section is production-ready.
-- Help centre (articles, Loom library, search)
-- Reporting dashboards (basic)
-- ROI calculator (admin configures, client reads)
-- Connector library (static for MVP)
-
-### Sprint 12 — Diji AI Chatbot
+### Sprint 10 — Digi AI Chatbot (Soft Support Gate)
 > **Model: Opus** — AI-powered chat with context injection, streaming responses, and ticket escalation. Needs careful prompt engineering and UX design for the conversation flow.
 
-**Goal:** Diji becomes a real AI assistant — clients' first line of support before opening a ticket.
+**Goal:** Digi becomes a real AI assistant — clients' first line of self-serve support before opening a ticket. Acts as the "soft gate" to the ticket system.
 
 **Architecture:**
 - Floating chat bubble in bottom-right corner (client pages only)
-- Opens a chat panel with Diji's avatar and conversational UI
-- Powered by Claude API (Anthropic SDK) with streaming responses
-- Context-aware: knows the client's project, current stage, flags, and help articles
+- Opens a chat panel with Digi's avatar and conversational UI
+- Powered by Claude API (Anthropic SDK) using **claude-haiku-4-5** for fast, cheap responses
+- Context-aware: knows the client's project, current stage, flags, and seeded knowledge base articles
+- Escalation to existing ticket system (not Freshdesk yet — that comes in Sprint 12)
 
 **What to build:**
-- `<DijiChat />` — floating bubble + slide-out chat panel component
+- `<DigiChat />` — floating bubble + slide-out chat panel component
 - `/api/chat` — API route that accepts messages, injects context, calls Claude API, streams response
-- Context loader: pulls project data, current stage, unresolved flags, and `helpArticles` content to build the system prompt
+- Context loader: pulls project data, current stage, unresolved flags, and knowledge base content to build the system prompt
 - Conversation history: stored in-memory per session (no DB persistence for MVP)
-- Escalation flow: when Diji can't answer, it offers "Would you like to open a support ticket?" → pre-fills a Freshdesk ticket with the conversation context
-- Diji personality: friendly, knowledgeable about HiBob integrations, uses simple language, never guesses — admits when it doesn't know
+- Escalation flow: when Digi can't answer, it offers "Would you like to open a support ticket?" → pre-fills a ticket with the conversation context (uses existing ticket API)
+- Digi personality: friendly, knowledgeable about HiBob integrations, uses simple language, never guesses — admits when it doesn't know
+- Seed a set of bootstrap knowledge base articles (common HiBob integration FAQs, payroll system basics, portal usage guide) so Digi has useful content from day one
 
 **Dependencies:**
-- Sprint 11 (help centre content populates `helpArticles` — Diji needs this to be useful)
-- Sprint 10 (Freshdesk integration for ticket escalation)
 - `ANTHROPIC_API_KEY` environment variable
+- No external service dependencies — uses existing ticket system for escalation
 
 **System prompt structure:**
 ```
-You are Diji, Digital Directions' friendly support assistant.
+You are Digi, Digital Directions' friendly support assistant.
 You help clients with their HiBob integration projects.
 
 Client context:
 - Company: {clientName}
 - Project: {projectName}
 - Current stage: {currentStage}
+- Payroll system: {payrollSystem}
 - Unresolved flags: {flags}
 
 Knowledge base:
-{helpArticles content}
+{knowledgeBase articles content}
 
 Rules:
 - Be concise and helpful
-- Reference specific help articles when relevant
-- If you're not sure, say so and offer to create a ticket
+- Reference specific knowledge base articles when relevant
+- If you're not sure, say so and offer to create a support ticket
 - Never make up technical answers about HiBob or payroll APIs
+- Keep responses short — 2-3 sentences max unless the user asks for detail
+- Use Australian English spelling (organisation, colour, etc.)
 ```
 
-**Future enhancements (not in Sprint 12):**
+**Future enhancements (not in Sprint 10):**
 - Conversation persistence in DB
-- Admin-side Diji for internal knowledge queries
-- Analytics on common questions to improve help articles
+- Admin-side Digi for internal knowledge queries
+- Analytics on common questions to improve knowledge base
+- Freshdesk-backed escalation (Sprint 12)
+
+### Sprint 11 — Help Centre & Support Features
+> **Model: Sonnet** — Help centre is mostly content/CRUD. Reporting dashboards and ROI calculator are well-defined at this point. Connector library is static for MVP.
+
+**Goal:** Full help centre with articles, search, and support features. Digi's knowledge base gets richer.
+- Help centre CRUD (admin creates/edits articles, client reads)
+- Article categories and search
+- Loom video library integration
+- Reporting dashboards (basic)
+- ROI calculator (admin configures, client reads)
+- Connector library (static for MVP)
+- Wire help centre articles into Digi's context loader (improves chatbot responses automatically)
+
+### Sprint 12 — Freshdesk Integration
+> **Model: Opus** — External API integration with bidirectional sync, webhook handling, and error states. Edge cases matter here and Opus handles them better.
+
+**Goal:** Tickets are backed by Freshdesk. Portal UI stays the same — clients never see "Freshdesk."
+- Freshdesk API integration
+- Update all ticket API routes to sync with Freshdesk
+- Bidirectional comment sync
+- Freshdesk webhook handler
+- Remove old time-tracking UI
+- Update Digi's escalation flow to create Freshdesk-backed tickets
+- Freshdesk account confirmed ✅ (Bryce has access)
 
 ---
 
@@ -1078,7 +1087,7 @@ Rules:
 | 2 | **Diji mascot assets** | ⏳ Pending | Build placeholder spots now. When Jack generates the image, export on white background then use remove.bg for transparent PNG. See Diji section for placement guide. |
 | 3 | **HiBob API keys for mapping** | ✅ Resolved | Encrypted on the `projects` table. Same AES-256-GCM pattern as `crypto.ts` (Workato credentials). |
 | 4 | **Freshdesk plan/tier** | ⏳ Open | Need to confirm with Jack which tier. Determines API features available (custom fields, ticket forms, etc.). |
-| 5 | **Freshdesk company setup** | ⏳ Open | Unknown — Bryce to check with Jack whether an account already exists or needs provisioning. Block Sprint 10 on this. |
+| 5 | **Freshdesk company setup** | ✅ Resolved | Bryce has a Freshdesk account. Freshdesk integration moved to Sprint 12 (after Digi chatbot and Help Centre). |
 | 6 | **SOW / Integration Limitation sign-off** | ✅ Resolved | External — handled outside the portal via email/PDF. Stage 1 does not include a sign-off step. |
 | 7 | **ROI calculator inputs** | ⏳ Open | There's an equation — needs defining with Jack before Sprint 11. Likely inputs: hours saved per pay run, employee count, pay frequency, cost of manual errors. |
 | 8 | **Connector library content** | ⏳ Open | Need the full list of integrations DD offers with availability status before building Sprint 11. |

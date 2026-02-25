@@ -59,14 +59,16 @@ export function ClaimTicketButton({ ticketId }: { ticketId: string }) {
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleClaim}
       disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all disabled:opacity-50"
+      className="rounded-lg font-semibold gap-1.5 border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100 hover:text-violet-800"
     >
-      <UserPlus className="w-4 h-4" />
-      {loading ? "Claiming..." : "Claim Ticket"}
-    </button>
+      <UserPlus className="w-3.5 h-3.5" />
+      {loading ? "Claiming..." : "Claim"}
+    </Button>
   );
 }
 
@@ -96,14 +98,16 @@ export function UnclaimTicketButton({ ticketId }: { ticketId: string }) {
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleUnclaim}
       disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-all disabled:opacity-50"
+      className="rounded-lg font-semibold gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-50"
     >
-      <UserMinus className="w-4 h-4" />
-      {loading ? "Unclaiming..." : "Unclaim Ticket"}
-    </button>
+      <UserMinus className="w-3.5 h-3.5" />
+      {loading ? "Unclaiming..." : "Unclaim"}
+    </Button>
   );
 }
 
@@ -140,12 +144,12 @@ export function UpdateStatusButton({ ticketId, currentStatus }: { ticketId: stri
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-all">
-          <Clock className="w-4 h-4" />
-          Update Status
-        </button>
+        <Button variant="outline" size="sm" className="rounded-lg font-semibold gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-50">
+          <Clock className="w-3.5 h-3.5" />
+          Status
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[400px] rounded-2xl">
         <DialogHeader>
           <DialogTitle>Update Ticket Status</DialogTitle>
         </DialogHeader>
@@ -153,7 +157,7 @@ export function UpdateStatusButton({ ticketId, currentStatus }: { ticketId: stri
           <div className="space-y-2">
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
+              <SelectTrigger className="rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -167,21 +171,22 @@ export function UpdateStatusButton({ ticketId, currentStatus }: { ticketId: stri
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              className="rounded-full"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-slate-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              className="rounded-full"
               onClick={handleUpdate}
               disabled={loading}
-              className="px-5 py-2 text-sm font-medium text-white bg-purple-700 rounded-lg transition-all hover:bg-purple-800 disabled:opacity-50 shadow-sm"
             >
               {loading ? "Updating..." : "Update"}
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -228,12 +233,12 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
-          <CheckCircle className="w-4 h-4" />
+        <Button variant="outline" size="sm" className="rounded-lg font-semibold gap-1.5 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800">
+          <CheckCircle className="w-3.5 h-3.5" />
           Resolve
-        </button>
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] rounded-2xl">
         <DialogHeader>
           <DialogTitle>Resolve Ticket</DialogTitle>
           <DialogDescription>
@@ -249,6 +254,7 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
               rows={4}
               value={resolution}
               onChange={(e) => setResolution(e.target.value)}
+              className="rounded-xl"
             />
           </div>
 
@@ -263,21 +269,22 @@ export function ResolveTicketDialog({ ticketId }: { ticketId: string }) {
           </label>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              className="rounded-full"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border border-slate-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              className="rounded-full"
               onClick={handleResolve}
               disabled={loading || !resolution.trim()}
-              className="px-5 py-2 text-sm font-medium text-white bg-purple-700 rounded-lg transition-all hover:bg-purple-800 disabled:opacity-50 shadow-sm"
             >
               {loading ? "Resolving..." : closeTicket ? "Close Ticket" : "Mark Resolved"}
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -293,7 +300,7 @@ export function TicketActions({ ticketId, currentStatus, isAssigned, assignedToU
   const showResolve = currentStatus !== "resolved" && currentStatus !== "closed";
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap">
       {showClaim && <ClaimTicketButton ticketId={ticketId} />}
       {showUnclaim && <UnclaimTicketButton ticketId={ticketId} />}
       <UpdateStatusButton ticketId={ticketId} currentStatus={currentStatus} />

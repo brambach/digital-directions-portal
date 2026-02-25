@@ -512,11 +512,17 @@ Invite-only portal - no public signup:
 - Real-time notifications for tickets, messages, file uploads
 - Set `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID`
 
-**Freshdesk (Sprint 10 of revamp):**
+**Freshdesk (Sprint 12 of revamp):**
 - Will REPLACE the current custom ticket system as the backend
 - Portal UI remains; Freshdesk handles data/workflows for DD team
 - Clients never see "Freshdesk" — they use the portal as normal
-- Blocked until Freshdesk account confirmed with Jack
+- Freshdesk account confirmed ✅
+
+**Digi AI Chatbot (Sprint 10 of revamp):**
+- Soft gate for self-serve support — clients talk to Digi before opening tickets
+- Powered by Claude API (Haiku model) with streaming responses
+- Context-aware: project, stage, flags, knowledge base articles
+- Escalates to existing ticket system (Freshdesk-backed escalation added in Sprint 12)
 
 All integrations are optional - portal works without them.
 
