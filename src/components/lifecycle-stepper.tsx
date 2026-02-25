@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Check, Lock, ChevronRight } from "lucide-react";
 import { LIFECYCLE_STAGES, stageSlug } from "@/lib/lifecycle";
@@ -14,7 +16,7 @@ export interface LifecycleStage {
 export interface LifecycleStepperProps {
   currentStage: string;
   projectId: string;
-  basePath: string; // e.g. "/dashboard/admin/projects" or "/dashboard/client/projects"
+  basePath: string;
   stages?: LifecycleStage[];
   className?: string;
 }
@@ -30,6 +32,24 @@ export function LifecycleStepper({
 
   const completedCount = resolvedStages.filter((s) => s.status === "complete").length;
   const progressPct = Math.round((completedCount / resolvedStages.length) * 100);
+
+  // Calculate progress fraction for SVG connector
+  const currentStageIdx = resolvedStages.findIndex(
+    (s) => s.status === "active" || s.status === "review"
+  );
+  const progressFraction = getConnectorWidth(resolvedStages) / 100;
+
+  // Celebration: track previous stage and celebrate when advancing
+  const prevStageRef = useRef(currentStageIdx);
+  const [celebratingIdx, setCelebratingIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (currentStageIdx > prevStageRef.current) {
+      setCelebratingIdx(currentStageIdx - 1);
+      setTimeout(() => setCelebratingIdx(null), 600);
+    }
+    prevStageRef.current = currentStageIdx;
+  }, [currentStageIdx]);
 
   return (
     <div className={cn("bg-white rounded-2xl border border-slate-100 p-6 shadow-sm", className)}>
@@ -57,16 +77,23 @@ export function LifecycleStepper({
 
       {/* Stepper */}
       <div className="relative">
-        {/* Connector line */}
-        <div className="absolute top-4 left-4 right-4 h-0.5 bg-slate-100 z-0" />
-        <div
-          className="absolute top-4 left-4 h-0.5 bg-[#7C1CFF] z-0 transition-all duration-700 ease-out"
-          style={{ width: `${getConnectorWidth(resolvedStages)}%` }}
-        />
+        {/* SVG Connector line */}
+        <svg className="absolute top-4 left-4 right-4 h-0.5 z-0" style={{ overflow: "visible", width: "calc(100% - 32px)" }}>
+          <line x1="0" y1="0" x2="100%" y2="0" stroke="#e2e8f0" strokeWidth="2" />
+          <motion.line
+            x1="0" y1="0"
+            x2="100%" y2="0"
+            stroke="#7C1CFF"
+            strokeWidth="2"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: progressFraction, opacity: progressFraction > 0 ? 1 : 0 }}
+            transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+          />
+        </svg>
 
         {/* Stage nodes */}
         <div className="relative z-10 flex justify-between">
-          {resolvedStages.map((stage) => {
+          {resolvedStages.map((stage, index) => {
             const slug = stageSlug(stage.key);
             const isClickable = stage.status !== "locked" && slug !== null;
             const href = isClickable ? `${basePath}/${projectId}/${slug}` : undefined;
@@ -76,27 +103,40 @@ export function LifecycleStepper({
                 "flex flex-col items-center group",
                 isClickable && "cursor-pointer"
               )}>
-                {/* Node */}
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-200",
-                    stage.status === "complete" && "bg-[#7C1CFF] border-[#7C1CFF] text-white",
-                    stage.status === "active" && "bg-white border-[#7C1CFF] ring-4 ring-violet-100",
-                    stage.status === "review" && "bg-amber-50 border-amber-400",
-                    stage.status === "locked" && "bg-slate-50 border-slate-200 text-slate-300",
-                    isClickable && "group-hover:scale-110 group-hover:shadow-md group-hover:shadow-violet-200/50"
-                  )}
+                {/* Node with spring entrance and celebration */}
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{
+                    scale: celebratingIdx === index ? [1, 1.3, 1] : 1,
+                    opacity: 1,
+                  }}
+                  transition={
+                    celebratingIdx === index
+                      ? { type: "spring", stiffness: 400, damping: 15 }
+                      : { type: "spring", stiffness: 400, damping: 22, delay: index * 0.06 }
+                  }
                 >
-                  {stage.status === "complete" ? (
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  ) : stage.status === "active" ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#7C1CFF] animate-pulse" />
-                  ) : stage.status === "review" ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                  ) : (
-                    <Lock className="w-3 h-3" strokeWidth={2} />
-                  )}
-                </div>
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-200",
+                      stage.status === "complete" && "bg-[#7C1CFF] border-[#7C1CFF] text-white",
+                      stage.status === "active" && "bg-white border-[#7C1CFF] ring-4 ring-violet-100",
+                      stage.status === "review" && "bg-amber-50 border-amber-400",
+                      stage.status === "locked" && "bg-slate-50 border-slate-200 text-slate-300",
+                      isClickable && "group-hover:scale-110 group-hover:shadow-md group-hover:shadow-violet-200/50"
+                    )}
+                  >
+                    {stage.status === "complete" ? (
+                      <Check className="w-4 h-4" strokeWidth={3} />
+                    ) : stage.status === "active" ? (
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#7C1CFF] animate-pulse" />
+                    ) : stage.status === "review" ? (
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    ) : (
+                      <Lock className="w-3 h-3" strokeWidth={2} />
+                    )}
+                  </div>
+                </motion.div>
 
                 {/* Label */}
                 <span
