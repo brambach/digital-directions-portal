@@ -113,7 +113,7 @@ export function AdminSidebar() {
 
             {/* Footer */}
             <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-center">
-                <p className="text-[11px] text-slate-400">&copy; 2025 Digital Directions</p>
+                <p className="text-[11px] text-slate-400">&copy; 2026 Digital Directions</p>
             </div>
         </aside>
     );

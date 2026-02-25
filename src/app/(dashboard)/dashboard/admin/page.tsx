@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnimatedProgressBar } from "@/components/animated-progress-bar";
-import { DigiMascot } from "@/components/digi-mascot";
+import { DigiFloat } from "@/components/motion/digi-float";
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +122,7 @@ export default async function AdminDashboard() {
   return (
     <div className="min-h-full bg-[#F4F5F9]">
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="animate-dashboard-reveal bg-white border-b border-slate-100 px-7 py-5">
+      <div className="animate-enter bg-white border-b border-slate-100 px-7 py-5">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Overview</p>
@@ -146,12 +146,11 @@ export default async function AdminDashboard() {
               key={stat.label}
               href={stat.href}
               className={cn(
-                "animate-dashboard-reveal group bg-white rounded-2xl border border-slate-100 p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200",
-                // stagger each card: 80ms, 140ms, 200ms, 260ms
-                i === 0 && "stagger-2",
-                i === 1 && "stagger-3",
-                i === 2 && "stagger-4",
-                i === 3 && "stagger-5",
+                "animate-enter group bg-white rounded-2xl border border-slate-100 p-5 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5 transition-all duration-200",
+                i === 0 && "delay-100",
+                i === 1 && "delay-150",
+                i === 2 && "delay-200",
+                i === 3 && "delay-300",
               )}
             >
               <div className="flex items-start justify-between mb-4">
@@ -179,7 +178,7 @@ export default async function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
           {/* Project Pipeline */}
-          <div className="animate-dashboard-reveal stagger-6 lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="animate-enter delay-300 lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
@@ -239,7 +238,7 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Recent Tickets */}
-          <div className="animate-dashboard-reveal stagger-7 lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="animate-enter delay-500 lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center">
@@ -290,7 +289,7 @@ export default async function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Unassigned Tickets */}
-          <div className="animate-dashboard-reveal stagger-8 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="animate-enter delay-500 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
@@ -310,7 +309,7 @@ export default async function AdminDashboard() {
 
             {UNASSIGNED_TICKETS.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <DigiMascot variant="celebrating" size="sm" className="mb-3" />
+                <DigiFloat variant="celebrating" size="sm" className="mb-3" />
                 <p className="text-[13px] font-semibold text-slate-700">All tickets assigned</p>
                 <p className="text-[12px] text-slate-400 mt-1">Nothing needs immediate attention</p>
               </div>
@@ -354,7 +353,7 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Pending Invites */}
-          <div className="animate-dashboard-reveal stagger-8 bg-white rounded-2xl border border-slate-100 p-6">
+          <div className="animate-enter delay-500 bg-white rounded-2xl border border-slate-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
