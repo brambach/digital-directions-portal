@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, MessageSquare, FolderKanban, Ticket, UserPlus, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,6 +47,8 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const prevUnreadRef = useRef(0);
+  const bellControls = useAnimationControls();
 
   useEffect(() => {
     fetchNotifications();
@@ -53,6 +56,17 @@ export function NotificationBell() {
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Shake bell when new notifications arrive
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      bellControls.start({
+        rotate: [-12, 12, -8, 8, -4, 4, 0],
+        transition: { duration: 0.5, ease: "easeInOut" },
+      });
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount, bellControls]);
 
   const fetchNotifications = async () => {
     try {
@@ -124,15 +138,24 @@ export function NotificationBell() {
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
           aria-haspopup="menu"
         >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-600 text-xs text-white flex items-center justify-center font-semibold"
-              aria-hidden="true"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
+          <motion.div animate={bellControls}>
+            <Bell className="h-5 w-5" />
+          </motion.div>
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span
+                key={unreadCount}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-600 text-xs text-white flex items-center justify-center font-semibold"
+                aria-hidden="true"
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
 

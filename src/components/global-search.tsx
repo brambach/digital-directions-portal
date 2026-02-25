@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Building2, FolderOpen, Ticket, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { staggerContainer, staggerItem } from "@/components/motion/stagger-list";
 
 interface SearchResult {
     id: string;
@@ -143,8 +145,15 @@ export function GlobalSearch({ role, placeholder }: GlobalSearchProps) {
                 />
             </div>
 
+            <AnimatePresence>
             {open && query.length >= 2 && (
-                <div className="absolute top-full mt-1.5 left-0 w-[380px] bg-white rounded-xl border border-slate-200 shadow-lg z-[9999] overflow-hidden">
+                <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="absolute top-full mt-1.5 left-0 w-[380px] bg-white rounded-xl border border-slate-200 shadow-lg z-[9999] overflow-hidden"
+                >
                     {!hasResults && !loading && (
                         <div className="px-4 py-6 text-center text-[13px] text-slate-400">
                             No results for &ldquo;{query}&rdquo;
@@ -174,8 +183,9 @@ export function GlobalSearch({ role, placeholder }: GlobalSearchProps) {
                             ))}
                         </Section>
                     )}
-                </div>
+                </motion.div>
             )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -187,14 +197,15 @@ function Section({ icon, label, children }: { icon: React.ReactNode; label: stri
                 <span className="text-slate-400">{icon}</span>
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
             </div>
-            <div>{children}</div>
+            <motion.div variants={staggerContainer} initial="hidden" animate="show">{children}</motion.div>
         </div>
     );
 }
 
 function ResultRow({ result, onSelect }: { result: SearchResult; onSelect: (href: string) => void }) {
     return (
-        <button
+        <motion.button
+            variants={staggerItem}
             onClick={() => onSelect(result.href)}
             className="w-full flex items-start gap-2 px-3 py-2.5 hover:bg-violet-50 transition-colors text-left border-b border-slate-50 last:border-0"
         >
@@ -204,6 +215,6 @@ function ResultRow({ result, onSelect }: { result: SearchResult; onSelect: (href
                     <p className="text-[11px] text-slate-400 capitalize truncate">{result.sub}</p>
                 )}
             </div>
-        </button>
+        </motion.button>
     );
 }
