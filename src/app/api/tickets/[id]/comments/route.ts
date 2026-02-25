@@ -5,6 +5,11 @@ import { tickets, ticketComments, users, clients } from "@/lib/db/schema";
 import { eq, and, isNull, desc, or } from "drizzle-orm";
 import { sendTicketResponseEmail } from "@/lib/email";
 import { notifyTicketResponse } from "@/lib/notifications";
+import {
+  isFreshdeskConfigured,
+  addNote as fdAddNote,
+  addReply as fdAddReply,
+} from "@/lib/freshdesk";
 
 export async function GET(
   req: NextRequest,
@@ -152,7 +157,13 @@ export async function POST(
 
     // Verify ticket exists and user has access
     const ticket = await db
-      .select()
+      .select({
+        id: tickets.id,
+        clientId: tickets.clientId,
+        status: tickets.status,
+        title: tickets.title,
+        freshdeskId: tickets.freshdeskId,
+      })
       .from(tickets)
       .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
       .limit(1)
@@ -190,6 +201,31 @@ export async function POST(
         isInternal: internal,
       })
       .returning();
+
+    // Sync comment to Freshdesk (fire and forget)
+    if (isFreshdeskConfigured() && ticket.freshdeskId) {
+      const fdId = parseInt(ticket.freshdeskId);
+      const htmlBody = `<p>${content.replace(/\n/g, "<br/>")}</p>`;
+
+      if (user.role === "admin") {
+        if (internal) {
+          // Internal note — private in Freshdesk
+          fdAddNote({ freshdeskId: fdId, body: htmlBody, private: true }).catch(
+            (err) => console.error("Failed to sync internal note to Freshdesk:", err)
+          );
+        } else {
+          // Public reply from admin — use reply endpoint so requester sees it
+          fdAddReply({ freshdeskId: fdId, body: htmlBody }).catch(
+            (err) => console.error("Failed to sync reply to Freshdesk:", err)
+          );
+        }
+      } else {
+        // Client comment — add as public note (appears in Freshdesk conversation)
+        fdAddNote({ freshdeskId: fdId, body: htmlBody, private: false }).catch(
+          (err) => console.error("Failed to sync client comment to Freshdesk:", err)
+        );
+      }
+    }
 
     // Update ticket status if client responded
     if (user.role === "client" && ticket.status === "waiting_on_client") {

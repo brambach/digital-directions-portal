@@ -10,7 +10,6 @@ import { format, formatDistanceToNow } from "date-fns";
 import { TicketStatusBadge, TicketPriorityBadge, TicketTypeBadge } from "@/components/ticket-status-badge";
 import { TicketActions } from "@/components/ticket-actions";
 import { TicketCommentForm } from "@/components/ticket-comment-form";
-import { TimeEntriesList } from "@/components/time-entries-list";
 import Image from "next/image";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
 import { Card } from "@/components/ui/card";
@@ -45,6 +44,8 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
       clientName: clients.companyName,
       contactEmail: clients.contactEmail,
       projectName: projects.name,
+      freshdeskId: tickets.freshdeskId,
+      freshdeskUrl: tickets.freshdeskUrl,
     })
     .from(tickets)
     .leftJoin(clients, eq(tickets.clientId, clients.id))
@@ -306,10 +307,19 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                   <span className="text-sm font-medium text-gray-500">Created</span>
                   <span className="text-sm font-bold text-gray-900 text-right">{format(new Date(ticket.createdAt), "MMM d, h:mm a")}</span>
                 </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-sm font-medium text-gray-500">Resolution Due</span>
-                  <span className="text-sm font-bold text-purple-700 text-right">Draft</span>
-                </div>
+                {ticket.freshdeskUrl && (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm font-medium text-gray-500">Freshdesk</span>
+                    <a
+                      href={ticket.freshdeskUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-bold text-purple-700 hover:text-purple-800 transition-colors"
+                    >
+                      View Ticket →
+                    </a>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -389,14 +399,6 @@ export default async function AdminTicketDetailPage({ params }: { params: Promis
                   </div>
                 </div>
               </div>
-            </Card>
-          </div>
-
-          {/* Time Logged Widget */}
-          <div className="space-y-1">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2 mb-2">Time Logged</h3>
-            <Card className="p-5 rounded-xl border-gray-100 shadow-sm bg-white">
-              <TimeEntriesList ticketId={id} />
             </Card>
           </div>
 

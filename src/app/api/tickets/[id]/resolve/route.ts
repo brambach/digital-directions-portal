@@ -5,6 +5,11 @@ import { tickets, users, clients } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notifyTicketResolved } from "@/lib/slack";
 import { sendTicketResolvedEmail } from "@/lib/email";
+import {
+  isFreshdeskConfigured,
+  updateTicket as fdUpdateTicket,
+  addNote as fdAddNote,
+} from "@/lib/freshdesk";
 
 export async function POST(
   req: NextRequest,
@@ -52,6 +57,7 @@ export async function POST(
         id: tickets.id,
         title: tickets.title,
         clientId: tickets.clientId,
+        freshdeskId: tickets.freshdeskId,
       })
       .from(tickets)
       .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
@@ -74,6 +80,22 @@ export async function POST(
       })
       .where(eq(tickets.id, id))
       .returning();
+
+    // Sync resolution to Freshdesk (fire and forget)
+    if (isFreshdeskConfigured() && existingTicket.freshdeskId) {
+      const fdId = parseInt(existingTicket.freshdeskId);
+      // Add resolution as a note, then close/resolve the ticket
+      fdAddNote({
+        freshdeskId: fdId,
+        body: `<p><strong>Resolution:</strong> ${resolution.replace(/\n/g, "<br/>")}</p>`,
+        private: true,
+      }).catch((err) => console.error("Failed to add resolution note to Freshdesk:", err));
+
+      fdUpdateTicket({
+        freshdeskId: fdId,
+        status: closeTicket ? "closed" : "resolved",
+      }).catch((err) => console.error("Failed to resolve Freshdesk ticket:", err));
+    }
 
     // Get resolver name from Clerk
     let resolverName = "Team Member";

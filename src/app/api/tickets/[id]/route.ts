@@ -3,6 +3,10 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { tickets, users, clients, projects, ticketComments } from "@/lib/db/schema";
 import { eq, and, isNull, desc, or } from "drizzle-orm";
+import {
+  isFreshdeskConfigured,
+  updateTicket as fdUpdateTicket,
+} from "@/lib/freshdesk";
 
 export async function GET(
   req: NextRequest,
@@ -194,7 +198,7 @@ export async function PUT(
     const body = await req.json();
     const { title, description, type, priority, status } = body;
 
-    // Update the ticket
+    // Update the ticket in portal DB
     const updatedTicket = await db
       .update(tickets)
       .set({
@@ -210,6 +214,17 @@ export async function PUT(
 
     if (updatedTicket.length === 0) {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+
+    // Sync update to Freshdesk (fire and forget)
+    if (isFreshdeskConfigured() && updatedTicket[0].freshdeskId) {
+      fdUpdateTicket({
+        freshdeskId: parseInt(updatedTicket[0].freshdeskId),
+        ...(title && { subject: title }),
+        ...(status && { status }),
+        ...(priority && { priority }),
+        ...(type && { type }),
+      }).catch((err) => console.error("Failed to update Freshdesk ticket:", err));
     }
 
     return NextResponse.json(updatedTicket[0]);

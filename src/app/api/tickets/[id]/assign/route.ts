@@ -4,6 +4,10 @@ import { db } from "@/lib/db";
 import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { notifyTicketAssigned } from "@/lib/slack";
+import {
+  isFreshdeskConfigured,
+  addNote as fdAddNote,
+} from "@/lib/freshdesk";
 
 export async function POST(
   req: NextRequest,
@@ -63,6 +67,7 @@ export async function POST(
         title: tickets.title,
         clientId: tickets.clientId,
         projectId: tickets.projectId,
+        freshdeskId: tickets.freshdeskId,
       })
       .from(tickets)
       .where(and(eq(tickets.id, id), isNull(tickets.deletedAt)))
@@ -131,6 +136,15 @@ export async function POST(
       projectName,
       assigneeName,
     }).catch((err) => console.error("Slack notification failed:", err));
+
+    // Add assignment note to Freshdesk (fire and forget)
+    if (isFreshdeskConfigured() && existingTicket.freshdeskId) {
+      fdAddNote({
+        freshdeskId: parseInt(existingTicket.freshdeskId),
+        body: `<p>Ticket assigned to <strong>${assigneeName}</strong> in the DD Portal.</p>`,
+        private: true,
+      }).catch((err) => console.error("Failed to add assignment note to Freshdesk:", err));
+    }
 
     return NextResponse.json(updatedTicket[0]);
   } catch (error) {

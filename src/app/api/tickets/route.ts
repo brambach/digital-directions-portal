@@ -5,6 +5,11 @@ import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull, desc, sql, or } from "drizzle-orm";
 import { notifyTicketCreated } from "@/lib/slack";
 import { notifyNewTicket } from "@/lib/notifications";
+import {
+  isFreshdeskConfigured,
+  createTicket as fdCreateTicket,
+  getFreshdeskTicketUrl,
+} from "@/lib/freshdesk";
 
 export async function GET(req: NextRequest) {
   try {
@@ -220,7 +225,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create the ticket
+    // Fetch client info (needed for Freshdesk + notifications)
+    const client = await db
+      .select({
+        companyName: clients.companyName,
+        contactEmail: clients.contactEmail,
+        contactName: clients.contactName,
+        freshdeskId: clients.freshdeskId,
+      })
+      .from(clients)
+      .where(eq(clients.id, clientId))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    // Create ticket in Freshdesk (if configured)
+    let freshdeskId: string | null = null;
+    let freshdeskUrl: string | null = null;
+
+    if (isFreshdeskConfigured()) {
+      try {
+        const fdTicket = await fdCreateTicket({
+          subject: title,
+          description,
+          email: client?.contactEmail || "unknown@example.com",
+          priority: priority || "medium",
+          type: type || "general_support",
+          tags: ["dd-portal"],
+          ...(client?.freshdeskId ? { companyId: parseInt(client.freshdeskId) } : {}),
+        });
+        freshdeskId = String(fdTicket.id);
+        freshdeskUrl = getFreshdeskTicketUrl(fdTicket.id);
+      } catch (err) {
+        console.error("Failed to create Freshdesk ticket:", err);
+        // Continue — portal ticket still gets created even if Freshdesk fails
+      }
+    }
+
+    // Create the ticket in portal DB
     const newTicket = await db
       .insert(tickets)
       .values({
@@ -232,16 +273,10 @@ export async function POST(req: NextRequest) {
         clientId,
         projectId: projectId || null,
         createdBy: user.id,
+        freshdeskId,
+        freshdeskUrl,
       })
       .returning();
-
-    // Fetch client and project names for Slack notification
-    const client = await db
-      .select({ companyName: clients.companyName })
-      .from(clients)
-      .where(eq(clients.id, clientId))
-      .limit(1)
-      .then((rows) => rows[0]);
 
     let projectName: string | undefined;
     if (projectId) {
