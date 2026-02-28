@@ -419,7 +419,7 @@ export default async function AdminDashboard() {
           </div>
         </StaggerItem>
 
-        {/* ── Main Grid ────────────────────────────────────────────────── */}
+        {/* ── Main Grid: Pipeline + Connector Health ────────────────── */}
         <StaggerItem>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
@@ -492,8 +492,62 @@ export default async function AdminDashboard() {
               )}
             </div>
 
-            {/* Projects Due Soon */}
+            {/* Connector Health */}
             <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
+                    <p className="text-[12px] text-slate-400">Live integration status</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  <RefreshCw className="w-3 h-3" />
+                  <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks"}</span>
+                </div>
+              </div>
+
+              {/* Status summary badges */}
+              <div className="flex items-center gap-1.5 mb-4">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                  {healthyCount} Healthy
+                </span>
+                {degradedCount > 0 && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                    {degradedCount} Degraded
+                  </span>
+                )}
+                {downCount > 0 && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                    {downCount} Down
+                  </span>
+                )}
+              </div>
+
+              {integrationHealth.length >= 3 ? (
+                <ConnectorHealthNetwork integrations={integrationHealth} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Wifi className="w-8 h-8 text-slate-300 mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
+                  <p className="text-[12px] text-slate-400 mt-1">
+                    Configure integration monitors on project pages to see live status here
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </StaggerItem>
+
+        {/* ── Due Soon + Pending Invites + Freshdesk ──────────────────── */}
+        <StaggerItem>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+            {/* Projects Due Soon */}
+            <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
@@ -545,60 +599,6 @@ export default async function AdminDashboard() {
                   );
                 })}
               </div>
-            </div>
-          </div>
-        </StaggerItem>
-
-        {/* ── Connector Health + Pending Invites + Freshdesk ───────────── */}
-        <StaggerItem>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-            {/* Connector Health */}
-            <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
-                    <p className="text-[12px] text-slate-400">Integration flow status</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-                    {healthyCount} Healthy
-                  </span>
-                  {degradedCount > 0 && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-                      {degradedCount} Degraded
-                    </span>
-                  )}
-                  {downCount > 0 && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                      {downCount} Down
-                    </span>
-                  )}
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                    <RefreshCw className="w-3 h-3" />
-                    <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks yet"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {integrationHealth.length >= 3 ? (
-                <div className="overflow-x-auto -mx-1 px-1">
-                  <ConnectorHealthNetwork integrations={integrationHealth} />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <Wifi className="w-8 h-8 text-slate-300 mb-3" />
-                  <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
-                  <p className="text-[12px] text-slate-400 mt-1">
-                    Configure integration monitors on project pages to see live status here
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Right sidebar: Pending Invites + Freshdesk */}
