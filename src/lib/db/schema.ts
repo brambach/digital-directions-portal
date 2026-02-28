@@ -57,8 +57,9 @@ export const integrationServiceTypeEnum = pgEnum("integration_service_type", [
   "hibob",
   "workato",
   "keypay",
-  "adp",
   "netsuite",
+  "deputy",
+  "myob",
 ]);
 
 export const integrationStatusEnum = pgEnum("integration_status", [

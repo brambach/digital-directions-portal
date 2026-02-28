@@ -170,8 +170,9 @@ export function ConfigureIntegrationDialog({
                 <SelectItem value="hibob">HiBob (Status Page Only)</SelectItem>
                 <SelectItem value="keypay">KeyPay (Status Page Only)</SelectItem>
                 <SelectItem value="workato">Workato (Status + Recipe List)</SelectItem>
-                <SelectItem value="adp">ADP (Status Page Only)</SelectItem>
                 <SelectItem value="netsuite">NetSuite (Status Page Only)</SelectItem>
+                <SelectItem value="deputy">Deputy (Status Page Only)</SelectItem>
+                <SelectItem value="myob">MYOB (Status Page Only)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-slate-500">

@@ -5,8 +5,9 @@ import { isNull, and, eq } from "drizzle-orm";
 import { checkHiBobHealth } from "@/lib/integrations/hibob";
 import { checkKeyPayHealth } from "@/lib/integrations/keypay";
 import { checkWorkatoHealth } from "@/lib/integrations/workato";
-import { checkADPHealth } from "@/lib/integrations/adp";
 import { checkNetSuiteHealth } from "@/lib/integrations/netsuite";
+import { checkDeputyHealth } from "@/lib/integrations/deputy";
+import { checkMYOBHealth } from "@/lib/integrations/myob";
 import { checkAndSendAlerts } from "@/lib/integrations/alert-manager";
 import { isWorkatoHealthResult } from "@/lib/integrations/types";
 import { decryptCredentials } from "@/lib/crypto";
@@ -95,12 +96,16 @@ export async function GET(request: NextRequest) {
             break;
           }
 
-          case "adp":
-            healthResult = await checkADPHealth();
-            break;
-
           case "netsuite":
             healthResult = await checkNetSuiteHealth();
+            break;
+
+          case "deputy":
+            healthResult = await checkDeputyHealth();
+            break;
+
+          case "myob":
+            healthResult = await checkMYOBHealth();
             break;
 
           default:

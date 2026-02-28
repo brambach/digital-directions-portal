@@ -517,6 +517,9 @@ Invite-only portal - no public signup:
 - Portal UI remains; Freshdesk handles data/workflows for DD team
 - Clients never see "Freshdesk" — they use the portal as normal
 - Freshdesk account confirmed ✅
+- **Support email:** `support@digitaldirections.io` — emails to this address go directly into the Freshdesk ticket queue
+- **Freshdesk URL:** `https://digitaldirections-help.freshdesk.com`
+- Any "open a support ticket" or helpdesk links in the portal should direct admins to Freshdesk, NOT to an internal ticket page
 
 **Digi AI Chatbot (Sprint 10 of revamp):**
 - Soft gate for self-serve support — clients talk to Digi before opening tickets

@@ -1,17 +1,15 @@
 /**
- * ADP Health Check
+ * MYOB Health Check
  * Uses status page only - no credential checking
- * Note: ADP may not have a public status page in standard format
  */
 
 import { BaseHealthCheckResult } from "./types";
-import { checkADPStatus } from "./status-pages";
+import { checkMYOBStatus } from "./status-pages";
 
-export async function checkADPHealth(): Promise<BaseHealthCheckResult> {
+export async function checkMYOBHealth(): Promise<BaseHealthCheckResult> {
   try {
-    const statusResult = await checkADPStatus();
+    const statusResult = await checkMYOBStatus();
 
-    // Map status page result to health check result
     const statusMap = {
       operational: "healthy",
       degraded: "degraded",

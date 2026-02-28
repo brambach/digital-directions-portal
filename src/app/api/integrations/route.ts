@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate serviceType
-    const validServiceTypes = ["hibob", "workato", "keypay", "adp"];
+    const validServiceTypes = ["hibob", "workato", "keypay", "netsuite", "deputy", "myob"];
     if (!validServiceTypes.includes(serviceType)) {
       return NextResponse.json(
         { error: "Invalid serviceType" },

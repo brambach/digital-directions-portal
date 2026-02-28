@@ -286,8 +286,8 @@ async function seed() {
       },
       {
         clientId: insertedClients[3].id,
-        name: "ADP Integration",
-        description: "Connect HiBob with ADP for payroll sync",
+        name: "Deputy Integration",
+        description: "Connect HiBob with Deputy for leave and shift management",
         status: "completed",
         currentStage: "support",
         payrollSystem: "keypay",
@@ -381,12 +381,18 @@ async function seed() {
 
     // Create integration monitors
     const integrationData = [
+      // Meridian Healthcare — HiBob + NetSuite + Workato
       { projectId: insertedProjects[0].id, clientId: insertedClients[0].id, serviceType: "hibob" as const, serviceName: "HiBob HR Platform" },
       { projectId: insertedProjects[0].id, clientId: insertedClients[0].id, serviceType: "netsuite" as const, serviceName: "NetSuite ERP" },
       { projectId: insertedProjects[1].id, clientId: insertedClients[0].id, serviceType: "workato" as const, serviceName: "Workato Automation" },
+      // TechFlow Solutions — HiBob + KeyPay
       { projectId: insertedProjects[2].id, clientId: insertedClients[1].id, serviceType: "hibob" as const, serviceName: "HiBob Time Tracking" },
+      { projectId: insertedProjects[2].id, clientId: insertedClients[1].id, serviceType: "keypay" as const, serviceName: "KeyPay Payroll" },
+      // GreenLeaf Retail — Workato + MYOB
       { projectId: insertedProjects[4].id, clientId: insertedClients[2].id, serviceType: "workato" as const, serviceName: "Workato Workflows" },
-      { projectId: insertedProjects[6].id, clientId: insertedClients[3].id, serviceType: "adp" as const, serviceName: "ADP Payroll" },
+      { projectId: insertedProjects[4].id, clientId: insertedClients[2].id, serviceType: "myob" as const, serviceName: "MYOB Payroll" },
+      // Summit Financial — Deputy + HiBob
+      { projectId: insertedProjects[6].id, clientId: insertedClients[3].id, serviceType: "deputy" as const, serviceName: "Deputy Scheduling" },
       { projectId: insertedProjects[6].id, clientId: insertedClients[3].id, serviceType: "hibob" as const, serviceName: "HiBob Core" },
     ];
 
@@ -419,7 +425,7 @@ async function seed() {
       { clientId: insertedClients[2].id, projectId: null, title: "Question about permissions", description: "How to set up department-specific permissions?", type: "general_support" as const, priority: "low" as const, status: "closed" as const, createdAt: daysAgo(20) },
 
       { clientId: insertedClients[3].id, projectId: insertedProjects[6].id, title: "Compliance report formatting", description: "Need to adjust formatting on quarterly compliance reports", type: "project_issue" as const, priority: "medium" as const, status: "in_progress" as const, createdAt: daysAgo(7) },
-      { clientId: insertedClients[3].id, projectId: insertedProjects[7].id, title: "ADP integration complete", description: "Confirming successful completion of ADP integration", type: "general_support" as const, priority: "low" as const, status: "closed" as const, createdAt: daysAgo(30) },
+      { clientId: insertedClients[3].id, projectId: insertedProjects[7].id, title: "Deputy integration complete", description: "Confirming successful completion of Deputy integration", type: "general_support" as const, priority: "low" as const, status: "closed" as const, createdAt: daysAgo(30) },
       { clientId: insertedClients[3].id, projectId: null, title: "Add new country payroll", description: "Need to add Germany to multi-country payroll setup", type: "feature_request" as const, priority: "medium" as const, status: "open" as const, createdAt: daysAgo(3) },
 
       { clientId: insertedClients[4].id, projectId: insertedProjects[9].id, title: "Shift scheduling requirements", description: "Discussion of requirements for shift scheduling", type: "project_issue" as const, priority: "medium" as const, status: "waiting_on_client" as const, createdAt: daysAgo(4) },

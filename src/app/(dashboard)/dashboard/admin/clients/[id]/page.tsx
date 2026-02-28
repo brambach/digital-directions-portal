@@ -4,7 +4,7 @@ import { clients, projects, clientActivity, users, invites } from "@/lib/db/sche
 import { eq, isNull, and, gt, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Building2, Calendar, Activity as ActivityIcon, FolderOpen, CheckCircle, AlertCircle, Clock, User, Users as UsersIcon, MailCheck, LayoutGrid, FileText, Briefcase, Zap, MoreHorizontal, ChevronDown } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Calendar, Activity as ActivityIcon, FolderOpen, CheckCircle, AlertCircle, Clock, User, Users as UsersIcon, MailCheck, LayoutGrid, FileText, Briefcase, Zap, ChevronDown } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { AnimateOnScroll } from "@/components/animate-on-scroll";
@@ -285,7 +285,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest pl-8">Project Name</th>
                         <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Status</th>
                         <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Due Date</th>
-                        <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest text-right pr-8">Action</th>
                       </tr>
                     </thead>
                     <tbody className="text-sm">
@@ -294,34 +293,29 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         const isOverdue = project.dueDate && new Date(project.dueDate) < now && project.status !== "completed";
 
                         return (
-                          <tr key={project.id} className="group hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
-                            <td className="px-6 py-5 pl-8">
-                              <div className="flex flex-col">
+                          <tr key={project.id} className="group hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
+                            <td className="pl-8">
+                              <Link href={`/dashboard/admin/projects/${project.id}`} className="flex flex-col px-6 py-5">
                                 <span className="font-bold text-slate-900 group-hover:text-[#7C1CFF] transition-colors">{project.name}</span>
                                 <span className="text-xs text-slate-400 truncate max-w-[200px]">{project.description || "No description"}</span>
-                              </div>
+                              </Link>
                             </td>
-                            <td className="px-6 py-5">
-                              <div className="flex items-center gap-2">
+                            <td>
+                              <Link href={`/dashboard/admin/projects/${project.id}`} className="flex items-center gap-2 px-6 py-5">
                                 <div className={cn("w-1.5 h-1.5 rounded-full", status.dot)}></div>
                                 <span className="font-medium text-slate-700">{status.label}</span>
-                              </div>
+                              </Link>
                             </td>
-                            <td className="px-6 py-5">
-                              {project.dueDate ? (
-                                <div className={cn("inline-flex items-center px-2 py-1 rounded-md text-xs font-bold", isOverdue ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-500")}>
-                                  <Clock className="w-3 h-3 mr-1.5" />
-                                  {formatDistanceToNow(new Date(project.dueDate), { addSuffix: true })}
-                                </div>
-                              ) : (
-                                <span className="text-xs text-slate-400 italic">No deadline</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-5 pr-8 text-right">
-                              <Link href={`/dashboard/admin/projects/${project.id}`}>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" aria-label="Project options">
-                                  <MoreHorizontal className="w-4 h-4 text-slate-400" />
-                                </Button>
+                            <td>
+                              <Link href={`/dashboard/admin/projects/${project.id}`} className="flex px-6 py-5 pr-8">
+                                {project.dueDate ? (
+                                  <div className={cn("inline-flex items-center px-2 py-1 rounded-md text-xs font-bold", isOverdue ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-500")}>
+                                    <Clock className="w-3 h-3 mr-1.5" />
+                                    {formatDistanceToNow(new Date(project.dueDate), { addSuffix: true })}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-slate-400 italic">No deadline</span>
+                                )}
                               </Link>
                             </td>
                           </tr>

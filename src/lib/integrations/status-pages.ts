@@ -118,44 +118,23 @@ export async function checkHiBobStatus(): Promise<StatusPageResult> {
 }
 
 /**
- * Check KeyPay platform status
- * https://status.keypay.com.au
+ * Check KeyPay (Employment Hero) platform status
+ * KeyPay rebranded to Employment Hero — old status.keypay.com.au is dead
+ * https://status.employmenthero.com
  */
 export async function checkKeyPayStatus(): Promise<StatusPageResult> {
-  const statusPageUrl = "https://status.keypay.com.au/api/v2/summary.json";
+  const statusPageUrl =
+    "https://status.employmenthero.com/api/v2/summary.json";
   return parseAtlassianStatuspage(statusPageUrl);
 }
 
 /**
- * Check Workato platform status
- * https://status.workato.com
+ * Check Workato platform status (AU region)
+ * https://status.au.workato.com
  */
 export async function checkWorkatoStatus(): Promise<StatusPageResult> {
-  const statusPageUrl = "https://status.workato.com/api/v2/summary.json";
+  const statusPageUrl = "https://status.au.workato.com/api/v2/summary.json";
   return parseAtlassianStatuspage(statusPageUrl);
-}
-
-/**
- * Check ADP platform status
- * Note: ADP may not have a public status page in Statuspage format
- * This is a placeholder implementation
- */
-export async function checkADPStatus(): Promise<StatusPageResult> {
-  // ADP's status page URL (if they have one)
-  // This may need to be updated based on actual ADP status page format
-  try {
-    const statusPageUrl = "https://status.adp.com/api/v2/summary.json";
-    return parseAtlassianStatuspage(statusPageUrl);
-  } catch (error) {
-    // If ADP doesn't have a public status page, return operational by default
-    console.warn("ADP status page not available, assuming operational");
-    return {
-      status: "operational",
-      description: "Status page not available",
-      incidents: [],
-      lastChecked: new Date(),
-    };
-  }
 }
 
 /**
@@ -165,6 +144,31 @@ export async function checkADPStatus(): Promise<StatusPageResult> {
 export async function checkNetSuiteStatus(): Promise<StatusPageResult> {
   const statusPageUrl = "https://status.netsuite.com/api/v2/summary.json";
   return parseAtlassianStatuspage(statusPageUrl);
+}
+
+/**
+ * Check Deputy platform status
+ * https://status.deputy.com
+ */
+export async function checkDeputyStatus(): Promise<StatusPageResult> {
+  const statusPageUrl = "https://status.deputy.com/api/v2/summary.json";
+  return parseAtlassianStatuspage(statusPageUrl);
+}
+
+/**
+ * Check MYOB platform status
+ * https://status.myob.com uses StatusHub (not Atlassian Statuspage).
+ * StatusHub requires an API key for programmatic access, so we can't
+ * auto-check. Returns operational by default — check manually at
+ * https://status.myob.com if issues are suspected.
+ */
+export async function checkMYOBStatus(): Promise<StatusPageResult> {
+  return {
+    status: "operational",
+    description: "Status page requires manual check (StatusHub)",
+    incidents: [],
+    lastChecked: new Date(),
+  };
 }
 
 /**
@@ -180,10 +184,12 @@ export function getStatusChecker(
       return checkKeyPayStatus;
     case "workato":
       return checkWorkatoStatus;
-    case "adp":
-      return checkADPStatus;
     case "netsuite":
       return checkNetSuiteStatus;
+    case "deputy":
+      return checkDeputyStatus;
+    case "myob":
+      return checkMYOBStatus;
     default:
       throw new Error(`Unknown service type: ${serviceType}`);
   }
