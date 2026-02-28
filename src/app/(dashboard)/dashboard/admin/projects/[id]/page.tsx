@@ -10,12 +10,11 @@ import { format, differenceInDays } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { IntegrationManagementSection } from "@/components/integration-management-section";
+import { IntegrationFlowDiagram } from "@/components/integration-flow-diagram";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { AdminFlagSection } from "@/components/admin-flag-section";
 import { StageAdvanceButton } from "@/components/stage-advance-button";
 import { stageSlug } from "@/lib/lifecycle";
-import { FadeIn } from "@/components/motion/fade-in";
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 
 const EditProjectDialog = dynamicImport(
@@ -242,12 +241,15 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
 
       </StaggerItem>
 
-      {/* Connected Systems */}
+      {/* Integration Architecture */}
       <StaggerItem>
       <div>
-        <h3 className="text-base font-bold text-slate-900 mb-3">Connected Systems</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-slate-900">Integration Architecture</h3>
+          <p className="text-[11px] text-slate-400">Status checked every 5 min</p>
+        </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <IntegrationManagementSection
+          <IntegrationFlowDiagram
             projectId={id}
             clientId={project.clientId}
             integrations={integrations}

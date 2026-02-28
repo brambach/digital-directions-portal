@@ -15,7 +15,7 @@ import {
   UserCircle2,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { IntegrationHealthGrid } from "@/components/integration-health-grid";
+import { ClientIntegrationFlow } from "@/components/client-integration-flow";
 import { LifecycleStepper } from "@/components/lifecycle-stepper";
 import { DdFlagBanner } from "@/components/dd-flag-banner";
 import { Button } from "@/components/ui/button";
@@ -251,7 +251,7 @@ export default async function ClientProjectDetailPage({
               </div>
             )}
 
-            {/* System Health */}
+            {/* Integration Architecture */}
             <div>
               <div className="flex items-center gap-2.5 mb-4 px-1">
                 <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -261,10 +261,10 @@ export default async function ClientProjectDetailPage({
                   />
                 </div>
                 <h2 className="text-[15px] font-bold text-slate-800">
-                  System Health
+                  Integration Architecture
                 </h2>
               </div>
-              <IntegrationHealthGrid
+              <ClientIntegrationFlow
                 clientId={project.clientId}
                 projectId={id}
               />

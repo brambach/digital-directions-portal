@@ -278,8 +278,22 @@
     animation: float 3s ease-in-out infinite;
   }
 
+  .animate-connector-shimmer {
+    animation: connector-shimmer 4s ease-in-out infinite;
+  }
 }
 
+
+@keyframes connector-shimmer {
+  0%,
+  70% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
 
 /* ===== Glow Button - Hero CTA ===== */
 .glow-btn {
