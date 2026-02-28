@@ -1,7 +1,8 @@
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clientFlags } from "@/lib/db/schema";
-import { eq, isNull, and } from "drizzle-orm";
+import { projects, clientFlags, users } from "@/lib/db/schema";
+import { eq, isNull, and, inArray } from "drizzle-orm";
+import { clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -9,9 +10,9 @@ import {
   Calendar,
   Activity,
   HelpCircle,
-  Plus,
   ChevronRight,
   Sparkles,
+  UserCircle2,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { IntegrationHealthGrid } from "@/components/integration-health-grid";
@@ -62,6 +63,32 @@ export default async function ClientProjectDetailPage({
     .where(
       and(eq(clientFlags.projectId, id), isNull(clientFlags.resolvedAt))
     );
+
+  // Fetch integration specialists
+  const specialistIds: string[] = project.assignedSpecialists
+    ? JSON.parse(project.assignedSpecialists)
+    : [];
+  let specialists: { name: string; imageUrl: string | null }[] = [];
+  if (specialistIds.length > 0) {
+    const specialistDbUsers = await db
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(inArray(users.id, specialistIds));
+    const clerk = await clerkClient();
+    specialists = await Promise.all(
+      specialistDbUsers.map(async (u) => {
+        try {
+          const cu = await clerk.users.getUser(u.clerkId);
+          return {
+            name: `${cu.firstName || ""} ${cu.lastName || ""}`.trim() || "Integration Specialist",
+            imageUrl: cu.imageUrl || null,
+          };
+        } catch {
+          return { name: "Integration Specialist", imageUrl: null };
+        }
+      })
+    );
+  }
 
   const now = new Date();
   const daysLeft = project.dueDate
@@ -276,6 +303,50 @@ export default async function ClientProjectDetailPage({
                     : `${daysLeft} days remaining`}
                 </p>
               )}
+            </div>
+
+            {/* Integration Specialist */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-4">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Your Specialist</p>
+                {specialists.length > 0 ? (
+                  <div className="space-y-4">
+                    {specialists.map(({ name, imageUrl }) => {
+                      const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+                      return (
+                        <div key={name} className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-100 shadow-sm">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-violet-500 to-[#7C1CFF] flex items-center justify-center">
+                                <span className="text-sm font-bold text-white">{initials}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{name}</p>
+                            <p className="text-[11px] font-semibold text-[#7C1CFF]">Integration Specialist</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <UserCircle2 className="w-5 h-5 text-slate-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-400">Being assigned</p>
+                      <p className="text-[11px] text-slate-300">We&apos;ll be in touch soon</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="px-5 py-3 bg-violet-50 border-t border-violet-100">
+                <p className="text-[11px] text-[#7C1CFF] font-medium">Digital Directions</p>
+              </div>
             </div>
 
           </div>

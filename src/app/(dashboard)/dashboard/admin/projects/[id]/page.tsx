@@ -1,10 +1,11 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { projects, clients, integrationMonitors, clientFlags } from "@/lib/db/schema";
+import { projects, clients, integrationMonitors, clientFlags, users } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
+import { clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Link as LinkIcon, User, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Link as LinkIcon, User, UserCircle2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
@@ -28,29 +29,60 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
   await requireAdmin();
   const { id } = await params;
 
-  const project = await db
-    .select({
-      id: projects.id,
-      name: projects.name,
-      description: projects.description,
-      currentStage: projects.currentStage,
-      startDate: projects.startDate,
-      dueDate: projects.dueDate,
-      createdAt: projects.createdAt,
-      clientId: projects.clientId,
-      clientName: clients.companyName,
-      clientContact: clients.contactName,
-      clientEmail: clients.contactEmail,
-    })
-    .from(projects)
-    .leftJoin(clients, eq(projects.clientId, clients.id))
-    .where(and(eq(projects.id, id), isNull(projects.deletedAt)))
-    .limit(1)
-    .then((rows) => rows[0]);
+  const [project, adminDbUsers] = await Promise.all([
+    db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        description: projects.description,
+        currentStage: projects.currentStage,
+        startDate: projects.startDate,
+        dueDate: projects.dueDate,
+        createdAt: projects.createdAt,
+        clientId: projects.clientId,
+        clientName: clients.companyName,
+        clientContact: clients.contactName,
+        clientEmail: clients.contactEmail,
+        assignedSpecialists: projects.assignedSpecialists,
+      })
+      .from(projects)
+      .leftJoin(clients, eq(projects.clientId, clients.id))
+      .where(and(eq(projects.id, id), isNull(projects.deletedAt)))
+      .limit(1)
+      .then((rows) => rows[0]),
+    db
+      .select({ id: users.id, clerkId: users.clerkId })
+      .from(users)
+      .where(and(eq(users.role, "admin"), isNull(users.deletedAt))),
+  ]);
 
   if (!project) {
     notFound();
   }
+
+  const clerk = await clerkClient();
+  const adminUsers = await Promise.all(
+    adminDbUsers.map(async (u) => {
+      try {
+        const cu = await clerk.users.getUser(u.clerkId);
+        return {
+          id: u.id,
+          name: `${cu.firstName || ""} ${cu.lastName || ""}`.trim() || cu.emailAddresses[0]?.emailAddress || "Admin",
+          email: cu.emailAddresses[0]?.emailAddress || "",
+          imageUrl: cu.imageUrl || null,
+        };
+      } catch {
+        return { id: u.id, name: "Admin", email: "", imageUrl: null };
+      }
+    })
+  );
+
+  const specialistIds: string[] = project.assignedSpecialists
+    ? JSON.parse(project.assignedSpecialists)
+    : [];
+  const assignedSpecialists = adminUsers
+    .filter((u) => specialistIds.includes(u.id))
+    .map((u) => ({ name: u.name, imageUrl: u.imageUrl }));
 
   const integrations = await db
     .select()
@@ -99,7 +131,9 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
                 description: project.description,
                 startDate: project.startDate,
                 dueDate: project.dueDate,
+                assignedSpecialists: specialistIds,
               }}
+              adminUsers={adminUsers}
             />
           </div>
         </div>
@@ -171,6 +205,38 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           </div>
           <p className="text-sm font-bold text-slate-900">{project.clientContact}</p>
           <p className="text-xs text-slate-400 mt-1 truncate">{project.clientEmail}</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Specialist</p>
+          {assignedSpecialists.length > 0 ? (
+            <div className="space-y-2.5">
+              {assignedSpecialists.map(({ name, imageUrl }) => {
+                const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+                return (
+                  <div key={name} className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-100 shadow-sm">
+                      {imageUrl ? (
+                        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-500 to-[#7C1CFF] flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-white">{initials}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 truncate">{name}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5 mt-1">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <UserCircle2 className="w-4 h-4 text-slate-300" />
+              </div>
+              <p className="text-sm text-slate-400 italic">Unassigned</p>
+            </div>
+          )}
         </div>
       </div>
 

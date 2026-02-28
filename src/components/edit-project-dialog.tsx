@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Check, Plus, UserCircle2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface EditProjectDialogProps {
   project: {
@@ -16,10 +24,12 @@ interface EditProjectDialogProps {
     description: string | null;
     startDate: Date | null;
     dueDate: Date | null;
+    assignedSpecialists?: string[];
   };
+  adminUsers?: AdminUser[];
 }
 
-export function EditProjectDialog({ project }: EditProjectDialogProps) {
+export function EditProjectDialog({ project, adminUsers = [] }: EditProjectDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,6 +39,15 @@ export function EditProjectDialog({ project }: EditProjectDialogProps) {
     startDate: project.startDate ? new Date(project.startDate).toISOString().split("T")[0] : "",
     dueDate: project.dueDate ? new Date(project.dueDate).toISOString().split("T")[0] : "",
   });
+  const [selectedSpecialists, setSelectedSpecialists] = useState<string[]>(
+    project.assignedSpecialists || []
+  );
+
+  const toggleSpecialist = (id: string) => {
+    setSelectedSpecialists((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +62,7 @@ export function EditProjectDialog({ project }: EditProjectDialogProps) {
           description: formData.description || null,
           startDate: formData.startDate || null,
           dueDate: formData.dueDate || null,
+          assignedSpecialists: selectedSpecialists,
         }),
       });
 
@@ -114,6 +134,51 @@ export function EditProjectDialog({ project }: EditProjectDialogProps) {
               />
             </div>
           </div>
+
+          {/* Integration Specialists */}
+          {adminUsers.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <UserCircle2 className="w-3.5 h-3.5 text-[#7C1CFF]" />
+                Integration Specialist(s)
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {adminUsers.map((admin) => {
+                  const selected = selectedSpecialists.includes(admin.id);
+                  return (
+                    <button
+                      key={admin.id}
+                      type="button"
+                      onClick={() => toggleSpecialist(admin.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                        selected
+                          ? "bg-violet-50 border-[#7C1CFF] text-[#7C1CFF]"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      )}
+                    >
+                      {selected ? (
+                        <Check className="w-3 h-3" />
+                      ) : (
+                        <Plus className="w-3 h-3 opacity-50" />
+                      )}
+                      {admin.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedSpecialists.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSpecialists([])}
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3 h-3" />
+                  Clear selection
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
