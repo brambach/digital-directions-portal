@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DigiFloat } from "@/components/motion/digi-float";
+import { stageGuidance, stageSlug } from "@/lib/lifecycle";
 import { FadeIn } from "@/components/motion/fade-in";
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 import { CountUp } from "@/components/motion/count-up";
@@ -52,24 +53,23 @@ export default async function ClientDashboard() {
 
   const projectIds = clientProjects.map((p) => p.id);
 
-  const activePhases = projectIds.length > 0
-    ? await db
-        .select({
-          id: projectPhases.id,
-          name: projectPhases.name,
-          description: projectPhases.description,
-          projectId: projectPhases.projectId,
-          projectName: projects.name,
-          startedAt: projectPhases.startedAt,
-        })
-        .from(projectPhases)
-        .innerJoin(projects, eq(projectPhases.projectId, projects.id))
-        .where(and(inArray(projectPhases.projectId, projectIds), eq(projectPhases.status, "in_progress")))
-        .orderBy(projectPhases.startedAt)
-        .limit(4)
-    : [];
-
-  const activePhaseCount = activePhases.length;
+  // Derive current steps directly from each project's lifecycle stage
+  const stageSteps = clientProjects
+    .filter((p) => p.currentStage !== "pre_sales" && p.currentStage !== "support")
+    .map((p) => {
+      const guidance = stageGuidance(p.currentStage);
+      const slug = stageSlug(p.currentStage);
+      return {
+        projectId: p.id,
+        projectName: p.name,
+        title: guidance.title,
+        description: guidance.description,
+        href: slug
+          ? `/dashboard/client/projects/${p.id}/${slug}`
+          : `/dashboard/client/projects/${p.id}`,
+      };
+    })
+    .slice(0, 4);
 
   const pendingPhases = projectIds.length > 0
     ? await db
@@ -115,9 +115,9 @@ export default async function ClientDashboard() {
       href: "/dashboard/client/projects",
     },
     {
-      label: "Active Phases",
-      value: activePhaseCount.toString(),
-      sub: activePhaseCount > 0 ? "Phases in progress" : "No phases in progress",
+      label: "Current Steps",
+      value: stageSteps.length.toString(),
+      sub: stageSteps.length > 0 ? "Steps awaiting action" : "No active projects",
       icon: ListChecks,
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
@@ -268,7 +268,7 @@ export default async function ClientDashboard() {
           {/* Right Column: Action Required + Recent Activity */}
           <div className="lg:col-span-5 space-y-5">
             {/* Action Required */}
-            <AmberPulse active={activePhases.length > 0} className="rounded-2xl">
+            <AmberPulse active={stageSteps.length > 0} className="rounded-2xl">
             <div className="bg-white rounded-2xl border border-slate-100 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
@@ -277,44 +277,42 @@ export default async function ClientDashboard() {
                   </div>
                   <div>
                     <h2 className="text-[15px] font-bold text-slate-800">Your Current Steps</h2>
-                    <p className="text-[12px] text-slate-400">Active implementation phases</p>
+                    <p className="text-[12px] text-slate-400">What needs your attention</p>
                   </div>
                 </div>
-                {activePhases.length > 0 && (
+                {stageSteps.length > 0 && (
                   <span className="text-[11px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                    {activePhases.length} active
+                    {stageSteps.length} active
                   </span>
                 )}
               </div>
 
-              {activePhases.length === 0 ? (
+              {stageSteps.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <DigiFloat variant="celebrating" size="sm" className="mb-3" />
                   <p className="text-[13px] font-semibold text-slate-700">All caught up!</p>
-                  <p className="text-[12px] text-slate-400 mt-1">No active phases right now</p>
+                  <p className="text-[12px] text-slate-400 mt-1">No active projects right now</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {activePhases.map((phase) => (
+                  {stageSteps.map((step) => (
                     <Link
-                      key={phase.id}
-                      href={`/dashboard/client/projects/${phase.projectId}`}
+                      key={step.projectId}
+                      href={step.href}
                       className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-amber-200 hover:bg-amber-50/30 transition-all group"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0">
                           Current Step
                         </span>
-                        <span className="text-[11px] text-slate-400 truncate">{phase.projectName}</span>
+                        <span className="text-[11px] text-slate-400 truncate">{step.projectName}</span>
                       </div>
                       <p className="text-[13px] font-semibold text-slate-800 group-hover:text-violet-700 transition-colors">
-                        {phase.name}
+                        {step.title}
                       </p>
-                      {phase.description && (
-                        <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                          {phase.description}
-                        </p>
-                      )}
+                      <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
+                        {step.description}
+                      </p>
                     </Link>
                   ))}
                   <Link

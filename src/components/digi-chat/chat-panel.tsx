@@ -50,7 +50,7 @@ export function ChatPanel({
         <div className="flex items-center gap-3 px-4 py-3 border-b border-violet-100/50 flex-shrink-0 bg-gradient-to-r from-white via-violet-50/30 to-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/digi/digi_neutral.png"
+            src="/images/digi/digi_headset.png"
             alt="Digi"
             className="w-8 h-8 object-contain"
             draggable={false}

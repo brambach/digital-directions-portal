@@ -76,7 +76,7 @@ export function stageGuidance(key: string): { title: string; description: string
       description: "Your project is being set up. You'll be notified when discovery begins.",
     },
     discovery: {
-      title: "Complete the Discovery Questionnaire",
+      title: "Go complete your Discovery Questionnaire",
       description: "Tell us about your organisation, payroll setup, and integration requirements so we can plan your build.",
     },
     provisioning: {
