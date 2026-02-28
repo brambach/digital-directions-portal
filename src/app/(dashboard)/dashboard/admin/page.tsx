@@ -6,7 +6,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   Users,
   FolderKanban,
-  Activity,
   ArrowUpRight,
   Clock,
   ChevronRight,
@@ -189,17 +188,6 @@ export default async function AdminDashboard() {
       trendUp: true,
       href: "/dashboard/admin/clients",
     },
-    {
-      label: "Platform Health",
-      value: "99.9%",
-      sub: "All systems go",
-      icon: Activity,
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-      trend: "Uptime 30 days",
-      trendUp: true,
-      href: "/dashboard/admin/settings",
-    },
   ];
 
   // ── Integration Health (real data from DB) ──────────────────────────────
@@ -369,7 +357,7 @@ export default async function AdminDashboard() {
 
         {/* ── Stat Cards ───────────────────────────────────────────────── */}
         <StaggerItem>
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {STATS.map((stat) => {
               const numericValue = parseFloat(stat.value);
               const isInteger = Number.isInteger(numericValue);
