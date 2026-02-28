@@ -125,41 +125,57 @@ export default async function ProjectsPage() {
       </div>
 
       <div className="p-8">
-        {/* Kanban Grid */}
-        <div className="flex gap-6 overflow-x-auto pb-10 no-scrollbar">
+        {/* Kanban Grid — fluid columns, empty stages collapse */}
+        <div className="flex gap-3 overflow-x-auto pb-10 no-scrollbar">
           {STAGE_COLUMNS.map((stage, colIdx) => {
             const stageProjects = groupedByStage[stage] ?? [];
             const colors = STAGE_COLORS[stage];
+            const isEmpty = stageProjects.length === 0;
+
             return (
-              <FadeIn key={stage} delay={colIdx * 0.07} className="flex-shrink-0 w-[300px]">
-                {/* Column Header */}
-                <div className="flex items-center justify-between mb-4 px-2">
-                  <div className="flex items-center gap-2">
+              <FadeIn
+                key={stage}
+                delay={colIdx * 0.07}
+                className={cn(
+                  isEmpty
+                    ? "w-10 flex-shrink-0"
+                    : "flex-1 min-w-[220px]"
+                )}
+              >
+                {isEmpty ? (
+                  /* Collapsed empty column — thin strip with vertical label */
+                  <div className="flex flex-col items-center gap-2 pt-1.5">
                     <div className={cn("w-1.5 h-1.5 rounded-full", colors?.dot ?? "bg-slate-400")} />
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-medium text-slate-300 [writing-mode:vertical-lr] uppercase tracking-widest">
                       {STAGE_LABELS[stage]}
                     </span>
-                    <span className="bg-slate-50 text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-100">
-                      {stageProjects.length}
-                    </span>
                   </div>
-                  <button className="text-slate-300 hover:text-slate-600 transition-colors" aria-label="Column options">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Cards */}
-                <div className="space-y-4">
-                  {stageProjects.length === 0 ? (
-                    <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-xl">
-                      <p className="text-xs text-slate-400">Empty</p>
+                ) : (
+                  <>
+                    {/* Column Header */}
+                    <div className="flex items-center justify-between mb-4 px-2">
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", colors?.dot ?? "bg-slate-400")} />
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                          {STAGE_LABELS[stage]}
+                        </span>
+                        <span className="bg-slate-50 text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-100">
+                          {stageProjects.length}
+                        </span>
+                      </div>
+                      <button className="text-slate-300 hover:text-slate-600 transition-colors" aria-label="Column options">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
                     </div>
-                  ) : (
-                    stageProjects.map((project, idx) => (
-                      <ProjectCard key={project.id} project={project} stage={stage} index={idx} />
-                    ))
-                  )}
-                </div>
+
+                    {/* Cards */}
+                    <div className="space-y-4">
+                      {stageProjects.map((project, idx) => (
+                        <ProjectCard key={project.id} project={project} stage={stage} index={idx} />
+                      ))}
+                    </div>
+                  </>
+                )}
               </FadeIn>
             );
           })}
