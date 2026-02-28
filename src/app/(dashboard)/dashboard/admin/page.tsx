@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { AnimatedProgressBar } from "@/components/animated-progress-bar";
 import { DigiFloat } from "@/components/motion/digi-float";
 import { FadeIn } from "@/components/motion/fade-in";
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
@@ -61,6 +60,32 @@ const PROJECT_STATUS_STYLES: Record<string, { dot: string; label: string }> = {
   on_hold:     { dot: "bg-slate-400",   label: "On Hold"     },
 };
 
+const STAGE_LABELS: Record<string, string> = {
+  pre_sales:    "Pre-Sales",
+  discovery:    "Discovery",
+  provisioning: "Provisioning",
+  bob_config:   "Bob Config",
+  mapping:      "Mapping",
+  build:        "Build",
+  uat:          "UAT",
+  go_live:      "Go-Live",
+  support:      "Support",
+};
+
+const STAGE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  pre_sales:    { bg: "bg-slate-100",  text: "text-slate-600",   dot: "bg-slate-400"   },
+  discovery:    { bg: "bg-sky-50",     text: "text-sky-700",     dot: "bg-sky-500"     },
+  provisioning: { bg: "bg-indigo-50",  text: "text-indigo-700",  dot: "bg-indigo-500"  },
+  bob_config:   { bg: "bg-violet-50",  text: "text-violet-700",  dot: "bg-violet-500"  },
+  mapping:      { bg: "bg-purple-50",  text: "text-purple-700",  dot: "bg-purple-500"  },
+  build:        { bg: "bg-fuchsia-50", text: "text-fuchsia-700", dot: "bg-fuchsia-500" },
+  uat:          { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-500"   },
+  go_live:      { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  support:      { bg: "bg-teal-50",    text: "text-teal-700",    dot: "bg-teal-500"    },
+};
+
+const STAGE_ORDER = ["pre_sales", "discovery", "provisioning", "bob_config", "mapping", "build", "uat", "go_live", "support"];
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function AdminDashboard() {
@@ -71,12 +96,13 @@ export default async function AdminDashboard() {
   const fourteenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
   // ── Real DB queries ──────────────────────────────────────────────────────
-  const [pipelineRows, clientCounts, dueSoonRows, pendingInviteRows] = await Promise.all([
-    // Pipeline: project counts grouped by status
-    db.select({ status: projects.status, count: sql<number>`count(*)::int` })
-      .from(projects)
-      .where(isNull(projects.deletedAt))
-      .groupBy(projects.status),
+  const [projectStats, clientCounts, dueSoonRows, pendingInviteRows] = await Promise.all([
+    // Project counts for stat cards
+    db.select({
+      total:  sql<number>`count(*)::int`,
+      active: sql<number>`count(*) filter (where status != 'completed')::int`,
+      review: sql<number>`count(*) filter (where status = 'review')::int`,
+    }).from(projects).where(isNull(projects.deletedAt)),
 
     // Client counts: total + active
     db.select({
@@ -120,23 +146,14 @@ export default async function AdminDashboard() {
   ]);
 
   // ── Derived values ───────────────────────────────────────────────────────
-  const totalProjects = pipelineRows.reduce((s, r) => s + r.count, 0);
-  const getCount = (status: string) => pipelineRows.find(r => r.status === status)?.count ?? 0;
+  const totalProjects   = projectStats[0]?.total  ?? 0;
+  const activeProjectCount = projectStats[0]?.active ?? 0;
+  const reviewCount     = projectStats[0]?.review ?? 0;
 
-  const activeProjectCount = totalProjects - getCount("completed");
-  const reviewCount = getCount("review");
   const dueThisWeekCount = dueSoonRows.filter(p => p.dueDate && p.dueDate <= sevenDaysFromNow).length;
   const overdueCount = dueSoonRows.filter(p => p.dueDate && p.dueDate < now).length;
   const totalClients = clientCounts[0]?.total ?? 0;
   const activeClients = clientCounts[0]?.active ?? 0;
-
-  const PIPELINE = [
-    { key: "in_progress", label: "In Progress", count: getCount("in_progress"), total: totalProjects, color: "bg-violet-500" },
-    { key: "planning",    label: "Planning",     count: getCount("planning"),    total: totalProjects, color: "bg-sky-500"    },
-    { key: "review",      label: "In Review",    count: getCount("review"),      total: totalProjects, color: "bg-amber-500"  },
-    { key: "completed",   label: "Completed",    count: getCount("completed"),   total: totalProjects, color: "bg-emerald-500"},
-    { key: "on_hold",     label: "On Hold",      count: getCount("on_hold"),     total: totalProjects, color: "bg-slate-400"  },
-  ];
 
   const PROJECTS_DUE_SOON = dueSoonRows.map(p => ({
     id: p.id,
@@ -189,6 +206,26 @@ export default async function AdminDashboard() {
       href: "/dashboard/admin/clients",
     },
   ];
+
+  // ── Project pipeline: actual projects with lifecycle stages ─────────────
+  const projectListRows = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      currentStage: projects.currentStage,
+      dueDate: projects.dueDate,
+      clientName: clients.companyName,
+    })
+    .from(projects)
+    .leftJoin(clients, eq(projects.clientId, clients.id))
+    .where(and(isNull(projects.deletedAt), ne(projects.status, "completed")))
+    .limit(8);
+
+  const PROJECT_PIPELINE = [...projectListRows].sort((a, b) => {
+    const aIdx = STAGE_ORDER.indexOf(a.currentStage ?? "");
+    const bIdx = STAGE_ORDER.indexOf(b.currentStage ?? "");
+    return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+  });
 
   // ── Integration Health (real data from DB) ──────────────────────────────
   const monitors = await db
@@ -416,42 +453,53 @@ export default async function AdminDashboard() {
                 </Link>
               </div>
 
-              <div className="space-y-4">
-                {PIPELINE.map((item, i) => {
-                  const pct = Math.round((item.count / item.total) * 100);
-                  const barDelay = 650 + i * 100;
-                  return (
-                    <div key={item.key}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className={cn("w-2 h-2 rounded-full flex-shrink-0", item.color)} />
-                          <span className="text-[13px] font-medium text-slate-700">{item.label}</span>
+              {PROJECT_PIPELINE.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <FolderKanban className="w-8 h-8 text-slate-300 mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-600">No active projects</p>
+                  <p className="text-[12px] text-slate-400 mt-1">Projects will appear here as they progress</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {PROJECT_PIPELINE.map((project) => {
+                    const stage = project.currentStage ?? "pre_sales";
+                    const stageColors = STAGE_COLORS[stage] ?? STAGE_COLORS.pre_sales;
+                    const stageLabel = STAGE_LABELS[stage] ?? stage;
+                    const daysLeft = project.dueDate ? Math.ceil((project.dueDate.getTime() - now.getTime()) / 86400000) : null;
+                    const isOverdue = project.dueDate ? project.dueDate < now : false;
+                    return (
+                      <Link
+                        key={project.id}
+                        href={`/dashboard/admin/projects/${project.id}`}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-slate-800 truncate group-hover:text-violet-700 transition-colors">
+                            {project.name}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 truncate">{project.clientName ?? "Unknown"}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-bold text-slate-900 tabular-nums">{item.count}</span>
-                          <span className="text-[11px] text-slate-400 w-8 text-right">{pct}%</span>
-                        </div>
-                      </div>
-                      <AnimatedProgressBar pct={pct} color={item.color} delayMs={barDelay} />
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-xl font-bold text-slate-900 tabular-nums">{PIPELINE.find((p) => p.key === "in_progress")?.count ?? 0}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Active now</p>
+                        <span className={cn(
+                          "flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0",
+                          stageColors.bg, stageColors.text
+                        )}>
+                          <span className={cn("w-1.5 h-1.5 rounded-full", stageColors.dot)} />
+                          {stageLabel}
+                        </span>
+                        {daysLeft !== null && (
+                          <span className={cn(
+                            "flex-shrink-0 flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg",
+                            isOverdue ? "bg-red-50 text-red-600" : daysLeft <= 3 ? "bg-amber-50 text-amber-700" : "bg-slate-50 text-slate-500"
+                          )}>
+                            <Clock className="w-3 h-3" />
+                            {isOverdue ? "Overdue" : daysLeft === 0 ? "Today" : `${daysLeft}d`}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-slate-900 tabular-nums">{PIPELINE.find((p) => p.key === "review")?.count ?? 0}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Awaiting review</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-emerald-600 tabular-nums">{PIPELINE.find((p) => p.key === "completed")?.count ?? 0}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Completed</p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Projects Due Soon */}
@@ -511,130 +559,128 @@ export default async function AdminDashboard() {
           </div>
         </StaggerItem>
 
-        {/* ── Connector Health (full width) ────────────────────────────── */}
-        <StaggerItem>
-          <div className="bg-white rounded-2xl border border-slate-100 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-                  <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
-                </div>
-                <div>
-                  <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
-                  <p className="text-[12px] text-slate-400">Integration flow status</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-                  {healthyCount} Healthy
-                </span>
-                {degradedCount > 0 && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-                    {degradedCount} Degraded
-                  </span>
-                )}
-                {downCount > 0 && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                    {downCount} Down
-                  </span>
-                )}
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <RefreshCw className="w-3 h-3" />
-                  <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks yet"}</span>
-                </div>
-              </div>
-            </div>
-
-            {integrationHealth.length >= 3 ? (
-              <div className="overflow-x-auto -mx-1 px-1">
-                <ConnectorHealthNetwork integrations={integrationHealth} />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Wifi className="w-8 h-8 text-slate-300 mb-3" />
-                <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
-                <p className="text-[12px] text-slate-400 mt-1">
-                  Configure integration monitors on project pages to see live status here
-                </p>
-              </div>
-            )}
-          </div>
-        </StaggerItem>
-
-        {/* ── Pending Invites + Freshdesk ──────────────────────────────── */}
+        {/* ── Connector Health + Pending Invites + Freshdesk ───────────── */}
         <StaggerItem>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-            {/* Pending Invites */}
+            {/* Connector Health */}
             <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
-                    <UserPlus className="w-4 h-4 text-sky-600" strokeWidth={2} />
+                  <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-bold text-slate-800">Pending Invites</h2>
-                    <p className="text-[12px] text-slate-400">Awaiting acceptance</p>
+                    <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
+                    <p className="text-[12px] text-slate-400">Integration flow status</p>
                   </div>
                 </div>
-                {PENDING_INVITES.length > 0 && (
-                  <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
-                    {PENDING_INVITES.length} pending
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                    {healthyCount} Healthy
                   </span>
-                )}
+                  {degradedCount > 0 && (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                      {degradedCount} Degraded
+                    </span>
+                  )}
+                  {downCount > 0 && (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                      {downCount} Down
+                    </span>
+                  )}
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <RefreshCw className="w-3 h-3" />
+                    <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks yet"}</span>
+                  </div>
+                </div>
               </div>
 
-              {PENDING_INVITES.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <DigiFloat variant="celebrating" size="sm" className="mb-3" />
-                  <p className="text-[13px] font-semibold text-slate-700">All caught up</p>
-                  <p className="text-[12px] text-slate-400 mt-1">No pending invitations</p>
+              {integrationHealth.length >= 3 ? (
+                <div className="overflow-x-auto -mx-1 px-1">
+                  <ConnectorHealthNetwork integrations={integrationHealth} />
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {PENDING_INVITES.map((invite) => (
-                    <div
-                      key={invite.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-[12px] font-bold">{invite.email.charAt(0).toUpperCase()}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-slate-800 truncate">{invite.email}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{invite.client} · {invite.sentAt}</p>
-                      </div>
-                      <CancelInviteButton inviteId={invite.id} />
-                    </div>
-                  ))}
-                  <Link
-                    href="/dashboard/admin/clients"
-                    className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-slate-500 hover:text-violet-600 transition-colors"
-                  >
-                    Manage invites <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Wifi className="w-8 h-8 text-slate-300 mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
+                  <p className="text-[12px] text-slate-400 mt-1">
+                    Configure integration monitors on project pages to see live status here
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Freshdesk quick link */}
-            {/* Freshdesk: support@digitaldirections.io routes here */}
-            <a
-              href="https://digitaldirections-help.freshdesk.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lg:col-span-4 group bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Headphones className="w-5 h-5 text-white" strokeWidth={2} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-white">Open Freshdesk</p>
-                <p className="text-[11px] text-violet-200 mt-0.5">Manage support tickets</p>
-              </div>
-              <ExternalLink className="w-4 h-4 text-violet-300 group-hover:text-white transition-colors flex-shrink-0" />
-            </a>
+            {/* Right sidebar: Pending Invites + Freshdesk */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
 
+              {/* Pending Invites */}
+              <div className="flex-1 bg-white rounded-2xl border border-slate-100 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
+                      <UserPlus className="w-4 h-4 text-sky-600" strokeWidth={2} />
+                    </div>
+                    <h2 className="text-[14px] font-bold text-slate-800">Pending Invites</h2>
+                  </div>
+                  {PENDING_INVITES.length > 0 && (
+                    <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
+                      {PENDING_INVITES.length}
+                    </span>
+                  )}
+                </div>
+
+                {PENDING_INVITES.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-4 text-center">
+                    <DigiFloat variant="celebrating" size="sm" className="mb-2" />
+                    <p className="text-[12px] font-semibold text-slate-700">All caught up</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">No pending invitations</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {PENDING_INVITES.map((invite) => (
+                      <div
+                        key={invite.id}
+                        className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-[11px] font-bold">{invite.email.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-medium text-slate-800 truncate">{invite.email}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{invite.client} · {invite.sentAt}</p>
+                        </div>
+                        <CancelInviteButton inviteId={invite.id} />
+                      </div>
+                    ))}
+                    <Link
+                      href="/dashboard/admin/clients"
+                      className="flex items-center justify-center gap-1 w-full pt-1 text-[11px] font-semibold text-slate-400 hover:text-violet-600 transition-colors"
+                    >
+                      Manage invites <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Freshdesk: support@digitaldirections.io routes here */}
+              <a
+                href="https://digitaldirections-help.freshdesk.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Headphones className="w-4.5 h-4.5 text-white" strokeWidth={2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-white">Open Freshdesk</p>
+                  <p className="text-[11px] text-violet-200 mt-0.5">Manage support tickets</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-violet-300 group-hover:text-white transition-colors flex-shrink-0" />
+              </a>
+
+            </div>
           </div>
         </StaggerItem>
 
