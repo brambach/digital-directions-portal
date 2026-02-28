@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 import { Check, Lock, ChevronRight } from "lucide-react";
 import { LIFECYCLE_STAGES, stageSlug } from "@/lib/lifecycle";
 
+const NODE_W = 32; // w-8 = 32px
+const NODE_PAD = NODE_W / 2; // 16px — center of first/last node
+
 export interface LifecycleStage {
   key: string;
   label: string;
@@ -33,11 +36,46 @@ export function LifecycleStepper({
   const completedCount = resolvedStages.filter((s) => s.status === "complete").length;
   const progressPct = Math.round((completedCount / resolvedStages.length) * 100);
 
-  // Calculate progress fraction for SVG connector
   const currentStageIdx = resolvedStages.findIndex(
     (s) => s.status === "active" || s.status === "review"
   );
-  const progressFraction = getConnectorWidth(resolvedStages) / 100;
+
+  // Index to draw the progress line to (active stage, or last complete if no active)
+  const progressTargetIdx = currentStageIdx >= 0
+    ? currentStageIdx
+    : resolvedStages.reduce((acc, s, i) => s.status === "complete" ? i : acc, -1);
+
+  // Directly measure circle positions via getBoundingClientRect so we aren't
+  // thrown off by variable-width flex items (labels make items wider than the 32px circle).
+  // Line ends at the LEFT EDGE of the active circle so it visually touches the ring/border.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [progressLineW, setProgressLineW] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      const container = containerRef.current;
+      if (!container || progressTargetIdx <= 0) { setProgressLineW(0); return; }
+
+      const circles = container.querySelectorAll<HTMLElement>("[data-lifecycle-node]");
+      const first = circles[0];
+      const target = circles[progressTargetIdx];
+      if (!first || !target) return;
+
+      const cRect = container.getBoundingClientRect();
+      const fRect = first.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+
+      // From center of first circle to left edge of target circle
+      const lineStart = fRect.left + fRect.width / 2 - cRect.left;
+      const lineEnd = tRect.left - cRect.left;
+      setProgressLineW(Math.max(0, lineEnd - lineStart));
+    }
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [progressTargetIdx]);
 
   // Celebration: track previous stage and celebrate when advancing
   const prevStageRef = useRef(currentStageIdx);
@@ -76,20 +114,19 @@ export function LifecycleStepper({
       </div>
 
       {/* Stepper */}
-      <div className="relative">
-        {/* SVG Connector line */}
-        <svg className="absolute top-4 left-4 right-4 h-0.5 z-0" style={{ overflow: "visible", width: "calc(100% - 32px)" }}>
-          <line x1="0" y1="0" x2="100%" y2="0" stroke="#e2e8f0" strokeWidth="2" />
-          <motion.line
-            x1="0" y1="0"
-            x2="100%" y2="0"
-            stroke="#7C1CFF"
-            strokeWidth="2"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: progressFraction, opacity: progressFraction > 0 ? 1 : 0 }}
-            transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-          />
-        </svg>
+      <div ref={containerRef} className="relative">
+        {/* Gray background track */}
+        <div className="absolute top-4 left-4 right-4 h-0.5 bg-slate-200 z-0" />
+
+        {/* Purple progress line — ends at the left edge of the active circle so it
+            visually touches the ring/border rather than hiding under the white bg */}
+        <motion.div
+          className="absolute top-4 h-0.5 bg-[#7C1CFF] z-0"
+          style={{ left: `${NODE_PAD}px` }}
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: progressLineW, opacity: progressLineW > 0 ? 1 : 0 }}
+          transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+        />
 
         {/* Stage nodes */}
         <div className="relative z-10 flex justify-between">
@@ -117,6 +154,7 @@ export function LifecycleStepper({
                   }
                 >
                   <div
+                    data-lifecycle-node
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-200",
                       stage.status === "complete" && "bg-[#7C1CFF] border-[#7C1CFF] text-white",
@@ -187,14 +225,4 @@ function deriveStages(currentStage: string): LifecycleStage[] {
   }));
 }
 
-function getConnectorWidth(stages: LifecycleStage[]): number {
-  const lastCompleteIndex = stages.reduce(
-    (acc, s, i) => (s.status === "complete" ? i : acc),
-    -1
-  );
-  const activeIndex = stages.findIndex((s) => s.status === "active");
-  const targetIndex = activeIndex >= 0 ? activeIndex : lastCompleteIndex;
 
-  if (targetIndex <= 0) return 0;
-  return (targetIndex / (stages.length - 1)) * 100;
-}
