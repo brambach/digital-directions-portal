@@ -90,7 +90,7 @@ export function ChatBubble({ isOpen, onClick }: ChatBubbleProps) {
           ) : (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src="/images/digi/digi_neutral.png"
+              src="/images/digi/digi_headset.png"
               alt="Digi"
               className="w-9 h-9 object-contain"
               draggable={false}
