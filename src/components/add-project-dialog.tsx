@@ -49,7 +49,6 @@ export function AddProjectDialog({ clients, admins = [] }: AddProjectDialogProps
     name: "",
     description: "",
     clientId: "",
-    status: "planning",
     startDate: "",
     dueDate: "",
   });
@@ -83,7 +82,6 @@ export function AddProjectDialog({ clients, admins = [] }: AddProjectDialogProps
         name: "",
         description: "",
         clientId: "",
-        status: "planning",
         startDate: "",
         dueDate: "",
       });
@@ -138,45 +136,24 @@ export function AddProjectDialog({ clients, admins = [] }: AddProjectDialogProps
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clientId">Client *</Label>
-                <Select
-                  required
-                  value={formData.clientId}
-                  onValueChange={(value) => setFormData({ ...formData, clientId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.companyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="review">In Review</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="on_hold">On Hold</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientId">Client *</Label>
+              <Select
+                required
+                value={formData.clientId}
+                onValueChange={(value) => setFormData({ ...formData, clientId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.companyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

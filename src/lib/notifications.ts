@@ -149,41 +149,6 @@ export async function notifyNewMessage({
 }
 
 /**
- * Notify when project status changes
- * - Notify all users of the client
- */
-export async function notifyProjectStatusChange({
-  projectId,
-  projectName,
-  clientId,
-  oldStatus,
-  newStatus,
-}: {
-  projectId: string;
-  projectName: string;
-  clientId: string;
-  oldStatus: string;
-  newStatus: string;
-}): Promise<void> {
-  const statusLabels: Record<string, string> = {
-    planning: "Planning",
-    in_progress: "In Progress",
-    review: "Review",
-    completed: "Completed",
-    on_hold: "On Hold",
-  };
-
-  const clientUserIds = await getClientUserIds(clientId);
-  await createNotificationsForUsers({
-    userIds: clientUserIds,
-    type: "project_update",
-    title: "Project status updated",
-    message: `${projectName} status changed from ${statusLabels[oldStatus] || oldStatus} to ${statusLabels[newStatus] || newStatus}`,
-    linkUrl: `/dashboard/client/projects/${projectId}`,
-  });
-}
-
-/**
  * Notify when a new ticket is created
  * - Notify all admins
  */

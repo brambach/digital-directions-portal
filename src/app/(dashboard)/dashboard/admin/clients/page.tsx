@@ -67,7 +67,7 @@ export default async function ClientsPage() {
         clientId: projects.clientId,
         totalCount: count(),
         activeCount:
-          sql<number>`count(*) filter (where ${projects.status} in ('in_progress', 'planning', 'review'))`.as(
+          sql<number>`count(*) filter (where ${projects.currentStage} != 'support')`.as(
             "active_count"
           ),
       })

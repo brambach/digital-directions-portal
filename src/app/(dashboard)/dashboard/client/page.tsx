@@ -42,7 +42,7 @@ export default async function ClientDashboard() {
     .where(and(eq(projects.clientId, client.id), isNull(projects.deletedAt)))
     .orderBy(desc(projects.createdAt));
 
-  const activeProjectsCount = clientProjects.filter((p) => !["completed", "on_hold"].includes(p.status)).length;
+  const activeProjectsCount = clientProjects.filter((p) => p.currentStage !== "support").length;
 
   const integrationsCount = await db
     .select({ count: count() })
@@ -125,20 +125,28 @@ export default async function ClientDashboard() {
     },
   ];
 
-  const statusLabels: Record<string, string> = {
-    planning: "Planning",
-    in_progress: "In Progress",
-    review: "In Review",
-    completed: "Completed",
-    on_hold: "On Hold",
+  const STAGE_LABELS: Record<string, string> = {
+    pre_sales: "Pre-Sales",
+    discovery: "Discovery",
+    provisioning: "Provisioning",
+    bob_config: "Bob Config",
+    mapping: "Mapping",
+    build: "Build",
+    uat: "UAT",
+    go_live: "Go-Live",
+    support: "Support",
   };
 
-  const statusColors: Record<string, string> = {
-    planning: "text-violet-700 bg-violet-50",
-    in_progress: "text-violet-700 bg-violet-50",
-    review: "text-amber-700 bg-amber-50",
-    completed: "text-emerald-700 bg-emerald-50",
-    on_hold: "text-slate-600 bg-slate-100",
+  const STAGE_COLORS: Record<string, string> = {
+    pre_sales: "text-slate-600 bg-slate-100",
+    discovery: "text-sky-700 bg-sky-50",
+    provisioning: "text-blue-700 bg-blue-50",
+    bob_config: "text-indigo-700 bg-indigo-50",
+    mapping: "text-violet-700 bg-violet-50",
+    build: "text-purple-700 bg-purple-50",
+    uat: "text-amber-700 bg-amber-50",
+    go_live: "text-emerald-700 bg-emerald-50",
+    support: "text-teal-700 bg-teal-50",
   };
 
 
@@ -248,8 +256,8 @@ export default async function ClientDashboard() {
                         Updated {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
                       </p>
                     </div>
-                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0", statusColors[project.status] || statusColors.planning)}>
-                      {statusLabels[project.status] || "Planning"}
+                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0", STAGE_COLORS[project.currentStage] || "text-slate-600 bg-slate-100")}>
+                      {STAGE_LABELS[project.currentStage] || project.currentStage}
                     </span>
                   </Link>
                 ))}

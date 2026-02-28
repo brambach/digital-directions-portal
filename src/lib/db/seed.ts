@@ -193,7 +193,6 @@ async function seed() {
       clientId: string;
       name: string;
       description: string;
-      status: "planning" | "in_progress" | "review" | "completed" | "on_hold";
       currentStage: "pre_sales" | "discovery" | "provisioning" | "bob_config" | "mapping" | "build" | "uat" | "go_live" | "support";
       payrollSystem: "keypay" | "myob" | "deputy" | "generic";
       startDate: Date;
@@ -206,7 +205,6 @@ async function seed() {
         clientId: insertedClients[0].id,
         name: "HiBob Payroll Integration",
         description: "Integrate HiBob with NetSuite for automated payroll processing",
-        status: "in_progress",
         currentStage: "build",
         payrollSystem: "keypay",
         startDate: daysAgo(45),
@@ -216,7 +214,6 @@ async function seed() {
         clientId: insertedClients[0].id,
         name: "Benefits Enrollment Portal",
         description: "Custom employee benefits enrollment through HiBob",
-        status: "review",
         currentStage: "uat",
         payrollSystem: "keypay",
         startDate: daysAgo(30),
@@ -230,7 +227,6 @@ async function seed() {
         clientId: insertedClients[1].id,
         name: "Time Tracking Implementation",
         description: "Deploy HiBob time tracking module across all departments",
-        status: "in_progress",
         currentStage: "mapping",
         payrollSystem: "keypay",
         startDate: daysAgo(60),
@@ -240,7 +236,6 @@ async function seed() {
         clientId: insertedClients[1].id,
         name: "Workato Recipe Optimization",
         description: "Optimize existing Workato recipes for performance",
-        status: "completed",
         currentStage: "support",
         payrollSystem: "keypay",
         startDate: daysAgo(90),
@@ -254,7 +249,6 @@ async function seed() {
         clientId: insertedClients[2].id,
         name: "Employee Onboarding Automation",
         description: "Automate new hire workflows with HiBob and Workato",
-        status: "in_progress",
         currentStage: "build",
         payrollSystem: "keypay",
         startDate: daysAgo(20),
@@ -264,7 +258,6 @@ async function seed() {
         clientId: insertedClients[2].id,
         name: "Performance Review System",
         description: "Implement quarterly performance review process",
-        status: "planning",
         currentStage: "discovery",
         payrollSystem: "keypay",
         startDate: daysAgo(5),
@@ -278,7 +271,6 @@ async function seed() {
         clientId: insertedClients[3].id,
         name: "Compliance Reporting Dashboard",
         description: "Build custom compliance reports from HiBob data",
-        status: "in_progress",
         currentStage: "build",
         payrollSystem: "keypay",
         startDate: daysAgo(75),
@@ -288,7 +280,6 @@ async function seed() {
         clientId: insertedClients[3].id,
         name: "Deputy Integration",
         description: "Connect HiBob with Deputy for leave and shift management",
-        status: "completed",
         currentStage: "support",
         payrollSystem: "keypay",
         startDate: daysAgo(120),
@@ -298,7 +289,6 @@ async function seed() {
         clientId: insertedClients[3].id,
         name: "Multi-Country Payroll Setup",
         description: "Configure HiBob for operations in 5 countries",
-        status: "review",
         currentStage: "uat",
         payrollSystem: "keypay",
         startDate: daysAgo(40),
@@ -312,7 +302,6 @@ async function seed() {
         clientId: insertedClients[4].id,
         name: "Shift Scheduling Module",
         description: "Implement shift scheduling for factory workers",
-        status: "planning",
         currentStage: "discovery",
         payrollSystem: "keypay",
         startDate: daysAgo(10),
@@ -325,8 +314,10 @@ async function seed() {
     console.log(`✓ Created ${insertedProjects.length} projects`);
 
     // Apply phase template to active projects and create project phases
+    const LATE_STAGES = ["build", "uat", "go_live", "support"];
+    const MID_STAGES = ["mapping", "bob_config", "provisioning"];
     let totalPhases = 0;
-    for (const project of insertedProjects.filter((p) => p.status !== "planning")) {
+    for (const project of insertedProjects.filter((p) => p.currentStage !== "pre_sales" && p.currentStage !== "discovery")) {
       const templatePhasesData = await db
         .select()
         .from(templatePhases)
@@ -339,11 +330,11 @@ async function seed() {
         let startedAt: Date | null = null;
         let completedAt: Date | null = null;
 
-        if (project.status === "completed") {
+        if (project.currentStage === "support") {
           status = "completed";
           startedAt = daysAgo(90 - i * 10);
           completedAt = daysAgo(85 - i * 10);
-        } else if (project.status === "in_progress") {
+        } else if (LATE_STAGES.includes(project.currentStage)) {
           if (i < 2) {
             status = "completed";
             startedAt = daysAgo(50 - i * 8);
@@ -352,7 +343,7 @@ async function seed() {
             status = "in_progress";
             startedAt = daysAgo(10);
           }
-        } else if (project.status === "review") {
+        } else if (MID_STAGES.includes(project.currentStage)) {
           if (i < 4) {
             status = "completed";
             startedAt = daysAgo(60 - i * 10);

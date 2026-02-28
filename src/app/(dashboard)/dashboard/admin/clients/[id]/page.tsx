@@ -45,23 +45,17 @@ function getStatusBadge(status: string): { bg: string; text: string; border: str
   }
 }
 
-// Helper function to get project status badge
-function getProjectStatusBadge(status: string): { bg: string; text: string; dot: string; label: string } {
-  switch (status) {
-    case "in_progress":
-      return { bg: "bg-violet-50", text: "text-[#7C1CFF]", dot: "bg-[#7C1CFF]", label: "In Progress" };
-    case "review":
-      return { bg: "bg-violet-50", text: "text-[#7C1CFF]", dot: "bg-[#7C1CFF]", label: "In Review" };
-    case "completed":
-      return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", label: "Completed" };
-    case "on_hold":
-      return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500", label: "On Hold" };
-    case "planning":
-      return { bg: "bg-slate-100", text: "text-slate-700", dot: "bg-slate-500", label: "Planning" };
-    default:
-      return { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400", label: status };
-  }
-}
+const STAGE_LABELS: Record<string, string> = {
+  pre_sales: "Pre-Sales", discovery: "Discovery", provisioning: "Provisioning",
+  bob_config: "Bob Config", mapping: "Mapping", build: "Build",
+  uat: "UAT", go_live: "Go-Live", support: "Support",
+};
+
+const STAGE_DOT: Record<string, string> = {
+  pre_sales: "bg-slate-400", discovery: "bg-sky-500", provisioning: "bg-indigo-500",
+  bob_config: "bg-violet-500", mapping: "bg-purple-500", build: "bg-fuchsia-500",
+  uat: "bg-amber-500", go_live: "bg-emerald-500", support: "bg-teal-500",
+};
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -170,10 +164,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   // Calculate project stats
   const totalProjects = clientProjects.length;
-  const activeProjects = clientProjects.filter((p) =>
-    p.status === "in_progress" || p.status === "planning" || p.status === "review"
-  ).length;
-  const completedProjects = clientProjects.filter((p) => p.status === "completed").length;
+  const activeProjects = clientProjects.filter((p) => p.currentStage !== "support").length;
+  const completedProjects = clientProjects.filter((p) => p.currentStage === "support").length;
 
   const now = new Date();
 
@@ -283,14 +275,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     <thead>
                       <tr className="text-left border-b border-slate-50 bg-slate-50/30">
                         <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest pl-8">Project Name</th>
-                        <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Status</th>
+                        <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Stage</th>
                         <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Due Date</th>
                       </tr>
                     </thead>
                     <tbody className="text-sm">
                       {clientProjects.map((project) => {
-                        const status = getProjectStatusBadge(project.status);
-                        const isOverdue = project.dueDate && new Date(project.dueDate) < now && project.status !== "completed";
+                        const isOverdue = project.dueDate && new Date(project.dueDate) < now && project.currentStage !== "support";
+                        const stageDot = STAGE_DOT[project.currentStage] ?? "bg-slate-400";
+                        const stageLabel = STAGE_LABELS[project.currentStage] ?? project.currentStage;
 
                         return (
                           <tr key={project.id} className="group hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
@@ -302,8 +295,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                             </td>
                             <td>
                               <Link href={`/dashboard/admin/projects/${project.id}`} className="flex items-center gap-2 px-6 py-5">
-                                <div className={cn("w-1.5 h-1.5 rounded-full", status.dot)}></div>
-                                <span className="font-medium text-slate-700">{status.label}</span>
+                                <div className={cn("w-1.5 h-1.5 rounded-full", stageDot)}></div>
+                                <span className="font-medium text-slate-700">{stageLabel}</span>
                               </Link>
                             </td>
                             <td>

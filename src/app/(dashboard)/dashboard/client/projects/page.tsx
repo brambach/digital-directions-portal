@@ -89,20 +89,28 @@ export default async function ClientProjectsPage() {
 }
 
 function ProjectCard({ project }: any) {
-  const statusLabels: Record<string, string> = {
-    planning: "Planning",
-    in_progress: "In Progress",
-    review: "In Review",
-    completed: "Completed",
-    on_hold: "On Hold",
+  const STAGE_LABELS: Record<string, string> = {
+    pre_sales: "Pre-Sales",
+    discovery: "Discovery",
+    provisioning: "Provisioning",
+    bob_config: "Bob Config",
+    mapping: "Mapping",
+    build: "Build",
+    uat: "UAT",
+    go_live: "Go-Live",
+    support: "Support",
   };
 
-  const statusColors: Record<string, string> = {
-    planning: "bg-violet-50 text-violet-700",
-    in_progress: "bg-violet-50 text-violet-700",
-    review: "bg-amber-50 text-amber-700",
-    completed: "bg-emerald-50 text-emerald-700",
-    on_hold: "bg-slate-100 text-slate-600",
+  const STAGE_COLORS: Record<string, string> = {
+    pre_sales: "bg-slate-100 text-slate-600",
+    discovery: "bg-sky-50 text-sky-700",
+    provisioning: "bg-blue-50 text-blue-700",
+    bob_config: "bg-indigo-50 text-indigo-700",
+    mapping: "bg-violet-50 text-violet-700",
+    build: "bg-purple-50 text-purple-700",
+    uat: "bg-amber-50 text-amber-700",
+    go_live: "bg-emerald-50 text-emerald-700",
+    support: "bg-teal-50 text-teal-700",
   };
 
   return (
@@ -117,9 +125,9 @@ function ProjectCard({ project }: any) {
               <h3 className="text-[14px] font-bold text-slate-900 group-hover:text-violet-700 transition-colors leading-tight">{project.name}</h3>
               <span className={cn(
                 "inline-flex mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold",
-                statusColors[project.status] || statusColors.planning
+                STAGE_COLORS[project.currentStage] || "bg-slate-100 text-slate-600"
               )}>
-                {statusLabels[project.status]}
+                {STAGE_LABELS[project.currentStage] || project.currentStage}
               </span>
             </div>
           </div>

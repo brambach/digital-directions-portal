@@ -4,7 +4,7 @@ import { projects, clients, integrationMonitors, clientFlags } from "@/lib/db/sc
 import { eq, isNull, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Link as LinkIcon, User, Activity, CheckCircle, AlertCircle, Layout, Pencil, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Link as LinkIcon, User, RefreshCw } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,6 @@ const EditProjectDialog = dynamicImport(
   () => import("@/components/edit-project-dialog").then((mod) => ({ default: mod.EditProjectDialog })),
   { loading: () => null }
 );
-const UpdateStatusDialog = dynamicImport(
-  () => import("@/components/update-status-dialog").then((mod) => ({ default: mod.UpdateStatusDialog })),
-  { loading: () => null }
-);
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +33,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
       id: projects.id,
       name: projects.name,
       description: projects.description,
-      status: projects.status,
       currentStage: projects.currentStage,
       startDate: projects.startDate,
       dueDate: projects.dueDate,
@@ -70,17 +65,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
       and(eq(clientFlags.projectId, id), isNull(clientFlags.resolvedAt))
     );
 
-  const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
-    planning: { color: "bg-violet-50 text-[#7C1CFF]", label: "Planning", icon: Layout },
-    in_progress: { color: "bg-emerald-50 text-emerald-600", label: "In Progress", icon: Activity },
-    review: { color: "bg-amber-50 text-amber-600", label: "Under Review", icon: CheckCircle },
-    completed: { color: "bg-slate-50 text-slate-600", label: "Completed", icon: CheckCircle },
-    on_hold: { color: "bg-red-50 text-red-600", label: "On Hold", icon: AlertCircle },
-  };
-
-  const currentStatus = statusConfig[project.status] || statusConfig.planning;
-  const StatusIcon = currentStatus.icon;
-
   const now = new Date();
   const daysLeft = project.dueDate ? differenceInDays(new Date(project.dueDate), now) : null;
 
@@ -99,10 +83,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{project.name}</h1>
-              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold", currentStatus.color)}>
-                <StatusIcon className="w-3 h-3" />
-                {currentStatus.label}
-              </span>
             </div>
             <p className="text-sm text-slate-500">
               {project.clientName} &middot; {project.description || "HiBob integration project"}
@@ -121,7 +101,6 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
                 dueDate: project.dueDate,
               }}
             />
-            <UpdateStatusDialog projectId={project.id} currentStatus={project.status} />
           </div>
         </div>
       </div>

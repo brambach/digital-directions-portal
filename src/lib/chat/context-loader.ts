@@ -23,7 +23,6 @@ export async function loadChatContext(
         name: projects.name,
         currentStage: projects.currentStage,
         payrollSystem: projects.payrollSystem,
-        status: projects.status,
       })
       .from(projects)
       .where(and(eq(projects.clientId, clientId), isNull(projects.deletedAt))),

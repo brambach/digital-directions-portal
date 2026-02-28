@@ -11,7 +11,6 @@ export interface ChatContext {
     name: string;
     currentStage: string;
     payrollSystem: string | null;
-    status: string;
   }>;
   selectedProject?: {
     id: string;

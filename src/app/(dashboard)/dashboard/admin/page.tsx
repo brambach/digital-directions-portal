@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { integrationMonitors, integrationMetrics, projects, clients, invites } from "@/lib/db/schema";
-import { isNull, eq, and, gte, lte, lt, ne, gt, sql } from "drizzle-orm";
+import { isNull, eq, and, gte, lte, ne, gt, sql } from "drizzle-orm";
 import { formatDistanceToNow } from "date-fns";
 import {
   Users,
@@ -52,14 +52,6 @@ function formatRelativeTime(date: Date): string {
 }
 
 
-const PROJECT_STATUS_STYLES: Record<string, { dot: string; label: string }> = {
-  in_progress: { dot: "bg-violet-500",  label: "In Progress" },
-  review:      { dot: "bg-amber-500",   label: "In Review"   },
-  planning:    { dot: "bg-sky-500",     label: "Planning"    },
-  completed:   { dot: "bg-emerald-500", label: "Completed"   },
-  on_hold:     { dot: "bg-slate-400",   label: "On Hold"     },
-};
-
 const STAGE_LABELS: Record<string, string> = {
   pre_sales:    "Pre-Sales",
   discovery:    "Discovery",
@@ -100,8 +92,7 @@ export default async function AdminDashboard() {
     // Project counts for stat cards
     db.select({
       total:  sql<number>`count(*)::int`,
-      active: sql<number>`count(*) filter (where status != 'completed')::int`,
-      review: sql<number>`count(*) filter (where status = 'review')::int`,
+      active: sql<number>`count(*) filter (where current_stage != 'support')::int`,
     }).from(projects).where(isNull(projects.deletedAt)),
 
     // Client counts: total + active
@@ -110,11 +101,11 @@ export default async function AdminDashboard() {
       active: sql<number>`count(*) filter (where status = 'active')::int`,
     }).from(clients).where(isNull(clients.deletedAt)),
 
-    // Projects due in the next 14 days (including overdue), not completed
+    // Projects due in the next 14 days (including overdue), not in support stage
     db.select({
       id: projects.id,
       name: projects.name,
-      status: projects.status,
+      currentStage: projects.currentStage,
       dueDate: projects.dueDate,
       clientName: clients.companyName,
     })
@@ -122,7 +113,7 @@ export default async function AdminDashboard() {
       .leftJoin(clients, eq(projects.clientId, clients.id))
       .where(and(
         isNull(projects.deletedAt),
-        ne(projects.status, "completed"),
+        ne(projects.currentStage, "support"),
         lte(projects.dueDate, fourteenDaysFromNow),
       ))
       .orderBy(projects.dueDate)
@@ -146,9 +137,8 @@ export default async function AdminDashboard() {
   ]);
 
   // ── Derived values ───────────────────────────────────────────────────────
-  const totalProjects   = projectStats[0]?.total  ?? 0;
+  const totalProjects      = projectStats[0]?.total  ?? 0;
   const activeProjectCount = projectStats[0]?.active ?? 0;
-  const reviewCount     = projectStats[0]?.review ?? 0;
 
   const dueThisWeekCount = dueSoonRows.filter(p => p.dueDate && p.dueDate <= sevenDaysFromNow).length;
   const overdueCount = dueSoonRows.filter(p => p.dueDate && p.dueDate < now).length;
@@ -159,7 +149,7 @@ export default async function AdminDashboard() {
     id: p.id,
     name: p.name,
     client: p.clientName ?? "Unknown",
-    status: p.status,
+    currentStage: p.currentStage,
     daysLeft: p.dueDate ? Math.ceil((p.dueDate.getTime() - now.getTime()) / 86400000) : null,
     isOverdue: p.dueDate ? p.dueDate < now : false,
   }));
@@ -175,7 +165,7 @@ export default async function AdminDashboard() {
     {
       label: "Active Projects",
       value: String(activeProjectCount),
-      sub: `${reviewCount} in review`,
+      sub: `${totalProjects} total projects`,
       icon: FolderKanban,
       iconBg: "bg-violet-100",
       iconColor: "text-violet-600",
@@ -218,7 +208,7 @@ export default async function AdminDashboard() {
     })
     .from(projects)
     .leftJoin(clients, eq(projects.clientId, clients.id))
-    .where(and(isNull(projects.deletedAt), ne(projects.status, "completed")))
+    .where(and(isNull(projects.deletedAt), ne(projects.currentStage, "support")))
     .limit(8);
 
   const PROJECT_PIPELINE = [...projectListRows].sort((a, b) => {
@@ -524,7 +514,7 @@ export default async function AdminDashboard() {
 
               <div className="space-y-1">
                 {PROJECTS_DUE_SOON.map((project) => {
-                  const s = PROJECT_STATUS_STYLES[project.status] ?? PROJECT_STATUS_STYLES.planning;
+                  const stageColors = STAGE_COLORS[project.currentStage] ?? STAGE_COLORS.discovery;
                   return (
                     <Link
                       key={project.id}
@@ -536,8 +526,8 @@ export default async function AdminDashboard() {
                           {project.name}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", s.dot)} />
-                          <p className="text-[11px] text-slate-400">{project.client} · {s.label}</p>
+                          <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", stageColors.dot)} />
+                          <p className="text-[11px] text-slate-400">{project.client} · {STAGE_LABELS[project.currentStage]}</p>
                         </div>
                       </div>
                       <div className={cn(

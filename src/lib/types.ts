@@ -66,7 +66,6 @@ export type FileWithUploader = File & {
 // Role types
 export type UserRole = "admin" | "client";
 export type ClientStatus = "active" | "inactive" | "archived";
-export type ProjectStatus = "planning" | "in_progress" | "review" | "completed" | "on_hold";
 
 // API Response types
 export type ApiResponse<T> = {

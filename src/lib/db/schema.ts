@@ -14,14 +14,6 @@ import { relations } from "drizzle-orm";
 // Enums
 export const userRoleEnum = pgEnum("user_role", ["admin", "client"]);
 export const clientStatusEnum = pgEnum("client_status", ["active", "inactive", "archived"]);
-export const projectStatusEnum = pgEnum("project_status", [
-  "planning",
-  "in_progress",
-  "review",
-  "completed",
-  "on_hold",
-]);
-
 // Ticket enums
 export const ticketStatusEnum = pgEnum("ticket_status", [
   "open",
@@ -167,7 +159,6 @@ export const projects = pgTable(
       .notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    status: projectStatusEnum("status").notNull().default("planning"),
     startDate: timestamp("start_date"),
     dueDate: timestamp("due_date"),
 
@@ -205,7 +196,6 @@ export const projects = pgTable(
   },
   (table) => ({
     clientIdx: index("projects_client_idx").on(table.clientId),
-    statusIdx: index("projects_status_idx").on(table.status),
   })
 );
 

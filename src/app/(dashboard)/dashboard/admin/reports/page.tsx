@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clients, projects, tickets } from "@/lib/db/schema";
-import { isNull, and, eq, count } from "drizzle-orm";
+import { isNull, and, eq, ne, count } from "drizzle-orm";
 import {
   Users,
   FolderKanban,
@@ -92,7 +92,7 @@ export default async function AdminReportsPage() {
     db.select({ count: count() }).from(clients).where(isNull(clients.deletedAt)).then((r) => r[0]?.count || 0),
     db.select({ count: count() }).from(clients).where(and(isNull(clients.deletedAt), eq(clients.status, "active"))).then((r) => r[0]?.count || 0),
     db.select({ count: count() }).from(projects).where(isNull(projects.deletedAt)).then((r) => r[0]?.count || 0),
-    db.select({ count: count() }).from(projects).where(and(isNull(projects.deletedAt), eq(projects.status, "in_progress"))).then((r) => r[0]?.count || 0),
+    db.select({ count: count() }).from(projects).where(and(isNull(projects.deletedAt), ne(projects.currentStage, "support"))).then((r) => r[0]?.count || 0),
     db.select({ count: count() }).from(tickets).where(isNull(tickets.deletedAt)).then((r) => r[0]?.count || 0),
     db.select({ count: count() }).from(tickets).where(and(isNull(tickets.deletedAt), eq(tickets.status, "open"))).then((r) => r[0]?.count || 0),
     db.select({ count: count() }).from(tickets).where(and(isNull(tickets.deletedAt), eq(tickets.status, "resolved"))).then((r) => r[0]?.count || 0),
