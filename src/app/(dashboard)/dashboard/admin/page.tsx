@@ -9,7 +9,6 @@ import {
   ArrowUpRight,
   Clock,
   ChevronRight,
-  Mail,
   UserPlus,
   CalendarClock,
   ExternalLink,
@@ -25,6 +24,7 @@ import { FadeIn } from "@/components/motion/fade-in";
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container";
 import { CountUp } from "@/components/motion/count-up";
 import { ConnectorHealthNetwork } from "@/components/connector-health-network";
+import { CancelInviteButton } from "@/components/cancel-invite-button";
 
 export const dynamic = "force-dynamic";
 
@@ -604,9 +604,7 @@ export default async function AdminDashboard() {
                         <p className="text-[12px] font-medium text-slate-800 truncate">{invite.email}</p>
                         <p className="text-[10px] text-slate-400 mt-0.5">{invite.client} · {invite.sentAt}</p>
                       </div>
-                      <button className="flex-shrink-0 p-1.5 rounded-lg border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-all">
-                        <Mail className="w-3.5 h-3.5" />
-                      </button>
+                      <CancelInviteButton inviteId={invite.id} />
                     </div>
                   ))}
                   <Link

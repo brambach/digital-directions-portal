@@ -75,6 +75,14 @@ async function inviteAdmin(email: string) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    if (appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) {
+      console.error("❌ NEXT_PUBLIC_APP_URL is set to a local URL:", appUrl);
+      console.log("   Update NEXT_PUBLIC_APP_URL in .env.local to your production URL.");
+      console.log("   Example: NEXT_PUBLIC_APP_URL=https://portal.digitaldirections.com.au");
+      process.exit(1);
+    }
+
     const inviteUrl = `${appUrl}/invite/${token}`;
     const emailFrom = process.env.EMAIL_FROM || "Digital Directions <notifications@digitaldirections.com>";
 
