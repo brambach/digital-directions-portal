@@ -1,54 +1,57 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 import { drizzle } from "drizzle-orm/vercel-postgres";
-import { sql } from "@vercel/postgres";
-import { users } from "./schema";
+import { sql as sqlClient } from "@vercel/postgres";
+import { users, ticketComments } from "./schema";
 import { createClerkClient } from "@clerk/backend";
-import { ne, eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
-const db = drizzle(sql);
+const db = drizzle(sqlClient);
 
 async function cleanupUsers() {
-  console.log("🧹 Cleaning up users...");
+  console.log("🧹 Cleaning up orphaned users (deleted from Clerk)...\n");
 
   try {
-    // Get Clerk client
     const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
-    // Find bryce.rambach@gmail.com in Clerk
-    const clerkUsers = await clerk.users.getUserList({
-      emailAddress: ["bryce.rambach@gmail.com"],
-    });
+    // Get all users from the database, skip the placeholder seed user
+    const dbUsers = await db.select().from(users);
+    const realUsers = dbUsers.filter((u) => u.clerkId !== "placeholder_clerk_id");
+    console.log(`Found ${realUsers.length} real user(s) in database (excluding seed placeholder).`);
 
-    if (clerkUsers.data.length === 0) {
-      console.log("❌ Could not find bryce.rambach@gmail.com in Clerk");
-      process.exit(1);
+    const toDelete: typeof dbUsers = [];
+
+    for (const user of realUsers) {
+      try {
+        await clerk.users.getUser(user.clerkId);
+        console.log(`  ✓ ${user.clerkId} — exists in Clerk, keeping`);
+      } catch {
+        console.log(`  ✗ ${user.clerkId} — not found in Clerk, will delete`);
+        toDelete.push(user);
+      }
     }
 
-    const bryceClerkId = clerkUsers.data[0].id;
-    console.log(`✓ Found bryce.rambach@gmail.com (Clerk ID: ${bryceClerkId})`);
-
-    // Find Bryce's user record in database
-    const [bryceUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.clerkId, bryceClerkId))
-      .limit(1);
-
-    if (!bryceUser) {
-      console.log("❌ Could not find bryce.rambach@gmail.com in database");
-      process.exit(1);
+    if (toDelete.length === 0) {
+      console.log("\nNo orphaned users found. Nothing to delete.");
+      process.exit(0);
     }
 
-    console.log(`✓ Found user in database (ID: ${bryceUser.id})`);
+    const orphanIds = toDelete.map((u) => u.id);
 
-    // Delete all users except Bryce
-    const result = await db.delete(users).where(ne(users.id, bryceUser.id));
+    // Delete ticket comments by these users first (schema conflict: authorId is notNull + onDelete:set null)
+    const deletedComments = await db
+      .delete(ticketComments)
+      .where(inArray(ticketComments.authorId, orphanIds));
+    console.log(`\n  → Deleted ticket comments by orphaned users`);
 
-    console.log("");
-    console.log("✅ Cleanup completed successfully!");
-    console.log(`✓ Kept user: bryce.rambach@gmail.com`);
-    console.log(`✓ Deleted all other users`);
+    // Now delete the orphaned users
+    console.log(`Deleting ${toDelete.length} orphaned user(s)...`);
+    for (const user of toDelete) {
+      await db.delete(users).where(eq(users.id, user.id));
+      console.log(`  ✓ Deleted user ${user.id} (clerkId: ${user.clerkId})`);
+    }
+
+    console.log("\n✅ Cleanup completed successfully!");
   } catch (error) {
     console.error("❌ Cleanup failed:", error);
     process.exit(1);

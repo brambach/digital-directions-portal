@@ -511,134 +511,132 @@ export default async function AdminDashboard() {
           </div>
         </StaggerItem>
 
-        {/* ── Connector Health + Sidebar ───────────────────────────────── */}
+        {/* ── Connector Health (full width) ────────────────────────────── */}
+        <StaggerItem>
+          <div className="bg-white rounded-2xl border border-slate-100 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
+                  <p className="text-[12px] text-slate-400">Integration flow status</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                  {healthyCount} Healthy
+                </span>
+                {degradedCount > 0 && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                    {degradedCount} Degraded
+                  </span>
+                )}
+                {downCount > 0 && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                    {downCount} Down
+                  </span>
+                )}
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  <RefreshCw className="w-3 h-3" />
+                  <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks yet"}</span>
+                </div>
+              </div>
+            </div>
+
+            {integrationHealth.length >= 3 ? (
+              <div className="overflow-x-auto -mx-1 px-1">
+                <ConnectorHealthNetwork integrations={integrationHealth} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Wifi className="w-8 h-8 text-slate-300 mb-3" />
+                <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
+                <p className="text-[12px] text-slate-400 mt-1">
+                  Configure integration monitors on project pages to see live status here
+                </p>
+              </div>
+            )}
+          </div>
+        </StaggerItem>
+
+        {/* ── Pending Invites + Freshdesk ──────────────────────────────── */}
         <StaggerItem>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-            {/* Connector Health */}
+            {/* Pending Invites */}
             <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Wifi className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
+                    <UserPlus className="w-4 h-4 text-sky-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-bold text-slate-800">Connector Health</h2>
-                    <p className="text-[12px] text-slate-400">Integration flow status</p>
+                    <h2 className="text-[15px] font-bold text-slate-800">Pending Invites</h2>
+                    <p className="text-[12px] text-slate-400">Awaiting acceptance</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-                    {healthyCount} Healthy
+                {PENDING_INVITES.length > 0 && (
+                  <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
+                    {PENDING_INVITES.length} pending
                   </span>
-                  {degradedCount > 0 && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-                      {degradedCount} Degraded
-                    </span>
-                  )}
-                  {downCount > 0 && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                      {downCount} Down
-                    </span>
-                  )}
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                    <RefreshCw className="w-3 h-3" />
-                    <span>{mostRecentGlobalCheck ? formatRelativeTime(mostRecentGlobalCheck) : "No checks yet"}</span>
-                  </div>
-                </div>
+                )}
               </div>
 
-              {integrationHealth.length >= 3 ? (
-                <div className="overflow-x-auto -mx-1 px-1">
-                  <ConnectorHealthNetwork integrations={integrationHealth} />
+              {PENDING_INVITES.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <DigiFloat variant="celebrating" size="sm" className="mb-3" />
+                  <p className="text-[13px] font-semibold text-slate-700">All caught up</p>
+                  <p className="text-[12px] text-slate-400 mt-1">No pending invitations</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <Wifi className="w-8 h-8 text-slate-300 mb-3" />
-                  <p className="text-[13px] font-semibold text-slate-600">No integrations monitored yet</p>
-                  <p className="text-[12px] text-slate-400 mt-1">
-                    Configure integration monitors on project pages to see live status here
-                  </p>
+                <div className="space-y-3">
+                  {PENDING_INVITES.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-[12px] font-bold">{invite.email.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium text-slate-800 truncate">{invite.email}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{invite.client} · {invite.sentAt}</p>
+                      </div>
+                      <button className="flex-shrink-0 p-1.5 rounded-lg border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-all">
+                        <Mail className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <Link
+                    href="/dashboard/admin/clients"
+                    className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-slate-500 hover:text-violet-600 transition-colors"
+                  >
+                    Manage invites <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               )}
             </div>
 
-            {/* Right sidebar */}
-            <div className="lg:col-span-4 flex flex-col gap-5">
-
-              {/* Pending Invites */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 flex-1">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center">
-                      <UserPlus className="w-4 h-4 text-sky-600" strokeWidth={2} />
-                    </div>
-                    <div>
-                      <h2 className="text-[15px] font-bold text-slate-800">Pending Invites</h2>
-                      <p className="text-[12px] text-slate-400">Awaiting acceptance</p>
-                    </div>
-                  </div>
-                  {PENDING_INVITES.length > 0 && (
-                    <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
-                      {PENDING_INVITES.length} pending
-                    </span>
-                  )}
-                </div>
-
-                {PENDING_INVITES.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <DigiFloat variant="celebrating" size="sm" className="mb-3" />
-                    <p className="text-[13px] font-semibold text-slate-700">All caught up</p>
-                    <p className="text-[12px] text-slate-400 mt-1">No pending invitations</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {PENDING_INVITES.map((invite) => (
-                      <div
-                        key={invite.id}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-[12px] font-bold">{invite.email.charAt(0).toUpperCase()}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-medium text-slate-800 truncate">{invite.email}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{invite.client} · {invite.sentAt}</p>
-                        </div>
-                        <button className="flex-shrink-0 p-1.5 rounded-lg border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-all">
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                    <Link
-                      href="/dashboard/admin/clients"
-                      className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-slate-500 hover:text-violet-600 transition-colors"
-                    >
-                      Manage invites <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                )}
+            {/* Freshdesk quick link */}
+            {/* Freshdesk: support@digitaldirections.io routes here */}
+            <a
+              href="https://digitaldirections-help.freshdesk.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lg:col-span-4 group bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Headphones className="w-5 h-5 text-white" strokeWidth={2} />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-white">Open Freshdesk</p>
+                <p className="text-[11px] text-violet-200 mt-0.5">Manage support tickets</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-violet-300 group-hover:text-white transition-colors flex-shrink-0" />
+            </a>
 
-              {/* Freshdesk quick link */}
-              {/* Freshdesk: support@digitaldirections.io routes here */}
-              <a
-                href="https://digitaldirections-help.freshdesk.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-200 flex-shrink-0"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Headphones className="w-5 h-5 text-white" strokeWidth={2} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-white">Open Freshdesk</p>
-                  <p className="text-[11px] text-violet-200 mt-0.5">Manage support tickets</p>
-                </div>
-                <ExternalLink className="w-4 h-4 text-violet-300 group-hover:text-white transition-colors flex-shrink-0" />
-              </a>
-
-            </div>
           </div>
         </StaggerItem>
 

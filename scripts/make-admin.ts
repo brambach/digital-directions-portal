@@ -6,7 +6,15 @@
  *
  * Example:
  * npm run make-admin bryce@example.com
+ *
+ * Note: The user must have already signed up in Clerk.
+ * To invite a new admin who hasn't signed up yet, use:
+ *   npm run invite-admin <email>
  */
+
+import * as dotenv from "dotenv";
+import * as path from "path";
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "../src/lib/db";
