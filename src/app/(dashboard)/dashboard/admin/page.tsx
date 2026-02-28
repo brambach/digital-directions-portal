@@ -1,7 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { integrationMonitors, integrationMetrics } from "@/lib/db/schema";
-import { isNull, eq, and, gte, sql } from "drizzle-orm";
+import { integrationMonitors, integrationMetrics, projects, clients, invites } from "@/lib/db/schema";
+import { isNull, eq, and, gte, lte, lt, ne, gt, sql } from "drizzle-orm";
+import { formatDistanceToNow } from "date-fns";
 import {
   Users,
   FolderKanban,
@@ -27,70 +28,6 @@ import { CountUp } from "@/components/motion/count-up";
 import { ConnectorHealthNetwork } from "@/components/connector-health-network";
 
 export const dynamic = "force-dynamic";
-
-// ─── Mock data (UI-first pass — wire up real queries after) ───────────────────
-
-const STATS = [
-  {
-    label: "Active Projects",
-    value: "8",
-    sub: "3 in review",
-    icon: FolderKanban,
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
-    trend: "+2 this month",
-    trendUp: true,
-    href: "/dashboard/admin/projects",
-  },
-  {
-    label: "Due This Week",
-    value: "3",
-    sub: "1 overdue",
-    icon: CalendarClock,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    trend: "2 due tomorrow",
-    trendUp: false,
-    href: "/dashboard/admin/projects",
-  },
-  {
-    label: "Total Clients",
-    value: "12",
-    sub: "10 active",
-    icon: Users,
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
-    trend: "+1 this month",
-    trendUp: true,
-    href: "/dashboard/admin/clients",
-  },
-  {
-    label: "Platform Health",
-    value: "99.9%",
-    sub: "All systems go",
-    icon: Activity,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    trend: "Uptime 30 days",
-    trendUp: true,
-    href: "/dashboard/admin/settings",
-  },
-];
-
-const PIPELINE = [
-  { key: "in_progress", label: "In Progress", count: 8,  total: 28, color: "bg-violet-500" },
-  { key: "planning",    label: "Planning",     count: 5,  total: 28, color: "bg-sky-500"    },
-  { key: "review",      label: "In Review",    count: 3,  total: 28, color: "bg-amber-500"  },
-  { key: "completed",   label: "Completed",    count: 10, total: 28, color: "bg-emerald-500"},
-  { key: "on_hold",     label: "On Hold",      count: 2,  total: 28, color: "bg-slate-400"  },
-];
-
-const PROJECTS_DUE_SOON = [
-  { id: "p1", name: "HiBob Payroll Integration",   client: "Meridian Healthcare", daysLeft: 3,  status: "in_progress", isOverdue: false },
-  { id: "p2", name: "Benefits Enrollment Portal",  client: "TechFlow Solutions",  daysLeft: 0,  status: "review",      isOverdue: true  },
-  { id: "p3", name: "KeyPay Employee Sync",         client: "Pacific Retail",      daysLeft: 7,  status: "in_progress", isOverdue: false },
-  { id: "p4", name: "MicrOpay Integration Setup",  client: "Darrell Lea",         daysLeft: 12, status: "planning",    isOverdue: false },
-];
 
 type IntegrationStatus = "healthy" | "degraded" | "down" | "unknown";
 
@@ -125,17 +62,145 @@ const PROJECT_STATUS_STYLES: Record<string, { dot: string; label: string }> = {
   on_hold:     { dot: "bg-slate-400",   label: "On Hold"     },
 };
 
-const PENDING_INVITES = [
-  { id: "i1", email: "sarah.nguyen@meridianhealth.com.au", client: "Meridian Healthcare", sentAt: "3 days ago" },
-  { id: "i2", email: "james.ko@techflowsolutions.com",     client: "TechFlow Solutions",  sentAt: "5 days ago" },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  const totalProjects = PIPELINE.reduce((s, p) => s + p.count, 0);
+  const now = new Date();
+  const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+  // ── Real DB queries ──────────────────────────────────────────────────────
+  const [pipelineRows, clientCounts, dueSoonRows, pendingInviteRows] = await Promise.all([
+    // Pipeline: project counts grouped by status
+    db.select({ status: projects.status, count: sql<number>`count(*)::int` })
+      .from(projects)
+      .where(isNull(projects.deletedAt))
+      .groupBy(projects.status),
+
+    // Client counts: total + active
+    db.select({
+      total: sql<number>`count(*)::int`,
+      active: sql<number>`count(*) filter (where status = 'active')::int`,
+    }).from(clients).where(isNull(clients.deletedAt)),
+
+    // Projects due in the next 14 days (including overdue), not completed
+    db.select({
+      id: projects.id,
+      name: projects.name,
+      status: projects.status,
+      dueDate: projects.dueDate,
+      clientName: clients.companyName,
+    })
+      .from(projects)
+      .leftJoin(clients, eq(projects.clientId, clients.id))
+      .where(and(
+        isNull(projects.deletedAt),
+        ne(projects.status, "completed"),
+        lte(projects.dueDate, fourteenDaysFromNow),
+      ))
+      .orderBy(projects.dueDate)
+      .limit(5),
+
+    // Pending invites (not accepted, not expired)
+    db.select({
+      id: invites.id,
+      email: invites.email,
+      clientName: clients.companyName,
+      createdAt: invites.createdAt,
+    })
+      .from(invites)
+      .leftJoin(clients, eq(invites.clientId, clients.id))
+      .where(and(
+        eq(invites.status, "pending"),
+        gt(invites.expiresAt, now),
+      ))
+      .orderBy(invites.createdAt)
+      .limit(5),
+  ]);
+
+  // ── Derived values ───────────────────────────────────────────────────────
+  const totalProjects = pipelineRows.reduce((s, r) => s + r.count, 0);
+  const getCount = (status: string) => pipelineRows.find(r => r.status === status)?.count ?? 0;
+
+  const activeProjectCount = totalProjects - getCount("completed");
+  const reviewCount = getCount("review");
+  const dueThisWeekCount = dueSoonRows.filter(p => p.dueDate && p.dueDate <= sevenDaysFromNow).length;
+  const overdueCount = dueSoonRows.filter(p => p.dueDate && p.dueDate < now).length;
+  const totalClients = clientCounts[0]?.total ?? 0;
+  const activeClients = clientCounts[0]?.active ?? 0;
+
+  const PIPELINE = [
+    { key: "in_progress", label: "In Progress", count: getCount("in_progress"), total: totalProjects, color: "bg-violet-500" },
+    { key: "planning",    label: "Planning",     count: getCount("planning"),    total: totalProjects, color: "bg-sky-500"    },
+    { key: "review",      label: "In Review",    count: getCount("review"),      total: totalProjects, color: "bg-amber-500"  },
+    { key: "completed",   label: "Completed",    count: getCount("completed"),   total: totalProjects, color: "bg-emerald-500"},
+    { key: "on_hold",     label: "On Hold",      count: getCount("on_hold"),     total: totalProjects, color: "bg-slate-400"  },
+  ];
+
+  const PROJECTS_DUE_SOON = dueSoonRows.map(p => ({
+    id: p.id,
+    name: p.name,
+    client: p.clientName ?? "Unknown",
+    status: p.status,
+    daysLeft: p.dueDate ? Math.ceil((p.dueDate.getTime() - now.getTime()) / 86400000) : null,
+    isOverdue: p.dueDate ? p.dueDate < now : false,
+  }));
+
+  const PENDING_INVITES = pendingInviteRows.map(i => ({
+    id: i.id,
+    email: i.email,
+    client: i.clientName ?? "DD Team",
+    sentAt: formatDistanceToNow(i.createdAt, { addSuffix: true }),
+  }));
+
+  const STATS = [
+    {
+      label: "Active Projects",
+      value: String(activeProjectCount),
+      sub: `${reviewCount} in review`,
+      icon: FolderKanban,
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+      trend: `${totalProjects} total`,
+      trendUp: true,
+      href: "/dashboard/admin/projects",
+    },
+    {
+      label: "Due This Week",
+      value: String(dueThisWeekCount),
+      sub: overdueCount > 0 ? `${overdueCount} overdue` : "None overdue",
+      icon: CalendarClock,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      trend: overdueCount > 0 ? `${overdueCount} past due` : "On track",
+      trendUp: overdueCount === 0,
+      href: "/dashboard/admin/projects",
+    },
+    {
+      label: "Total Clients",
+      value: String(totalClients),
+      sub: `${activeClients} active`,
+      icon: Users,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      trend: `${totalClients - activeClients} inactive`,
+      trendUp: true,
+      href: "/dashboard/admin/clients",
+    },
+    {
+      label: "Platform Health",
+      value: "99.9%",
+      sub: "All systems go",
+      icon: Activity,
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-600",
+      trend: "Uptime 30 days",
+      trendUp: true,
+      href: "/dashboard/admin/settings",
+    },
+  ];
 
   // ── Integration Health (real data from DB) ──────────────────────────────
   const monitors = await db
@@ -443,12 +508,12 @@ export default async function AdminDashboard() {
                         "flex-shrink-0 flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg",
                         project.isOverdue
                           ? "bg-red-50 text-red-600"
-                          : project.daysLeft <= 3
+                          : (project.daysLeft ?? 99) <= 3
                             ? "bg-amber-50 text-amber-700"
                             : "bg-slate-50 text-slate-500"
                       )}>
                         <Clock className="w-3 h-3" />
-                        {project.isOverdue ? "Overdue" : project.daysLeft === 0 ? "Today" : `${project.daysLeft}d`}
+                        {project.isOverdue ? "Overdue" : project.daysLeft === 0 ? "Today" : project.daysLeft != null ? `${project.daysLeft}d` : "TBD"}
                       </div>
                     </Link>
                   );
