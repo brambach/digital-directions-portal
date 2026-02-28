@@ -19,7 +19,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 import { createClerkClient } from "@clerk/backend";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { users, ticketComments, tickets, invites, flags } from "../src/lib/db/schema";
+import { users, ticketComments, tickets, invites, clientFlags } from "../src/lib/db/schema";
 import { eq, and, isNull, ne } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -103,13 +103,13 @@ async function deleteUser(email: string) {
       }
     }
 
-    // 4. flags.raised_by — notNull, onDelete:set null conflict → reassign if possible
+    // 4. client_flags.raised_by — notNull, onDelete:set null conflict → reassign if possible
     if (otherAdmin) {
       const reassignedFlags = await db
-        .update(flags)
+        .update(clientFlags)
         .set({ raisedBy: otherAdmin.id })
-        .where(eq(flags.raisedBy, dbUser.id))
-        .returning({ id: flags.id });
+        .where(eq(clientFlags.raisedBy, dbUser.id))
+        .returning({ id: clientFlags.id });
       if (reassignedFlags.length > 0) {
         console.log(`  ✓ Reassigned ${reassignedFlags.length} flag(s) to another admin`);
       }
