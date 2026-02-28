@@ -11,9 +11,9 @@ export default function SignUpPage() {
             <Image
               src="/images/logos/long_form_purple_text.png"
               alt="Digital Directions"
-              width={120}
+              width={215}
               height={30}
-              className="mx-auto mb-4"
+              className="h-8 w-auto mx-auto mb-4"
             />
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-8 h-8 text-purple-600" />

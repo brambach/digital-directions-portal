@@ -196,9 +196,9 @@ export default function InvitePage() {
             <Image
               src="/images/logos/long_form_purple_text.png"
               alt="Digital Directions"
-              width={64}
-              height={64}
-              className="w-16 h-16"
+              width={215}
+              height={30}
+              className="h-8 w-auto"
             />
           </div>
 
