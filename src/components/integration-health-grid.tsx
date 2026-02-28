@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { IntegrationHealthCard } from "./integration-health-card";
 import { Activity } from "lucide-react";
 
@@ -101,14 +102,27 @@ export function IntegrationHealthGrid({
         </span>
       </div>
 
-      <div className={`grid ${gridCols} gap-4`}>
+      <motion.div
+        className={`grid ${gridCols} gap-4`}
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.1 } },
+        }}
+      >
         {integrations.map((integration) => (
-          <IntegrationHealthCard
+          <motion.div
             key={integration.id}
-            integration={integration}
-          />
+            variants={{
+              hidden: { opacity: 0, y: 12 },
+              show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 28 } },
+            }}
+          >
+            <IntegrationHealthCard integration={integration} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

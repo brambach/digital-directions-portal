@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { IntegrationStatusBadge } from "./integration-status-badge";
-import { Clock, Activity, TrendingUp, AlertCircle, Zap, CheckCircle, XCircle, HelpCircle } from "lucide-react";
+import { Clock, AlertCircle, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { CountUp } from "@/components/motion/count-up";
 
 interface Integration {
   id: string;
@@ -52,7 +54,12 @@ export function IntegrationHealthCard({
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-50 shadow-sm hover-card transition-all">
+    <motion.div
+      className="bg-white rounded-xl p-6 border border-gray-50 shadow-sm hover-card transition-all"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 280, damping: 28 }}
+    >
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div
@@ -100,7 +107,7 @@ export function IntegrationHealthCard({
                     ? "text-amber-500"
                     : "text-red-500"
               )}>
-                {metrics.uptimePercentage.toFixed(2)}%
+                <CountUp value={metrics.uptimePercentage} duration={1} suffix="%" />
               </div>
             </div>
             <div className="space-y-1">
@@ -156,6 +163,6 @@ export function IntegrationHealthCard({
       ) : (
         <p className="text-xs text-gray-400">Monitoring sync pending...</p>
       )}
-    </div>
+    </motion.div>
   );
 }
