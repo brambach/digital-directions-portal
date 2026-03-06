@@ -48,12 +48,14 @@ export function ConnectorHealthNetwork({
   integrations: IntegrationNode[];
 }) {
   const source = integrations.find((i) => i.abbr === "HB") ?? integrations[0];
-  const hub = integrations.find((i) => i.abbr === "WK") ?? integrations[1];
+  const hub = integrations.find((i) => i.abbr === "WK");
   const dests = integrations.filter((i) => i.abbr !== "HB" && i.abbr !== "WK");
+  const showFlowIndicator = source && hub;
 
   return (
     <div className="space-y-4">
-      {/* Mini flow indicator */}
+      {/* Mini flow indicator — only shown when HiBob + Workato both present */}
+      {showFlowIndicator && (
       <div className="flex items-center gap-1.5 text-[11px]">
         <span className="flex items-center gap-1">
           <StatusDot status={source.status} />
@@ -67,6 +69,7 @@ export function ConnectorHealthNetwork({
         <ChevronRight className="w-3 h-3 text-slate-300" />
         <span className="text-slate-400 font-medium">{dests.length} system{dests.length !== 1 ? "s" : ""}</span>
       </div>
+      )}
 
       {/* Service rows */}
       <div className="space-y-1.5">
