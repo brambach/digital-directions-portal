@@ -527,7 +527,7 @@ export default async function AdminDashboard() {
                 )}
               </div>
 
-              {integrationHealth.length >= 3 ? (
+              {integrationHealth.length > 0 ? (
                 <ConnectorHealthNetwork integrations={integrationHealth} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center">

@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useUser, useClerk } from "@clerk/nextjs";
-import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
 import { GlobalSearch } from "@/components/global-search";
-import { Button } from "@/components/ui/button";
 
 export function AdminHeader() {
     const { user } = useUser();
@@ -37,13 +35,6 @@ export function AdminHeader() {
 
             {/* Right Tools */}
             <div className="flex items-center gap-1">
-                <Button asChild size="sm" className="mr-2">
-                    <Link href="/dashboard/admin/tickets/new">
-                        <Plus className="w-3.5 h-3.5 mr-1.5" />
-                        New
-                    </Link>
-                </Button>
-
                 <NotificationBell />
 
                 {/* Divider */}
