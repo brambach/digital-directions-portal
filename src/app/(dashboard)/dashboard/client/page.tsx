@@ -162,10 +162,6 @@ export default async function ClientDashboard() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-[13px] text-slate-500 mr-4">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              All systems operational
-            </div>
             <Link href="/dashboard/client/tickets">
               <Button size="sm" className="rounded-xl font-semibold">
                 <HelpCircle className="w-3.5 h-3.5 mr-2" />
