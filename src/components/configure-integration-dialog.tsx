@@ -25,7 +25,7 @@ import { Loader2 } from "lucide-react";
 interface ConfigureIntegrationDialogProps {
   projectId: string;
   clientId: string;
-  integration?: any; // If editing existing integration
+  integration?: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -42,33 +42,17 @@ export function ConfigureIntegrationDialog({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const [serviceType, setServiceType] = useState(
-    integration?.serviceType || "hibob"
-  );
-  const [serviceName, setServiceName] = useState(
-    integration?.serviceName || ""
-  );
+  const [serviceType, setServiceType] = useState(integration?.serviceType || "keypay");
+  const [serviceName, setServiceName] = useState(integration?.serviceName || "");
   const [workatoApiToken, setWorkatoApiToken] = useState("");
   const [workatoEmail, setWorkatoEmail] = useState("");
-  const [isEnabled, setIsEnabled] = useState(
-    integration?.isEnabled !== false
-  );
-  const [checkIntervalMinutes, setCheckIntervalMinutes] = useState(
-    integration?.checkIntervalMinutes?.toString() || "5"
-  );
-  const [alertEnabled, setAlertEnabled] = useState(
-    integration?.alertEnabled !== false
-  );
-  const [alertThresholdMinutes, setAlertThresholdMinutes] = useState(
-    integration?.alertThresholdMinutes?.toString() || "15"
-  );
+  const [isEnabled, setIsEnabled] = useState(integration?.isEnabled !== false);
+  const [alertEnabled, setAlertEnabled] = useState(integration?.alertEnabled !== false);
 
   useEffect(() => {
     if (integration) {
-      setServiceType(integration.serviceType || "hibob");
+      setServiceType(integration.serviceType || "keypay");
       setServiceName(integration.serviceName || "");
-
-      // Parse Workato credentials if editing
       if (integration.workatoCredentials) {
         try {
           const creds = JSON.parse(integration.workatoCredentials);
@@ -78,11 +62,8 @@ export function ConfigureIntegrationDialog({
           console.warn("Failed to parse Workato credentials");
         }
       }
-
       setIsEnabled(integration.isEnabled !== false);
-      setCheckIntervalMinutes(integration.checkIntervalMinutes?.toString() || "5");
       setAlertEnabled(integration.alertEnabled !== false);
-      setAlertThresholdMinutes(integration.alertThresholdMinutes?.toString() || "15");
     }
   }, [integration]);
 
@@ -97,13 +78,12 @@ export function ConfigureIntegrationDialog({
         serviceType,
         serviceName: serviceName.trim(),
         isEnabled,
-        checkIntervalMinutes: parseInt(checkIntervalMinutes) || 5,
+        checkIntervalMinutes: 5,
         alertEnabled,
         alertChannels: JSON.stringify(["email", "in_app"]),
-        alertThresholdMinutes: parseInt(alertThresholdMinutes) || 15,
+        alertThresholdMinutes: 5,
       };
 
-      // Only add Workato credentials if it's a Workato integration
       if (serviceType === "workato" && workatoApiToken && workatoEmail) {
         body.workatoCredentials = JSON.stringify({
           apiToken: workatoApiToken,
@@ -111,16 +91,12 @@ export function ConfigureIntegrationDialog({
         });
       }
 
-      const url = integration
-        ? `/api/integrations/${integration.id}`
-        : "/api/integrations";
+      const url = integration ? `/api/integrations/${integration.id}` : "/api/integrations";
       const method = integration ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -129,17 +105,11 @@ export function ConfigureIntegrationDialog({
         throw new Error(data.error || "Failed to save integration");
       }
 
-      toast.success(
-        integration
-          ? "Integration updated successfully"
-          : "Integration created successfully"
-      );
-
+      toast.success(integration ? "Integration updated" : "Integration added");
       router.refresh();
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error saving integration:", error);
       toast.error(error.message || "Failed to save integration");
     } finally {
       setLoading(false);
@@ -148,53 +118,45 @@ export function ConfigureIntegrationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {integration ? "Edit Integration" : "Add Integration"}
-          </DialogTitle>
+          <DialogTitle>{integration ? "Edit Connected System" : "Add Connected System"}</DialogTitle>
           <DialogDescription>
-            Configure integration monitoring for this client. Status page monitoring tracks platform health without requiring credentials.
+            Add a payroll or workforce system to this project's architecture view.
+            HiBob and Workato are always included automatically.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Service Type */}
           <div className="space-y-2">
-            <Label htmlFor="serviceType">Service Type</Label>
+            <Label htmlFor="serviceType">System</Label>
             <Select value={serviceType} onValueChange={setServiceType}>
               <SelectTrigger id="serviceType">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hibob">HiBob (Status Page Only)</SelectItem>
-                <SelectItem value="keypay">KeyPay (Status Page Only)</SelectItem>
-                <SelectItem value="workato">Workato (Status + Recipe List)</SelectItem>
-                <SelectItem value="netsuite">NetSuite (Status Page Only)</SelectItem>
-                <SelectItem value="deputy">Deputy (Status Page Only)</SelectItem>
-                <SelectItem value="myob">MYOB (Status Page Only)</SelectItem>
+                <SelectItem value="keypay">KeyPay (Employment Hero)</SelectItem>
+                <SelectItem value="myob">MYOB</SelectItem>
+                <SelectItem value="deputy">Deputy</SelectItem>
+                <SelectItem value="netsuite">NetSuite</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-500">
-              {serviceType === "workato"
-                ? "Monitors Workato status page and basic recipe list (running/stopped counts)"
-                : "Monitors platform status page for service availability"}
-            </p>
           </div>
 
           {/* Service Name */}
           <div className="space-y-2">
-            <Label htmlFor="serviceName">Service Name</Label>
+            <Label htmlFor="serviceName">Display Name</Label>
             <Input
               id="serviceName"
               value={serviceName}
               onChange={(e) => setServiceName(e.target.value)}
-              placeholder="e.g., HiBob Production"
+              placeholder="e.g., KeyPay Production"
               required
             />
           </div>
 
-          {/* Workato Credentials (only shown for Workato) */}
+          {/* Workato Credentials */}
           {serviceType === "workato" && (
             <>
               <div className="space-y-2">
@@ -206,11 +168,7 @@ export function ConfigureIntegrationDialog({
                   onChange={(e) => setWorkatoApiToken(e.target.value)}
                   placeholder="Enter your Workato API token"
                 />
-                <p className="text-xs text-slate-500">
-                  Used to fetch basic recipe list (running/stopped status)
-                </p>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="workatoEmail">Workato Email</Label>
                 <Input
@@ -224,40 +182,18 @@ export function ConfigureIntegrationDialog({
             </>
           )}
 
-          {/* Check Interval */}
-          <div className="space-y-2">
-            <Label htmlFor="checkInterval">Check Interval (Minutes)</Label>
-            <Input
-              id="checkInterval"
-              type="number"
-              min="1"
-              max="1440"
-              value={checkIntervalMinutes}
-              onChange={(e) => setCheckIntervalMinutes(e.target.value)}
-            />
-            <p className="text-xs text-slate-500">
-              How often to check status page (1-1440 minutes, recommended: 5-10)
-            </p>
-          </div>
-
-          {/* Enabled Toggle */}
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="isEnabled"
-              checked={isEnabled}
-              onChange={(e) => setIsEnabled(e.target.checked)}
-              className="w-4 h-4 text-purple-700 rounded focus:ring-purple-600"
-            />
-            <Label htmlFor="isEnabled" className="cursor-pointer">
-              Enable monitoring for this integration
-            </Label>
-          </div>
-
-          {/* Alert Settings */}
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="text-sm font-semibold text-slate-900">Alert Settings</h3>
-
+          {/* Enabled + Alerts */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="isEnabled"
+                checked={isEnabled}
+                onChange={(e) => setIsEnabled(e.target.checked)}
+                className="w-4 h-4 text-purple-700 rounded focus:ring-purple-600"
+              />
+              <Label htmlFor="isEnabled" className="cursor-pointer">Enable status monitoring</Label>
+            </div>
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -266,50 +202,16 @@ export function ConfigureIntegrationDialog({
                 onChange={(e) => setAlertEnabled(e.target.checked)}
                 className="w-4 h-4 text-purple-700 rounded focus:ring-purple-600"
               />
-              <Label htmlFor="alertEnabled" className="cursor-pointer">
-                Enable alerts for this integration
-              </Label>
+              <Label htmlFor="alertEnabled" className="cursor-pointer">Send alerts on status change</Label>
             </div>
-
-            {alertEnabled && (
-              <div className="space-y-2 pl-7">
-                <Label htmlFor="alertThreshold">Alert Threshold (Minutes)</Label>
-                <Input
-                  id="alertThreshold"
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={alertThresholdMinutes}
-                  onChange={(e) => setAlertThresholdMinutes(e.target.value)}
-                />
-                <p className="text-xs text-slate-500">
-                  Send alert if integration is down for more than this many minutes
-                </p>
-              </div>
-            )}
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
+          <div className="flex justify-end gap-3 pt-2 border-t">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : integration ? (
-                "Update Integration"
-              ) : (
-                "Add Integration"
-              )}
+              {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : integration ? "Save Changes" : "Add System"}
             </Button>
           </div>
         </form>
