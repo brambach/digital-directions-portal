@@ -15,6 +15,22 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── March 2026 ──────────────────────────────────────────────
   {
+    id: "2026-03-10-changelog-improvements",
+    date: "2026-03-10",
+    title: "Changelog Improvements",
+    description: "The changelog page got a serious upgrade — stats, filters, month headers, and more.",
+    tags: ["improvement"],
+    audience: "all",
+    items: [
+      "Stats banner showing total updates, features, improvements, and fixes at a glance",
+      "Tag filter bar to show only features, improvements, or fixes",
+      "Month group headers to make scanning the timeline easier",
+      "Timeline dot connecting the date column to each entry card",
+      "Stagger animations as entries load in",
+      "Click the date to copy a direct link to that entry",
+    ],
+  },
+  {
     id: "2026-03-10-changelog",
     date: "2026-03-10",
     title: "Portal Changelog",

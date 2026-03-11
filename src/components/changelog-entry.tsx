@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { Check, Link } from "lucide-react";
 import type { ChangelogEntry } from "@/lib/changelog";
 import { cn } from "@/lib/utils";
 
@@ -19,29 +23,58 @@ export function ChangelogEntryCard({
   isNew,
   showAdminLabels,
 }: ChangelogEntryCardProps) {
+  const [copied, setCopied] = useState(false);
+
   const displayDate = new Date(entry.date + "T00:00:00");
   const month = displayDate.toLocaleDateString("en-AU", { month: "short" });
   const day = displayDate.getDate();
 
+  function handleCopyAnchor() {
+    const url = `${window.location.origin}${window.location.pathname}#${entry.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
   return (
     <div id={entry.id} className="flex gap-6">
-      {/* Left column — date + timeline stem */}
+      {/* Left column — date + timeline */}
       <div className="flex flex-col items-center w-16 flex-shrink-0 pt-1">
-        <div className="text-center">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <button
+          onClick={handleCopyAnchor}
+          title="Copy link to this entry"
+          className="text-center group relative"
+        >
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-violet-400 transition-colors">
             {month}
           </p>
-          <p className="text-lg font-bold text-slate-700 leading-tight">
+          <p className="text-lg font-bold text-slate-700 leading-tight group-hover:text-violet-600 transition-colors">
             {day}
           </p>
-        </div>
+          <span
+            className={cn(
+              "absolute -right-4 top-1/2 -translate-y-1/2 transition-all",
+              copied ? "opacity-100 scale-100" : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100"
+            )}
+          >
+            {copied ? (
+              <Check className="w-3 h-3 text-green-500" />
+            ) : (
+              <Link className="w-3 h-3 text-violet-400" />
+            )}
+          </span>
+        </button>
         {entry.version && (
           <span className="mt-1.5 text-[10px] font-semibold text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded-full">
             {entry.version}
           </span>
         )}
-        {/* Stem */}
-        <div className="flex-1 w-px bg-slate-200 mt-3" />
+        {/* Timeline dot + stem */}
+        <div className="flex flex-col items-center mt-3 flex-1">
+          <div className="w-2 h-2 rounded-full bg-violet-300 flex-shrink-0" />
+          <div className="flex-1 w-px bg-slate-200 mt-1" />
+        </div>
       </div>
 
       {/* Right column — card */}
@@ -76,9 +109,7 @@ export function ChangelogEntryCard({
             {/* Tags */}
             <div className="flex flex-wrap gap-1.5 mb-3">
               {entry.tags
-                .filter(
-                  (tag) => showAdminLabels || tag !== "internal"
-                )
+                .filter((tag) => showAdminLabels || tag !== "internal")
                 .map((tag) => (
                   <span
                     key={tag}
