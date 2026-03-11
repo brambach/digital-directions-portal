@@ -163,9 +163,10 @@ export async function checkDeputyStatus(): Promise<StatusPageResult> {
  * https://status.myob.com if issues are suspected.
  */
 export async function checkMYOBStatus(): Promise<StatusPageResult> {
+  // status.myob.com uses StatusHub (not Atlassian Statuspage) — no public API available
   return {
     status: "operational",
-    description: "Status page requires manual check (StatusHub)",
+    description: "Manual check required — status.myob.com",
     incidents: [],
     lastChecked: new Date(),
   };

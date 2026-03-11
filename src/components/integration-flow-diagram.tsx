@@ -36,8 +36,9 @@ function statusColor(status: string | null) {
   }
 }
 
-function StatusIndicator({ status, lastCheckedAt }: { status: string | null; lastCheckedAt: Date | null }) {
+function StatusIndicator({ status, lastCheckedAt, serviceType }: { status: string | null; lastCheckedAt: Date | null; serviceType?: string }) {
   const s = statusColor(status);
+  const isMYOBUnknown = serviceType === "myob" && (!status || status === "unknown");
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5">
@@ -49,11 +50,15 @@ function StatusIndicator({ status, lastCheckedAt }: { status: string | null; las
             status === "healthy" && "animate-pulse-slow"
           )}
         />
-        {s.label && (
+        {isMYOBUnknown ? (
+          <a href="https://status.myob.com" target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-slate-400 hover:text-violet-600 tracking-wider">
+            Check →
+          </a>
+        ) : s.label ? (
           <span className={cn("text-[9px] font-bold tracking-wider", s.labelColor)}>{s.label}</span>
-        )}
+        ) : null}
       </div>
-      {lastCheckedAt && (
+      {!isMYOBUnknown && lastCheckedAt && (
         <div className="flex items-center gap-0.5 text-[9px] text-slate-400">
           <Clock className="w-2.5 h-2.5" />
           <span>{formatDistanceToNow(new Date(lastCheckedAt), { addSuffix: true })}</span>
@@ -128,7 +133,7 @@ function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; on
 
       {/* Status section */}
       <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
-        <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} />
+        <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
       </div>
     </Tag>
   );
@@ -179,7 +184,7 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
 
         {/* Status section */}
         <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
-          <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} />
+          <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
         </div>
       </Tag>
     </motion.div>
@@ -216,7 +221,7 @@ function ConnectedRow({ monitor, onClick, readOnly }: { monitor: Monitor; onClic
         <p className="text-[13px] font-bold text-slate-800 truncate">{meta.name}</p>
         <p className="text-[10px] text-slate-400">{meta.role}</p>
         <div className="mt-1">
-          <StatusIndicator status={monitor.currentStatus} lastCheckedAt={monitor.lastCheckedAt} />
+          <StatusIndicator status={monitor.currentStatus} lastCheckedAt={monitor.lastCheckedAt} serviceType={monitor.serviceType} />
         </div>
       </div>
       {!readOnly && (

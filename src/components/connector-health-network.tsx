@@ -24,7 +24,7 @@ const S = {
   healthy:  { dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700", label: "Operational", ping: "bg-emerald-400", accent: "border-l-emerald-400" },
   degraded: { dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700",     label: "Degraded",    ping: "bg-amber-400",   accent: "border-l-amber-400" },
   down:     { dot: "bg-red-500",     badge: "bg-red-50 text-red-700",         label: "Down",        ping: "bg-red-400",     accent: "border-l-red-500" },
-  unknown:  { dot: "bg-slate-400",   badge: "bg-slate-50 text-slate-600",     label: "Unknown",     ping: "bg-slate-300",   accent: "border-l-slate-300" },
+  unknown:  { dot: "bg-slate-400",   badge: "bg-slate-50 text-slate-500",     label: "Unknown",     ping: "bg-slate-300",   accent: "border-l-slate-300" },
 } as const;
 
 // ─── StatusDot ──────────────────────────────────────────────────────────────
@@ -97,9 +97,15 @@ export function ConnectorHealthNetwork({
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={cn("text-[10px] font-semibold px-1.5 py-px rounded-full", S[node.status].badge)}>
-                  {S[node.status].label}
+                  {node.id === "myob" && node.status === "unknown" ? "Manual check" : S[node.status].label}
                 </span>
-                <span className="text-[10px] text-slate-400">{node.lastChecked}</span>
+                {node.id === "myob" && node.status === "unknown" ? (
+                  <a href="https://status.myob.com" target="_blank" rel="noopener noreferrer" className="text-[10px] text-violet-500 hover:text-violet-700 font-medium">
+                    status.myob.com →
+                  </a>
+                ) : (
+                  <span className="text-[10px] text-slate-400">{node.lastChecked}</span>
+                )}
               </div>
               {node.incident && (
                 <p className="text-[10px] text-amber-600 font-medium mt-1 truncate">{node.incident}</p>

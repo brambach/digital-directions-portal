@@ -7,28 +7,10 @@ import { BaseHealthCheckResult } from "./types";
 import { checkMYOBStatus } from "./status-pages";
 
 export async function checkMYOBHealth(): Promise<BaseHealthCheckResult> {
-  try {
-    const statusResult = await checkMYOBStatus();
-
-    const statusMap = {
-      operational: "healthy",
-      degraded: "degraded",
-      major_outage: "down",
-      maintenance: "degraded",
-    } as const;
-
-    return {
-      status: statusMap[statusResult.status] || "unknown",
-      responseTimeMs: Date.now() - statusResult.lastChecked.getTime(),
-      errorMessage: statusResult.description !== "All systems operational"
-        ? statusResult.description
-        : null,
-    };
-  } catch (error: any) {
-    return {
-      status: "unknown",
-      responseTimeMs: null,
-      errorMessage: `Failed to fetch status page: ${error.message}`,
-    };
-  }
+  // status.myob.com uses StatusHub with no public API — cannot be auto-checked
+  return {
+    status: "unknown",
+    responseTimeMs: null,
+    errorMessage: "Manual check required — status.myob.com",
+  };
 }
