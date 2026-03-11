@@ -203,7 +203,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
             </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Systems</p>
           </div>
-          <p className="text-lg font-bold text-slate-900">{integrations.length}</p>
+          <p className="text-lg font-bold text-slate-900">{integrationsWithFallback.length}</p>
           <p className="text-xs text-slate-400 mt-1">Active integrations</p>
         </div>
 
