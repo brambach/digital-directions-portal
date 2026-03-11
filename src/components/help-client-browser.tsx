@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Search,
   BookOpen,
@@ -12,10 +13,12 @@ import {
   Lightbulb,
   AlertTriangle,
   Info,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DigiFloat } from "@/components/motion/digi-float";
 import { LoomEmbed } from "@/components/loom-embed";
+import { TOUR_LS_KEY } from "@/lib/tour-steps";
 
 interface Article {
   id: string;
@@ -155,11 +158,17 @@ function renderMarkdown(content: string) {
 }
 
 export function HelpClientBrowser() {
+  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+
+  const replayTour = () => {
+    localStorage.removeItem(TOUR_LS_KEY);
+    router.push("/dashboard/client");
+  };
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -239,9 +248,18 @@ export function HelpClientBrowser() {
         <div className="flex items-center gap-4">
           <DigiFloat variant="neutral" size="sm" />
           <div className="flex-1">
-            <h2 className="text-[17px] font-bold text-slate-800 mb-1">
-              How can we help?
-            </h2>
+            <div className="flex items-start justify-between mb-1">
+              <h2 className="text-[17px] font-bold text-slate-800">
+                How can we help?
+              </h2>
+              <button
+                onClick={replayTour}
+                className="flex items-center gap-1.5 text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors flex-shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Replay portal tour
+              </button>
+            </div>
             <p className="text-[13px] text-slate-500 mb-4">
               Search our knowledge base or browse by category
             </p>

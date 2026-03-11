@@ -81,7 +81,7 @@ export function CelebrationOverlay({
         className="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 p-8 text-center space-y-6 animate-in zoom-in-95 duration-500"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Diji celebrating */}
+        {/* Digi celebrating */}
         <div className="flex justify-center">
           <DigiMascot variant="celebrating" size="lg" />
         </div>

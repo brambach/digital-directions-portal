@@ -12,6 +12,19 @@ Digital Directions Portal is a custom-built HiBob implementation management port
 
 > **⚠️ Major Revamp In Progress:** This portal is undergoing a full lifecycle revamp per `DD-PORTAL-2026-IMPLEMENTATION-PLAN.md`. Read that file before making significant architectural changes. Key decisions: support hours system is being removed, Freshdesk will replace the current ticket backend, the project phase system is being expanded to a 9-stage lifecycle, and the entire UI is moving to light mode.
 
+## Changelog (Required After Every Feature)
+
+After shipping any feature or fix, **always update `src/lib/changelog.ts`**:
+
+1. Prepend a new entry to the `CHANGELOG` array (newest first)
+2. Set `audience: "all"` for client-visible features, `audience: "admin"` for internal/admin-only changes
+3. Use today's date, a descriptive `id` slug, appropriate `tags`, and clear `items` bullet points
+4. `LATEST_ADMIN_ENTRY_DATE` and `LATEST_CLIENT_ENTRY_DATE` are computed expressions — they update automatically
+
+Tag guide: `feature` (new capability) · `improvement` (enhancement) · `fix` (bug fix) · `internal` (never shown to clients)
+
+---
+
 ## Development Commands
 
 ```bash
@@ -591,9 +604,9 @@ All admins and clients belong to the Digital Directions agency:
 - Status badges: Green (active), Gray (inactive), Red (archived/overdue)
 - Ticket priorities: Gray (low), Blue (medium), Orange (high), Red (urgent)
 
-**Diji Mascot:**
-- Bear mascot named Diji. 7 variants in `/public/images/digi/`: neutral, peeking, construction, celebrating, thinking, confused, sleeping
-- Component: `src/components/diji-mascot.tsx` — `<DijiMascot variant="neutral" size="sm" />`
+**Digi Mascot:**
+- Bear mascot named Digi. 5 variants in `/public/images/digi/`: neutral, construction, celebrating, confused, sleeping
+- Component: `src/components/digi-mascot.tsx` — `<DigiMascot variant="neutral" size="sm" />`
 - Use in: sidebar footer, empty states, locked lifecycle stages, go-live celebration, help centre
 
 **CSS Variables:**

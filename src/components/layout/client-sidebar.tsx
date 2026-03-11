@@ -30,8 +30,8 @@ export function ClientSidebar() {
             title: "GENERAL",
             items: [
                 { label: "Dashboard", href: "/dashboard/client", icon: LayoutDashboard },
-                { label: "Projects", href: "/dashboard/client/projects", icon: FolderKanban },
-                { label: "Support", href: "/dashboard/client/tickets", icon: Ticket },
+                { label: "Projects", href: "/dashboard/client/projects", icon: FolderKanban, dataTour: "sidebar-projects" },
+                { label: "Support", href: "/dashboard/client/tickets", icon: Ticket, dataTour: "sidebar-support" },
             ]
         },
         {
@@ -56,6 +56,7 @@ export function ClientSidebar() {
             <Link
                 key={item.href}
                 href={item.href}
+                data-tour={item.dataTour}
                 className={cn(
                     "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-colors duration-150 group",
                     active

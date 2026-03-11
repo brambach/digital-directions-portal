@@ -2,6 +2,7 @@
 
 import { ClientSidebar } from "./client-sidebar";
 import { ClientHeader } from "./client-header";
+import { TourOverlay } from "@/components/guided-tour/tour-overlay";
 import { DigiChat } from "@/components/digi-chat/digi-chat";
 
 interface ClientShellProps {
@@ -25,6 +26,9 @@ export default function ClientShell({ children, chatProps }: ClientShellProps) {
                 <ClientHeader />
                 {children}
             </main>
+
+            {/* Guided Tour — must render BEFORE DigiChat for effect ordering */}
+            <TourOverlay hasProjects={Boolean(chatProps?.projects?.length)} />
 
             {/* Digi AI Chat */}
             {chatProps && (

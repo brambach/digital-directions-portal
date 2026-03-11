@@ -135,6 +135,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="relative"
+          data-tour="notification-bell"
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
           aria-haspopup="menu"
         >

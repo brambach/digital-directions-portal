@@ -10,7 +10,7 @@ Internal client management portal for Digital Directions — an Australian-based
 - **Messaging** — Project-scoped messaging thread between DD team and client users
 - **Integration health** — Monitor HiBob, KeyPay, Workato, and other service status pages
 - **Support** — Ticket submission routes to Freshdesk via email; clients submit from the portal
-- **Diji AI chatbot** — Claude-powered assistant for self-serve client support before ticket escalation
+- **Digi AI chatbot** — Claude-powered assistant for self-serve client support before ticket escalation
 
 ## Tech stack
 
@@ -112,7 +112,7 @@ SLACK_BOT_TOKEN=          # Slack notifications
 SLACK_CHANNEL_ID=         # Slack channel
 FRESHDESK_DOMAIN=         # Freshdesk subdomain (e.g. yourcompany-help)
 FRESHDESK_API_KEY=        # Freshdesk API key
-ANTHROPIC_API_KEY=        # Diji AI chatbot
+ANTHROPIC_API_KEY=        # Digi AI chatbot
 CRON_SECRET=              # Secure the integration health cron endpoint
 CREDENTIALS_ENCRYPTION_KEY=  # 64-char hex — encrypt stored Workato credentials
 ```

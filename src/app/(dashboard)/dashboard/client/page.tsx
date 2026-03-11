@@ -179,7 +179,7 @@ export default async function ClientDashboard() {
       <StaggerContainer className="px-7 py-6 space-y-6">
         {/* ── Stat Cards ─────────────────────────────────────────── */}
         <StaggerItem>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4" data-tour="stat-cards">
           {STATS.map((stat) => {
             const numericValue = parseInt(stat.value, 10);
             const isNumeric = !isNaN(numericValue) && stat.value === numericValue.toString();
