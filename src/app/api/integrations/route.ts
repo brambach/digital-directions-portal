@@ -4,6 +4,28 @@ import { integrationMonitors } from "@/lib/db/schema";
 import { requireAdmin, requireAuth } from "@/lib/auth";
 import { isNull, desc, eq, and } from "drizzle-orm";
 
+// Fetch global (project-less) monitors for HiBob/Workato
+async function fetchGlobalMonitors() {
+  return db
+    .select()
+    .from(integrationMonitors)
+    .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt)));
+}
+
+// Merge global monitor status into project monitors that haven't been checked yet
+function applyGlobalFallback<T extends { serviceType: string; currentStatus: string | null; lastCheckedAt: Date | null }>(
+  monitors: T[],
+  globalMonitors: T[]
+): T[] {
+  return monitors.map((m) => {
+    if ((m.serviceType === "hibob" || m.serviceType === "workato") && !m.currentStatus) {
+      const global = globalMonitors.find((g) => g.serviceType === m.serviceType);
+      if (global) return { ...m, currentStatus: global.currentStatus, lastCheckedAt: global.lastCheckedAt };
+    }
+    return m;
+  });
+}
+
 // GET /api/integrations - List all integration monitors
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +70,7 @@ export async function GET(request: NextRequest) {
         .where(and(...whereConditions))
         .orderBy(desc(integrationMonitors.createdAt));
 
-      return NextResponse.json(monitors);
+      return NextResponse.json(applyGlobalFallback(monitors, await fetchGlobalMonitors()));
     }
 
     // Admin users can see all or filter by projectId/clientId
@@ -67,7 +89,7 @@ export async function GET(request: NextRequest) {
       .where(and(...whereConditions))
       .orderBy(desc(integrationMonitors.createdAt));
 
-    return NextResponse.json(monitors);
+    return NextResponse.json(applyGlobalFallback(monitors, await fetchGlobalMonitors()));
   } catch (error: any) {
     console.error("Error fetching integration monitors:", error);
 

@@ -89,6 +89,20 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
     .where(and(eq(integrationMonitors.projectId, id), isNull(integrationMonitors.deletedAt)))
     .orderBy(desc(integrationMonitors.createdAt));
 
+  // For HiBob and Workato, fall back to global monitor status if the project monitor has no status yet
+  const globalMonitors = await db
+    .select()
+    .from(integrationMonitors)
+    .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt)));
+
+  const integrationsWithFallback = integrations.map((m) => {
+    if ((m.serviceType === "hibob" || m.serviceType === "workato") && !m.currentStatus) {
+      const global = globalMonitors.find((g) => g.serviceType === m.serviceType);
+      if (global) return { ...m, currentStatus: global.currentStatus, lastCheckedAt: global.lastCheckedAt };
+    }
+    return m;
+  });
+
   const unresolvedFlags = await db
     .select()
     .from(clientFlags)
@@ -252,7 +266,7 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
           <IntegrationFlowDiagram
             projectId={id}
             clientId={project.clientId}
-            integrations={integrations}
+            integrations={integrationsWithFallback}
           />
         </div>
       </div>
