@@ -402,6 +402,36 @@ async function seed() {
 
     console.log(`✓ Created ${insertedIntegrations.length} integration monitors`);
 
+    // Create global system monitors for HiBob and Workato (not tied to any project)
+    await db.insert(integrationMonitors).values([
+      {
+        projectId: null,
+        clientId: null,
+        serviceType: "hibob" as const,
+        serviceName: "HiBob",
+        isEnabled: true,
+        checkIntervalMinutes: 5,
+        currentStatus: "unknown" as const,
+        platformStatusUrl: "https://status.hibob.io",
+        checkPlatformStatus: true,
+        alertEnabled: false,
+        alertThresholdMinutes: 15,
+      },
+      {
+        projectId: null,
+        clientId: null,
+        serviceType: "workato" as const,
+        serviceName: "Workato",
+        isEnabled: true,
+        checkIntervalMinutes: 5,
+        currentStatus: "unknown" as const,
+        checkPlatformStatus: true,
+        alertEnabled: false,
+        alertThresholdMinutes: 15,
+      },
+    ]);
+    console.log("✓ Created global HiBob + Workato system monitors");
+
     // Create tickets
     const ticketsData = [
       { clientId: insertedClients[0].id, projectId: insertedProjects[0].id, title: "API timeout in payroll sync", description: "Intermittent timeouts when syncing payroll data to NetSuite during peak hours", type: "bug_report" as const, priority: "high" as const, status: "in_progress" as const, createdAt: daysAgo(5) },

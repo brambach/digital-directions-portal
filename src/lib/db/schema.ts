@@ -369,11 +369,9 @@ export const integrationMonitors = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     projectId: uuid("project_id")
-      .references(() => projects.id, { onDelete: "cascade" })
-      .notNull(),
+      .references(() => projects.id, { onDelete: "cascade" }),
     clientId: uuid("client_id")
-      .references(() => clients.id, { onDelete: "cascade" })
-      .notNull(),
+      .references(() => clients.id, { onDelete: "cascade" }),
     serviceType: integrationServiceTypeEnum("service_type").notNull(),
     serviceName: varchar("service_name", { length: 255 }).notNull(),
     workatoCredentials: text("workato_credentials"),
