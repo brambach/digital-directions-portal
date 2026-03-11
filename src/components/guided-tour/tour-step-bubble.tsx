@@ -6,6 +6,8 @@ import { DigiMascot } from "@/components/digi-mascot";
 import { Button } from "@/components/ui/button";
 import type { TourStep } from "@/lib/tour-steps";
 
+const TYPEWRITER_SPEED_MS = 18; // ms per character
+
 interface TourStepBubbleProps {
   step: TourStep;
   stepIndex: number;
@@ -164,11 +166,14 @@ export function TourStepBubble({
 }: TourStepBubbleProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const primaryRef = useRef<HTMLButtonElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [pos, setPos] = useState<{ top: number; left: number; placement: Placement }>({
     top: 0,
     left: 0,
     placement: "below",
   });
+  const [displayedMessage, setDisplayedMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
@@ -182,7 +187,6 @@ export function TourStepBubble({
 
   // Position on mount and when target changes
   useEffect(() => {
-    // Small delay to let the bubble render and get its dimensions
     const raf = requestAnimationFrame(() => reposition());
     return () => cancelAnimationFrame(raf);
   }, [reposition, stepIndex]);
@@ -192,6 +196,45 @@ export function TourStepBubble({
     const timer = setTimeout(() => primaryRef.current?.focus(), 50);
     return () => clearTimeout(timer);
   }, [stepIndex]);
+
+  // Typewriter effect — restarts on each step
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setDisplayedMessage("");
+    setIsTyping(true);
+    let i = 0;
+    intervalRef.current = setInterval(() => {
+      i++;
+      setDisplayedMessage(step.message.slice(0, i));
+      if (i >= step.message.length) {
+        clearInterval(intervalRef.current!);
+        setIsTyping(false);
+      }
+    }, TYPEWRITER_SPEED_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [step.message, stepIndex]);
+
+  const handleNext = () => {
+    if (isTyping) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setDisplayedMessage(step.message);
+      setIsTyping(false);
+      return;
+    }
+    onNext();
+  };
+
+  const handleBack = () => {
+    if (isTyping) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setDisplayedMessage(step.message);
+      setIsTyping(false);
+      return;
+    }
+    onBack();
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -225,7 +268,7 @@ export function TourStepBubble({
               {step.title && (
                 <h3 className="text-[14px] font-bold text-slate-800 mb-1">{step.title}</h3>
               )}
-              <p className="text-[13px] text-slate-600 leading-relaxed">{step.message}</p>
+              <p className="text-[13px] text-slate-600 leading-relaxed">{displayedMessage}</p>
             </div>
           </div>
 
@@ -247,7 +290,7 @@ export function TourStepBubble({
             {/* Buttons */}
             <div className="flex items-center gap-2">
               {!isFirst && (
-                <Button variant="ghost" size="sm" onClick={onBack} className="text-xs h-8 px-3">
+                <Button variant="ghost" size="sm" onClick={handleBack} className="text-xs h-8 px-3">
                   Back
                 </Button>
               )}
@@ -259,7 +302,7 @@ export function TourStepBubble({
               <Button
                 ref={primaryRef}
                 size="sm"
-                onClick={isLast ? onFinish : onNext}
+                onClick={isLast ? onFinish : handleNext}
                 className="text-xs h-8 px-4 rounded-full"
               >
                 {isLast ? "Got it!" : "Next"}

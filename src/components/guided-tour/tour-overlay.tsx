@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { TOUR_STEPS, TOUR_LS_KEY } from "@/lib/tour-steps";
 import { TourStepBubble } from "./tour-step-bubble";
+import { TourCelebration } from "./tour-celebration";
 
 interface TourOverlayProps {
   hasProjects?: boolean;
@@ -25,11 +27,14 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
     );
   }, [hasProjects]);
 
+  const [showCelebration, setShowCelebration] = useState(false);
+
   // ── Complete / dismiss ───────────────────────────────────────────
-  const completeTour = useCallback(() => {
+  const completeTour = useCallback((celebrate = false) => {
     localStorage.setItem(TOUR_LS_KEY, "true");
     setIsActive(false);
     setSpotlightRect(null);
+    if (celebrate) setShowCelebration(true);
   }, []);
 
   // ── Immediate mount effect: suppress Digi prompt ──────────────────
@@ -137,7 +142,7 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
       if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
         if (currentStep === steps.length - 1) {
-          completeTour();
+          completeTour(true);
         } else {
           goToStep(currentStep + 1, "forward");
         }
@@ -154,6 +159,10 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [isActive, currentStep, steps.length, goToStep, completeTour]);
 
+  if (showCelebration) {
+    return <TourCelebration onDismiss={() => setShowCelebration(false)} />;
+  }
+
   if (!isActive) return null;
 
   const step = steps[currentStep];
@@ -168,16 +177,23 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
         <defs>
           <mask id="tour-spotlight-mask">
             <rect width="100%" height="100%" fill="white" />
-            {spotlightRect && (
-              <rect
-                x={spotlightRect.x - pad}
-                y={spotlightRect.y - pad}
-                width={spotlightRect.width + pad * 2}
-                height={spotlightRect.height + pad * 2}
-                rx={12}
-                fill="black"
-              />
-            )}
+            <motion.rect
+              animate={
+                spotlightRect
+                  ? {
+                      x: spotlightRect.x - pad,
+                      y: spotlightRect.y - pad,
+                      width: spotlightRect.width + pad * 2,
+                      height: spotlightRect.height + pad * 2,
+                      opacity: 1,
+                    }
+                  : { opacity: 0 }
+              }
+              initial={{ opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              rx={12}
+              fill="black"
+            />
           </mask>
         </defs>
         <rect
@@ -191,19 +207,26 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
       {/* Layer 2: Click blocker — catches clicks on dimmed area */}
       <div className="absolute inset-0" />
 
-      {/* Layer 3: Spotlight glow ring */}
-      {spotlightRect && (
-        <div
-          className="absolute rounded-xl pointer-events-none"
-          style={{
-            left: spotlightRect.x - pad,
-            top: spotlightRect.y - pad,
-            width: spotlightRect.width + pad * 2,
-            height: spotlightRect.height + pad * 2,
-            boxShadow: "0 0 0 4px rgba(124, 28, 255, 0.2)",
-          }}
-        />
-      )}
+      {/* Layer 3: Spotlight glow ring — animates between targets */}
+      <AnimatePresence>
+        {spotlightRect && (
+          <motion.div
+            key="glow"
+            className="absolute rounded-xl pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              left: spotlightRect.x - pad,
+              top: spotlightRect.y - pad,
+              width: spotlightRect.width + pad * 2,
+              height: spotlightRect.height + pad * 2,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            style={{ boxShadow: "0 0 0 4px rgba(124, 28, 255, 0.2)" }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Layer 4: Speech bubble */}
       <TourStepBubble
@@ -213,8 +236,8 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
         targetRect={spotlightRect}
         onNext={() => goToStep(currentStep + 1, "forward")}
         onBack={() => goToStep(currentStep - 1, "backward")}
-        onSkip={completeTour}
-        onFinish={completeTour}
+        onSkip={() => completeTour(false)}
+        onFinish={() => completeTour(true)}
       />
     </div>
   );

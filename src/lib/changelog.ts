@@ -15,6 +15,23 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── March 2026 ──────────────────────────────────────────────
   {
+    id: "2026-03-10-guided-tour",
+    date: "2026-03-10",
+    title: "Guided Portal Tour",
+    description: "New client users now get a guided tour of the portal on first login, with Digi as the guide.",
+    tags: ["feature"],
+    audience: "all",
+    items: [
+      "First-time tour auto-starts on the dashboard after login — walks through Projects, Support, stat cards, notifications, and Digi chat",
+      "Spotlight overlay highlights each element as Digi explains it",
+      "Smooth animated spotlight that slides between targets",
+      "Typewriter text effect as Digi speaks each step",
+      "Celebration moment with confetti when you finish the tour",
+      "Keyboard navigation: arrow keys to step through, Escape to dismiss",
+      "Replay the tour any time from the Help Centre",
+    ],
+  },
+  {
     id: "2026-03-10-changelog-improvements",
     date: "2026-03-10",
     title: "Changelog Improvements",
