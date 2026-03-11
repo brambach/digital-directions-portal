@@ -15,6 +15,21 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── March 2026 ──────────────────────────────────────────────
   {
+    id: "2026-03-10-guided-tour-polish",
+    date: "2026-03-10",
+    title: "Guided Tour Polish",
+    description: "Multiple UX improvements to the first-time guided tour experience.",
+    tags: ["improvement"],
+    audience: "all",
+    items: [
+      "Click the spotlit element to advance the tour — feels more natural and explorable",
+      "Typewriter animation pauses when you hover the speech bubble so you can read at your own pace",
+      "Step counter (e.g. '2 / 7') shown alongside the progress dots",
+      "Digi appears in construction mode on the Projects step for more personality",
+      "Notification bell rings and chat bubble pulses during their respective tour steps",
+    ],
+  },
+  {
     id: "2026-03-10-guided-tour",
     date: "2026-03-10",
     title: "Guided Portal Tour",

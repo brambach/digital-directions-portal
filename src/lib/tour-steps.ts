@@ -23,7 +23,7 @@ export const TOUR_STEPS: TourStep[] = [
     title: "Your Projects",
     message:
       "This is where you'll find your integration projects. Each project tracks every step from kickoff to go-live.",
-    digiVariant: "neutral",
+    digiVariant: "construction",
   },
   {
     id: "sidebar-support",

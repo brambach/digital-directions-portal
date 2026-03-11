@@ -116,6 +116,24 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
     [steps, measureTarget, completeTour],
   );
 
+  // ── Element animations for specific steps ───────────────────────
+  useEffect(() => {
+    if (!isActive) return;
+    const step = steps[currentStep];
+    if (!step?.target) return;
+
+    const el = document.querySelector(`[data-tour="${step.target}"]`);
+    if (!el) return;
+
+    const animClass =
+      step.id === "notification-bell" ? "tour-bell-ring" :
+      step.id === "chat-bubble"       ? "tour-pop-pulse" : null;
+
+    if (!animClass) return;
+    el.classList.add(animClass);
+    return () => el.classList.remove(animClass);
+  }, [isActive, currentStep, steps]);
+
   // ── Measure on step change + resize ──────────────────────────────
   useEffect(() => {
     if (!isActive) return;
@@ -207,7 +225,25 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
       {/* Layer 2: Click blocker — catches clicks on dimmed area */}
       <div className="absolute inset-0" />
 
-      {/* Layer 3: Spotlight glow ring — animates between targets */}
+      {/* Layer 3: Spotlight click zone — click the highlighted element to advance */}
+      {spotlightRect && (
+        <div
+          className="absolute z-[2] cursor-pointer"
+          style={{
+            left: spotlightRect.x - pad,
+            top: spotlightRect.y - pad,
+            width: spotlightRect.width + pad * 2,
+            height: spotlightRect.height + pad * 2,
+          }}
+          onClick={() => {
+            if (currentStep === steps.length - 1) completeTour(true);
+            else goToStep(currentStep + 1, "forward");
+          }}
+          title="Click to advance"
+        />
+      )}
+
+      {/* Layer 4: Spotlight glow ring — animates between targets */}
       <AnimatePresence>
         {spotlightRect && (
           <motion.div
@@ -228,7 +264,7 @@ export function TourOverlay({ hasProjects = true }: TourOverlayProps) {
         )}
       </AnimatePresence>
 
-      {/* Layer 4: Speech bubble */}
+      {/* Layer 5: Speech bubble */}
       <TourStepBubble
         step={step}
         stepIndex={currentStep}
