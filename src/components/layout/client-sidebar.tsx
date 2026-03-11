@@ -11,7 +11,10 @@ import {
     HelpCircle,
     Calculator,
     Plug,
+    History,
 } from "lucide-react";
+import { ChangelogNavBadge } from "@/components/changelog-whats-new-badge";
+import { LATEST_CLIENT_ENTRY_DATE } from "@/lib/changelog";
 
 export function ClientSidebar() {
     const pathname = usePathname();
@@ -36,6 +39,7 @@ export function ClientSidebar() {
             items: [
                 { label: "ROI Calculator", href: "/dashboard/client/roi", icon: Calculator },
                 { label: "Connectors", href: "/dashboard/client/connectors", icon: Plug },
+                { label: "Changelog", href: "/dashboard/client/changelog", icon: History, badgeComponent: <ChangelogNavBadge latestDate={LATEST_CLIENT_ENTRY_DATE} /> },
             ]
         },
         {
@@ -75,6 +79,7 @@ export function ClientSidebar() {
                         )}
                     />
                     <span className="flex-1">{item.label}</span>
+                    {item.badgeComponent}
                 </span>
             </Link>
         );

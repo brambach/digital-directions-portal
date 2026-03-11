@@ -12,7 +12,10 @@ import {
     Settings,
     BookOpen,
     BarChart2,
+    History,
 } from "lucide-react";
+import { ChangelogNavBadge } from "@/components/changelog-whats-new-badge";
+import { LATEST_ADMIN_ENTRY_DATE } from "@/lib/changelog";
 
 export function AdminSidebar() {
     const pathname = usePathname();
@@ -38,6 +41,7 @@ export function AdminSidebar() {
             items: [
                 { label: "Reports", href: "/dashboard/admin/reports", icon: BarChart2 },
                 { label: "Help Articles", href: "/dashboard/admin/help", icon: BookOpen },
+                { label: "Changelog", href: "/dashboard/admin/changelog", icon: History, badgeComponent: <ChangelogNavBadge latestDate={LATEST_ADMIN_ENTRY_DATE} /> },
             ]
         },
         {
@@ -77,6 +81,7 @@ export function AdminSidebar() {
                         )}
                     />
                     <span className="flex-1">{item.label}</span>
+                    {item.badgeComponent}
                     {item.badge && (
                         <span className={cn(
                             "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
