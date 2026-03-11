@@ -18,7 +18,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 interface IntegrationMonitor {
   id: string;
-  clientId: string;
+  clientId: string | null;
   serviceName: string;
   serviceType: string;
   currentStatus: string;
@@ -153,6 +153,9 @@ async function sendEmailAlert(
   }
 
   try {
+    // Global monitors (no client) don't send email alerts
+    if (!monitor.clientId) return;
+
     // Get client contact email
     const client = await db
       .select()
@@ -230,11 +233,13 @@ async function createInAppNotification(
   message: string
 ): Promise<void> {
   try {
-    // Get all users for this client
-    const clientUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.clientId, monitor.clientId), isNull(users.deletedAt)));
+    // Global monitors (no client) only notify admins
+    const clientUsers = monitor.clientId
+      ? await db
+          .select()
+          .from(users)
+          .where(and(eq(users.clientId, monitor.clientId), isNull(users.deletedAt)))
+      : [];
 
     // Also notify admin users
     const adminUsers = await db
@@ -253,7 +258,7 @@ async function createInAppNotification(
           ? `Integration Recovered: ${monitor.serviceName}`
           : `Integration Alert: ${monitor.serviceName}`,
       message,
-      linkUrl: `/dashboard/admin/clients/${monitor.clientId}`,
+      linkUrl: monitor.clientId ? `/dashboard/admin/clients/${monitor.clientId}` : `/dashboard/admin`,
       isRead: false,
     }));
 
