@@ -83,25 +83,23 @@ export default async function AdminProjectDetailPage({ params }: { params: Promi
     .filter((u) => specialistIds.includes(u.id))
     .map((u) => ({ name: u.name, imageUrl: u.imageUrl }));
 
-  const integrations = await db
+  // Connected systems (KeyPay, MYOB, etc.) come from project-level monitors
+  const connectedMonitors = await db
     .select()
     .from(integrationMonitors)
     .where(and(eq(integrationMonitors.projectId, id), isNull(integrationMonitors.deletedAt)))
     .orderBy(desc(integrationMonitors.createdAt));
 
-  // For HiBob and Workato, fall back to global monitor status if the project monitor has no status yet
+  // HiBob + Workato always come from global monitors (always checked, not project-specific)
   const globalMonitors = await db
     .select()
     .from(integrationMonitors)
     .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt)));
 
-  const integrationsWithFallback = integrations.map((m) => {
-    if ((m.serviceType === "hibob" || m.serviceType === "workato") && !m.currentStatus) {
-      const global = globalMonitors.find((g) => g.serviceType === m.serviceType);
-      if (global) return { ...m, currentStatus: global.currentStatus, lastCheckedAt: global.lastCheckedAt };
-    }
-    return m;
-  });
+  const integrationsWithFallback = [
+    ...globalMonitors.filter((m) => m.serviceType === "hibob" || m.serviceType === "workato"),
+    ...connectedMonitors.filter((m) => m.serviceType !== "hibob" && m.serviceType !== "workato"),
+  ];
 
   const unresolvedFlags = await db
     .select()

@@ -4,28 +4,6 @@ import { integrationMonitors } from "@/lib/db/schema";
 import { requireAdmin, requireAuth } from "@/lib/auth";
 import { isNull, desc, eq, and } from "drizzle-orm";
 
-// Fetch global (project-less) monitors for HiBob/Workato
-async function fetchGlobalMonitors() {
-  return db
-    .select()
-    .from(integrationMonitors)
-    .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt)));
-}
-
-// Merge global monitor status into project monitors that haven't been checked yet
-function applyGlobalFallback<T extends { serviceType: string; currentStatus: string | null; lastCheckedAt: Date | null }>(
-  monitors: T[],
-  globalMonitors: T[]
-): T[] {
-  return monitors.map((m) => {
-    if ((m.serviceType === "hibob" || m.serviceType === "workato") && !m.currentStatus) {
-      const global = globalMonitors.find((g) => g.serviceType === m.serviceType);
-      if (global) return { ...m, currentStatus: global.currentStatus, lastCheckedAt: global.lastCheckedAt };
-    }
-    return m;
-  });
-}
-
 // GET /api/integrations - List all integration monitors
 export async function GET(request: NextRequest) {
   try {
@@ -54,34 +32,50 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Build where clause for client users
-      const whereConditions = [
-        eq(integrationMonitors.clientId, user.clientId),
-        isNull(integrationMonitors.deletedAt),
-      ];
-
+      // When viewing a project, combine global HiBob/Workato + project connected systems
       if (projectId) {
-        whereConditions.push(eq(integrationMonitors.projectId, projectId));
+        const [connected, globals] = await Promise.all([
+          db.select().from(integrationMonitors)
+            .where(and(eq(integrationMonitors.projectId, projectId), isNull(integrationMonitors.deletedAt)))
+            .orderBy(desc(integrationMonitors.createdAt)),
+          db.select().from(integrationMonitors)
+            .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt))),
+        ]);
+        const merged = [
+          ...globals.filter((m) => m.serviceType === "hibob" || m.serviceType === "workato"),
+          ...connected.filter((m) => m.serviceType !== "hibob" && m.serviceType !== "workato"),
+        ];
+        return NextResponse.json(merged);
       }
 
+      // Otherwise return all monitors for this client
       const monitors = await db
         .select()
         .from(integrationMonitors)
-        .where(and(...whereConditions))
+        .where(and(eq(integrationMonitors.clientId, user.clientId), isNull(integrationMonitors.deletedAt)))
         .orderBy(desc(integrationMonitors.createdAt));
 
-      return NextResponse.json(applyGlobalFallback(monitors, await fetchGlobalMonitors()));
+      return NextResponse.json(monitors);
     }
 
-    // Admin users can see all or filter by projectId/clientId
-    const whereConditions = [isNull(integrationMonitors.deletedAt)];
-
+    // Admin users — when viewing a project, combine global HiBob/Workato + project connected systems
     if (projectId) {
-      whereConditions.push(eq(integrationMonitors.projectId, projectId));
+      const [connected, globals] = await Promise.all([
+        db.select().from(integrationMonitors)
+          .where(and(eq(integrationMonitors.projectId, projectId), isNull(integrationMonitors.deletedAt)))
+          .orderBy(desc(integrationMonitors.createdAt)),
+        db.select().from(integrationMonitors)
+          .where(and(isNull(integrationMonitors.projectId), isNull(integrationMonitors.deletedAt))),
+      ]);
+      return NextResponse.json([
+        ...globals.filter((m) => m.serviceType === "hibob" || m.serviceType === "workato"),
+        ...connected.filter((m) => m.serviceType !== "hibob" && m.serviceType !== "workato"),
+      ]);
     }
-    if (clientId) {
-      whereConditions.push(eq(integrationMonitors.clientId, clientId));
-    }
+
+    // Otherwise filter by clientId or return all
+    const whereConditions = [isNull(integrationMonitors.deletedAt)];
+    if (clientId) whereConditions.push(eq(integrationMonitors.clientId, clientId));
 
     const monitors = await db
       .select()
@@ -89,7 +83,7 @@ export async function GET(request: NextRequest) {
       .where(and(...whereConditions))
       .orderBy(desc(integrationMonitors.createdAt));
 
-    return NextResponse.json(applyGlobalFallback(monitors, await fetchGlobalMonitors()));
+    return NextResponse.json(monitors);
   } catch (error: any) {
     console.error("Error fetching integration monitors:", error);
 
