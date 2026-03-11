@@ -167,7 +167,6 @@ export function TourStepBubble({
   const bubbleRef = useRef<HTMLDivElement>(null);
   const primaryRef = useRef<HTMLButtonElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isHoveredRef = useRef(false);
   const [pos, setPos] = useState<{ top: number; left: number; placement: Placement }>({
     top: 0,
     left: 0,
@@ -205,7 +204,6 @@ export function TourStepBubble({
     setIsTyping(true);
     let i = 0;
     intervalRef.current = setInterval(() => {
-      if (isHoveredRef.current) return; // pause while bubble is hovered
       i++;
       setDisplayedMessage(step.message.slice(0, i));
       if (i >= step.message.length) {
@@ -252,8 +250,6 @@ export function TourStepBubble({
         transition={{ duration: 0.2 }}
         className="absolute z-10 w-[340px] max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-xl pointer-events-auto"
         style={{ top: pos.top, left: pos.left }}
-        onMouseEnter={() => { isHoveredRef.current = true; }}
-        onMouseLeave={() => { isHoveredRef.current = false; }}
       >
         <TailPointer
           placement={pos.placement}
