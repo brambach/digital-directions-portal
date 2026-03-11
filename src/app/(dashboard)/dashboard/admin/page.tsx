@@ -353,17 +353,6 @@ export default async function AdminDashboard() {
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-[13px] text-slate-500">
-                <span className={cn(
-                  "w-2 h-2 rounded-full animate-pulse",
-                  downCount > 0 ? "bg-red-500" : degradedCount > 0 ? "bg-amber-500" : "bg-emerald-500"
-                )} />
-                {downCount > 0
-                  ? "Systems experiencing issues"
-                  : degradedCount > 0
-                    ? "Some systems degraded"
-                    : "All systems operational"}
-              </span>
               {/* Freshdesk: support@digitaldirections.io routes here */}
               <a
                 href="https://digitaldirections-help.freshdesk.com"
@@ -653,22 +642,6 @@ export default async function AdminDashboard() {
                 )}
               </div>
 
-              {/* Freshdesk: support@digitaldirections.io routes here */}
-              <a
-                href="https://digitaldirections-help.freshdesk.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-200"
-              >
-                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Headphones className="w-4.5 h-4.5 text-white" strokeWidth={2} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-white">Open Freshdesk</p>
-                  <p className="text-[11px] text-violet-200 mt-0.5">Manage support tickets</p>
-                </div>
-                <ExternalLink className="w-4 h-4 text-violet-300 group-hover:text-white transition-colors flex-shrink-0" />
-              </a>
 
             </div>
           </div>
