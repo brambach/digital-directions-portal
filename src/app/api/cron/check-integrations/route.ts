@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
           ? new Date(monitor.lastCheckedAt)
           : null;
 
-        // HiBob and Workato are core systems — always check them on every run
-        const isCoreSystem = monitor.serviceType === "hibob" || monitor.serviceType === "workato";
+        // Global monitors (no projectId) are always checked on every run
+        const isCoreSystem = monitor.projectId === null;
 
         // Skip if checked recently (within the interval), unless it's a core system
         if (!isCoreSystem && lastChecked && now.getTime() - lastChecked.getTime() < intervalMs) {

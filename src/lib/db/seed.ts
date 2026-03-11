@@ -402,35 +402,29 @@ async function seed() {
 
     console.log(`✓ Created ${insertedIntegrations.length} integration monitors`);
 
-    // Create global system monitors for HiBob and Workato (not tied to any project)
-    await db.insert(integrationMonitors).values([
-      {
+    // Create global system monitors for all supported services (not tied to any project)
+    const globalServiceTypes = [
+      { serviceType: "hibob" as const,   serviceName: "HiBob" },
+      { serviceType: "workato" as const, serviceName: "Workato" },
+      { serviceType: "keypay" as const,  serviceName: "KeyPay" },
+      { serviceType: "netsuite" as const, serviceName: "NetSuite" },
+      { serviceType: "deputy" as const,  serviceName: "Deputy" },
+      { serviceType: "myob" as const,    serviceName: "MYOB" },
+    ];
+    await db.insert(integrationMonitors).values(
+      globalServiceTypes.map((s) => ({
         projectId: null,
         clientId: null,
-        serviceType: "hibob" as const,
-        serviceName: "HiBob",
-        isEnabled: true,
-        checkIntervalMinutes: 5,
-        currentStatus: "unknown" as const,
-        platformStatusUrl: "https://status.hibob.io",
-        checkPlatformStatus: true,
-        alertEnabled: false,
-        alertThresholdMinutes: 15,
-      },
-      {
-        projectId: null,
-        clientId: null,
-        serviceType: "workato" as const,
-        serviceName: "Workato",
+        ...s,
         isEnabled: true,
         checkIntervalMinutes: 5,
         currentStatus: "unknown" as const,
         checkPlatformStatus: true,
         alertEnabled: false,
-        alertThresholdMinutes: 15,
-      },
-    ]);
-    console.log("✓ Created global HiBob + Workato system monitors");
+        alertThresholdMinutes: 5,
+      }))
+    );
+    console.log("✓ Created global system monitors (HiBob, Workato, KeyPay, NetSuite, Deputy, MYOB)");
 
     // Create tickets
     const ticketsData = [
