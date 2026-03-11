@@ -122,7 +122,7 @@ export function ConfigureIntegrationDialog({
         <DialogHeader>
           <DialogTitle>{integration ? "Edit Connected System" : "Add Connected System"}</DialogTitle>
           <DialogDescription>
-            Add a payroll or workforce system to this project's architecture view.
+            Add a payroll or workforce system to this project&apos;s architecture view.
             HiBob and Workato are always included automatically.
           </DialogDescription>
         </DialogHeader>
