@@ -74,7 +74,7 @@ export function ChatBubble({ isOpen, onClick }: ChatBubbleProps) {
         onClick={onClick}
         data-tour="chat-bubble"
         className={cn(
-          "fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-gradient-to-br from-[#7C1CFF] to-[#5B10BF] shadow-lg shadow-purple-500/25 hover:shadow-purple-500/50 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
+          "fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-gradient-to-br from-[#FB25E7] to-[#7C1CFF] shadow-lg shadow-purple-500/25 hover:shadow-pink-500/40 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
           // Entrance animation
           mounted
             ? "opacity-100 scale-100 translate-y-0"
