@@ -1,3 +1,5 @@
+export const maxDuration = 30;
+
 import { getCurrentUser } from "@/lib/auth";
 import { loadChatContext } from "@/lib/chat/context-loader";
 import { buildSystemPrompt } from "@/lib/chat/system-prompt";
