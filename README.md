@@ -147,6 +147,6 @@ Deploy to Vercel. Set all environment variables in the Vercel project settings.
 
 The cron job (`vercel.json`) runs automatically on Vercel's infrastructure. Set `CRON_SECRET` to secure the endpoint.
 
-## Project docs
+## License
 
-Detailed architecture, patterns, and build notes live in [`CLAUDE.md`](./CLAUDE.md).
+Private — built for Digital Directions internal use.
