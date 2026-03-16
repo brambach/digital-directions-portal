@@ -39,3 +39,7 @@ next-env.d.ts
 # drizzle
 /drizzle
 DD-Portal-Team-Presentation.pptx
+
+CLAUDE.md
+*.PLAN.md
+DD-PORTAL-*.md
