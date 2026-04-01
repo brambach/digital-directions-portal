@@ -121,8 +121,8 @@ function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; on
       )}
 
       {/* Logo */}
-      <div className="w-12 h-12 rounded-xl bg-white border border-rose-100 flex items-center justify-center shadow-sm overflow-hidden p-1.5">
-        <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-contain" />
+      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+        <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-cover" />
       </div>
 
       <div className="text-center">
@@ -163,8 +163,8 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
       <Tag
         {...(!readOnly && { onClick })}
         className={cn(
-          "group relative w-full flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-orange-200 shadow-md transition-all",
-          !readOnly && "hover:shadow-lg hover:border-orange-300 cursor-pointer"
+          "group relative w-full flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 shadow-md transition-all",
+          !readOnly && "hover:shadow-lg hover:border-orange-200 cursor-pointer"
         )}
       >
         {!readOnly && (
@@ -172,7 +172,7 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
         )}
 
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bg-white border border-orange-100 flex items-center justify-center shadow-sm overflow-hidden p-1.5">
+        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm overflow-hidden p-2">
           <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
         </div>
 
@@ -211,10 +211,10 @@ function ConnectedRow({ monitor, onClick, readOnly }: { monitor: Monitor; onClic
         !readOnly && "hover:border-slate-200 hover:shadow-sm"
       )}
     >
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm bg-white border border-slate-100 overflow-hidden p-1">
+      <div className="w-9 h-9 rounded-lg flex-shrink-0 shadow-sm overflow-hidden">
         {meta.logo
-          ? <img src={meta.logo} alt={meta.name} className="w-full h-full object-contain" />
-          : <span className="text-[11px] font-black text-white w-full h-full flex items-center justify-center rounded-lg" style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}>{meta.abbr}</span>
+          ? <img src={meta.logo} alt={meta.name} className="w-full h-full object-cover" />
+          : <span className="text-[11px] font-black text-white w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}>{meta.abbr}</span>
         }
       </div>
       <div className="flex-1 min-w-0">
