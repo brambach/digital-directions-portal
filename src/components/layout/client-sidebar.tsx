@@ -38,7 +38,6 @@ export function ClientSidebar() {
             title: "TOOLS",
             items: [
                 { label: "ROI Calculator", href: "/dashboard/client/roi", icon: Calculator },
-                { label: "Connectors", href: "/dashboard/client/connectors", icon: Plug },
                 { label: "Changelog", href: "/dashboard/client/changelog", icon: History, badgeComponent: <ChangelogNavBadge latestDate={LATEST_CLIENT_ENTRY_DATE} /> },
             ]
         },
