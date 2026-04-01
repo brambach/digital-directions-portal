@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 
-const SUPPORT_EMAIL = "support@digitaldirections-help.freshdesk.com";
+const SUPPORT_EMAIL = "support@digitaldirections.io";
 
 interface EscalationBannerProps {
   onDismiss: () => void;

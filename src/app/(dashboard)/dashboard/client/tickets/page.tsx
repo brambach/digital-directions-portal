@@ -8,7 +8,7 @@ import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-conta
 
 export const dynamic = "force-dynamic";
 
-const SUPPORT_EMAIL = "support@digitaldirections-help.freshdesk.com";
+const SUPPORT_EMAIL = "support@digitaldirections.io";
 
 export default async function ClientTicketsPage() {
   await requireAuth();

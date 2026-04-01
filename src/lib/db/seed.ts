@@ -930,7 +930,7 @@ If you see any flags or action items, these indicate something needs your attent
 Digi is our AI assistant available from the chat bubble in the bottom-right corner. Digi can answer most questions instantly — from project status to integration help. Start here for the fastest response.
 
 **Email the support team**
-For issues Digi can't resolve, email us directly at support@digitaldirections-help.freshdesk.com. We respond within 4 business hours.
+For issues Digi can't resolve, email us directly at support@digitaldirections.io. We respond within 4 business hours.
 
 **Tips for faster resolution:**
 - Include specific details (employee names, dates, error messages)
@@ -1051,7 +1051,7 @@ Yes. After Go-Live, additional fields or features can be added as part of your s
 Workato includes error handling and retry logic. If a sync fails, our team is notified and will investigate. The portal's integration health dashboard shows you the current status at all times.
 
 **Do I need to do anything after Go-Live?**
-Day-to-day, the integration runs automatically. You should continue managing employees in HiBob as normal. If you notice any sync issues, email our support team at support@digitaldirections-help.freshdesk.com.
+Day-to-day, the integration runs automatically. You should continue managing employees in HiBob as normal. If you notice any sync issues, email our support team at support@digitaldirections.io.
 
 **Is my data secure?**
 Yes. All data is encrypted in transit and at rest. Workato is SOC 2 Type II certified, and we follow strict data handling practices.`,
@@ -1076,7 +1076,7 @@ Yes. All data is encrypted in transit and at rest. Workato is SOC 2 Type II cert
 
 **What to do if you see an issue:**
 - **Degraded status**: Usually temporary. Monitor for resolution — most degrade issues resolve within an hour.
-- **Down status**: Our team is automatically notified. If it affects your payroll processing, email support@digitaldirections-help.freshdesk.com immediately.
+- **Down status**: Our team is automatically notified. If it affects your payroll processing, email support@digitaldirections.io immediately.
 - **Unknown status**: This usually means a health check couldn't complete. It doesn't necessarily mean there's a problem.
 
 Health checks run every 5 minutes, so the dashboard always shows current information.`,
@@ -1094,7 +1094,7 @@ Health checks run every 5 minutes, so the dashboard always shows current informa
 - General information about how HiBob integrations work
 - Finding the right knowledge base article
 
-**Email support@digitaldirections-help.freshdesk.com for:**
+**Email support@digitaldirections.io for:**
 - Technical issues with your integration (sync failures, data mismatches)
 - Requesting changes to your integration configuration
 - Reporting bugs or unexpected behaviour
@@ -1174,7 +1174,7 @@ Your first live payroll run after go-live is important. Run it as normal, but ke
 
 ## What if something goes wrong?
 
-That's what the team is here for. Email support@digitaldirections-help.freshdesk.com immediately. We monitor go-live days closely and can respond quickly.`,
+That's what the team is here for. Email support@digitaldirections.io immediately. We monitor go-live days closely and can respond quickly.`,
         category: "lifecycle",
         publishedAt: new Date(),
       },
@@ -1255,7 +1255,7 @@ If there's already an employee record in payroll with the same details, the inte
 
 ## Still not syncing?
 
-If you've checked all of the above and the employee still isn't syncing, email support@digitaldirections-help.freshdesk.com with:
+If you've checked all of the above and the employee still isn't syncing, email support@digitaldirections.io with:
 - The employee's name and HiBob ID
 - What change you made and when
 - What you expected to happen`,
