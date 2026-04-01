@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Settings, Zap, Clock } from "lucide-react";
+import { Plus, Settings, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ConfigureIntegrationDialog } from "@/components/configure-integration-dialog";
@@ -18,11 +18,11 @@ type Monitor = {
   lastErrorMessage: string | null;
 };
 
-const PAYROLL_META: Record<string, { name: string; role: string; abbr: string; from: string; to: string }> = {
-  keypay:   { name: "KeyPay",   role: "Employment Hero",    abbr: "KP", from: "#3B82F6", to: "#1D4ED8" },
-  myob:     { name: "MYOB",     role: "Payroll & Accounting", abbr: "MB", from: "#8B5CF6", to: "#6D28D9" },
-  deputy:   { name: "Deputy",   role: "Workforce Mgmt",     abbr: "DP", from: "#10B981", to: "#047857" },
-  netsuite: { name: "NetSuite", role: "ERP & Payroll",      abbr: "NS", from: "#60A5FA", to: "#1D4ED8" },
+const PAYROLL_META: Record<string, { name: string; role: string; abbr: string; from: string; to: string; logo: string }> = {
+  keypay:   { name: "KeyPay",   role: "Employment Hero",      abbr: "KP", from: "#3B82F6", to: "#1D4ED8", logo: "/images/logos/keypay-icon.jpg" },
+  myob:     { name: "MYOB",     role: "Payroll & Accounting", abbr: "MB", from: "#8B5CF6", to: "#6D28D9", logo: "/images/logos/myob-icon.png"   },
+  deputy:   { name: "Deputy",   role: "Workforce Mgmt",       abbr: "DP", from: "#10B981", to: "#047857", logo: "/images/logos/deputy-icon.png"  },
+  netsuite: { name: "NetSuite", role: "ERP & Payroll",        abbr: "NS", from: "#60A5FA", to: "#1D4ED8", logo: "/images/logos/netsuite-icon.svg"},
 };
 
 // ─── Status helpers ──────────────────────────────────────────────────────────
@@ -121,8 +121,8 @@ function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; on
       )}
 
       {/* Logo */}
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shadow-sm">
-        <span className="text-sm font-black text-white tracking-tight">HB</span>
+      <div className="w-12 h-12 rounded-xl bg-white border border-rose-100 flex items-center justify-center shadow-sm overflow-hidden p-1.5">
+        <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-contain" />
       </div>
 
       <div className="text-center">
@@ -172,8 +172,8 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
         )}
 
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm">
-          <Zap className="w-6 h-6 text-white fill-white" />
+        <div className="w-12 h-12 rounded-xl bg-white border border-orange-100 flex items-center justify-center shadow-sm overflow-hidden p-1.5">
+          <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
         </div>
 
         <div className="text-center">
@@ -211,11 +211,11 @@ function ConnectedRow({ monitor, onClick, readOnly }: { monitor: Monitor; onClic
         !readOnly && "hover:border-slate-200 hover:shadow-sm"
       )}
     >
-      <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-black text-white flex-shrink-0 shadow-sm"
-        style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}
-      >
-        {meta.abbr}
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm bg-white border border-slate-100 overflow-hidden p-1">
+        {meta.logo
+          ? <img src={meta.logo} alt={meta.name} className="w-full h-full object-contain" />
+          : <span className="text-[11px] font-black text-white w-full h-full flex items-center justify-center rounded-lg" style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}>{meta.abbr}</span>
+        }
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-bold text-slate-800 truncate">{meta.name}</p>
