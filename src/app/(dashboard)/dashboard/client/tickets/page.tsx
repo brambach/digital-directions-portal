@@ -56,7 +56,7 @@ export default async function ClientTicketsPage() {
               <p className="text-[14px] font-semibold text-slate-800 mb-1">Contact the Digital Directions team</p>
               <p className="text-[13px] text-slate-500 leading-relaxed">
                 Send us an email and we&apos;ll get back to you within{" "}
-                <span className="font-semibold text-slate-700">4 business hours</span>.
+                <span className="font-semibold text-slate-700">24 hours</span>.
               </p>
               <p className="mt-3 text-[12px] font-medium text-slate-400 font-mono">
                 {SUPPORT_EMAIL}

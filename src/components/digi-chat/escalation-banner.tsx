@@ -13,7 +13,7 @@ export function EscalationBanner({ onDismiss }: EscalationBannerProps) {
   return (
     <div className="mx-4 mb-2 p-3 bg-violet-50 border border-violet-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
       <p className="text-[13px] text-slate-700 mb-2">
-        Need more help? Email the team and they&apos;ll get back to you within 4 business hours.
+        Need more help? Email the team and they&apos;ll get back to you within 24 hours.
       </p>
       <div className="flex gap-2">
         <a href={`mailto:${SUPPORT_EMAIL}`}>

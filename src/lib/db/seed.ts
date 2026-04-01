@@ -930,7 +930,7 @@ If you see any flags or action items, these indicate something needs your attent
 Digi is our AI assistant available from the chat bubble in the bottom-right corner. Digi can answer most questions instantly — from project status to integration help. Start here for the fastest response.
 
 **Email the support team**
-For issues Digi can't resolve, email us directly at support@digitaldirections.io. We respond within 4 business hours.
+For issues Digi can't resolve, email us directly at support@digitaldirections.io. We respond within 24 hours.
 
 **Tips for faster resolution:**
 - Include specific details (employee names, dates, error messages)
@@ -1102,7 +1102,7 @@ Health checks run every 5 minutes, so the dashboard always shows current informa
 - Urgent production issues affecting payroll processing
 - Questions about your contract or support package
 
-We respond within 4 business hours. For urgent payroll-critical issues, say so clearly in your email subject line.
+We respond within 24 hours. For urgent payroll-critical issues, say so clearly in your email subject line.
 
 **Tips for faster resolution:**
 - Include specific details (employee IDs, dates, error messages)
