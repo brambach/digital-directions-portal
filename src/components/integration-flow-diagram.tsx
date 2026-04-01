@@ -172,7 +172,7 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
         )}
 
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm overflow-hidden p-2">
+        <div className="w-12 h-12 flex items-center justify-center overflow-hidden p-1">
           <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
         </div>
 
