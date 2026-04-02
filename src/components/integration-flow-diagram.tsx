@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Settings, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { ConfigureIntegrationDialog } from "@/components/configure-integration-dialog";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +72,6 @@ function StatusIndicator({ status, lastCheckedAt, serviceType }: { status: strin
 function FlowConnector({ active = true }: { active?: boolean }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: 68, height: 8 }}>
-      {/* Static gradient line */}
       <div
         className={cn(
           "absolute left-0 right-3 top-1/2 -translate-y-1/2 h-px",
@@ -82,7 +80,6 @@ function FlowConnector({ active = true }: { active?: boolean }) {
             : "bg-slate-200"
         )}
       />
-      {/* Shimmer overlay */}
       {active && (
         <div
           className="absolute left-0 right-3 top-1/2 -translate-y-1/2 h-px animate-connector-shimmer"
@@ -92,7 +89,6 @@ function FlowConnector({ active = true }: { active?: boolean }) {
           }}
         />
       )}
-      {/* Arrowhead */}
       <div
         className={cn(
           "absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[4px] border-b-[4px] border-l-[6px] border-transparent",
@@ -119,19 +115,14 @@ function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; on
       {!readOnly && (
         <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
       )}
-
-      {/* Logo */}
       <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
         <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-cover" />
       </div>
-
       <div className="text-center">
         <p className="text-[13px] font-bold text-slate-800 leading-tight">HiBob</p>
         <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider mt-0.5">HRIS</p>
         <p className="text-[10px] text-slate-400 mt-0.5">Source of Truth</p>
       </div>
-
-      {/* Status section */}
       <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
         <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
       </div>
@@ -154,11 +145,7 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
           "0 0 16px 4px rgba(251,146,60,0.08)",
         ],
       }}
-      transition={{
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
     >
       <Tag
         {...(!readOnly && { onClick })}
@@ -170,19 +157,14 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
         {!readOnly && (
           <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
-
-        {/* Logo */}
         <div className="w-12 h-12 flex items-center justify-center overflow-hidden p-1">
           <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
         </div>
-
         <div className="text-center">
           <p className="text-[13px] font-bold text-slate-800 leading-tight">Workato</p>
           <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider mt-0.5">Middleware</p>
           <p className="text-[10px] text-slate-400 mt-0.5">Integration Hub</p>
         </div>
-
-        {/* Status section */}
         <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
           <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
         </div>
@@ -191,15 +173,16 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
   );
 }
 
-// ─── Connected system row ────────────────────────────────────────────────────
+// ─── Connected system node (matches HiBob/Workato card style) ────────────────
 
-function ConnectedRow({ monitor, onClick, readOnly }: { monitor: Monitor; onClick: () => void; readOnly?: boolean }) {
+function ConnectedNode({ monitor, onClick, readOnly }: { monitor: Monitor; onClick: () => void; readOnly?: boolean }) {
   const meta = PAYROLL_META[monitor.serviceType] ?? {
     name: monitor.serviceName,
     role: "Connected System",
     abbr: monitor.serviceName.slice(0, 2).toUpperCase(),
     from: "#64748B",
     to: "#475569",
+    logo: "",
   };
 
   const Tag = readOnly ? "div" : "button";
@@ -207,86 +190,45 @@ function ConnectedRow({ monitor, onClick, readOnly }: { monitor: Monitor; onClic
     <Tag
       {...(!readOnly && { onClick })}
       className={cn(
-        "w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 transition-all group text-left",
-        !readOnly && "hover:border-slate-200 hover:shadow-sm"
+        "group relative flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all flex-shrink-0",
+        !readOnly && "hover:shadow-md hover:border-slate-200 cursor-pointer"
       )}
+      style={{ width: 132 }}
     >
-      <div className="w-9 h-9 rounded-lg flex-shrink-0 shadow-sm overflow-hidden">
+      {!readOnly && (
+        <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+      )}
+      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
         {meta.logo
           ? <img src={meta.logo} alt={meta.name} className="w-full h-full object-cover" />
-          : <span className="text-[11px] font-black text-white w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}>{meta.abbr}</span>
+          : <span className="text-sm font-black text-white w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${meta.from}, ${meta.to})` }}>{meta.abbr}</span>
         }
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-slate-800 truncate">{meta.name}</p>
-        <p className="text-[10px] text-slate-400">{meta.role}</p>
-        <div className="mt-1">
-          <StatusIndicator status={monitor.currentStatus} lastCheckedAt={monitor.lastCheckedAt} serviceType={monitor.serviceType} />
-        </div>
+      <div className="text-center">
+        <p className="text-[13px] font-bold text-slate-800 leading-tight">{meta.name}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: meta.from }}>{meta.role}</p>
       </div>
-      {!readOnly && (
-        <Settings className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 transition-colors flex-shrink-0" />
-      )}
+      <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
+        <StatusIndicator status={monitor.currentStatus} lastCheckedAt={monitor.lastCheckedAt} serviceType={monitor.serviceType} />
+      </div>
     </Tag>
   );
 }
 
-// ─── Connected systems panel ─────────────────────────────────────────────────
+// ─── Dashed add node ─────────────────────────────────────────────────────────
 
-function ConnectedPanel({
-  monitors,
-  onAdd,
-  onEdit,
-  readOnly,
-}: {
-  monitors: Monitor[];
-  onAdd: () => void;
-  onEdit: (m: Monitor) => void;
-  readOnly?: boolean;
-}) {
-  if (monitors.length === 0) {
-    return (
-      <div className="flex-1 min-w-[200px] flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
-        <p className="text-[11px] font-semibold text-slate-400 text-center leading-relaxed">
-          No connected systems<br />{readOnly ? "monitored yet" : "configured yet"}
-        </p>
-        {!readOnly && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onAdd}
-            className="text-xs h-7 rounded-full border-slate-300 hover:border-[#7C1CFF] hover:text-[#7C1CFF]"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Add System
-          </Button>
-        )}
-      </div>
-    );
-  }
-
+function AddSystemNode({ onClick }: { onClick: () => void }) {
   return (
-    <div className="flex-1 min-w-[220px] bg-slate-50/60 rounded-2xl border border-slate-100 p-3">
-      <div className="flex items-center justify-between mb-3 px-0.5">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Connected Systems</p>
-        {!readOnly && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onAdd}
-            className="h-6 px-2 text-[10px] font-bold text-[#7C1CFF] hover:text-[#7C1CFF] hover:bg-violet-50 rounded-full"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Add
-          </Button>
-        )}
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-center justify-center gap-2 py-4 px-4 rounded-2xl border-2 border-dashed border-slate-200 bg-transparent hover:border-[#7C1CFF] hover:bg-violet-50/40 transition-all flex-shrink-0"
+      style={{ width: 132 }}
+    >
+      <div className="w-12 h-12 rounded-xl border-2 border-dashed border-slate-200 group-hover:border-[#7C1CFF] flex items-center justify-center transition-colors">
+        <Plus className="w-5 h-5 text-slate-300 group-hover:text-[#7C1CFF] transition-colors" />
       </div>
-      <div className="space-y-2">
-        {monitors.map((m) => (
-          <ConnectedRow key={m.id} monitor={m} onClick={() => onEdit(m)} readOnly={readOnly} />
-        ))}
-      </div>
-    </div>
+      <p className="text-[11px] font-semibold text-slate-400 group-hover:text-[#7C1CFF] transition-colors">Add System</p>
+    </button>
   );
 }
 
@@ -320,25 +262,21 @@ export function IntegrationFlowDiagram({
     setDialogOpen(true);
   }
 
+  const showConnected = connected.length > 0 || !readOnly;
+
   return (
     <>
       {/* Zone labels */}
       <div className="flex items-end gap-0 mb-3">
-        <div
-          className="text-[9px] font-bold text-rose-400 uppercase tracking-widest text-center flex-shrink-0"
-          style={{ width: 132 }}
-        >
+        <div className="text-[9px] font-bold text-rose-400 uppercase tracking-widest text-center flex-shrink-0" style={{ width: 132 }}>
           HRIS
         </div>
         <div className="flex-shrink-0" style={{ width: 68 }} />
-        <div
-          className="text-[9px] font-bold text-orange-400 uppercase tracking-widest text-center flex-shrink-0"
-          style={{ width: 148 }}
-        >
+        <div className="text-[9px] font-bold text-orange-400 uppercase tracking-widest text-center flex-shrink-0" style={{ width: 148 }}>
           Middleware
         </div>
         <div className="flex-shrink-0" style={{ width: 68 }} />
-        <div className="text-[9px] font-bold text-[#7C1CFF] uppercase tracking-widest flex-1">
+        <div className="text-[9px] font-bold text-[#7C1CFF] uppercase tracking-widest">
           Connected
         </div>
       </div>
@@ -348,8 +286,18 @@ export function IntegrationFlowDiagram({
         <HiBobNode monitor={hibob} onClick={() => openDialog(hibob)} readOnly={readOnly} />
         <FlowConnector active />
         <WorkatoNode monitor={workato} onClick={() => openDialog(workato)} readOnly={readOnly} />
-        <FlowConnector active={connected.length > 0} />
-        <ConnectedPanel monitors={connected} onAdd={() => openDialog(null)} onEdit={openDialog} readOnly={readOnly} />
+
+        {showConnected && (
+          <>
+            <FlowConnector active={connected.length > 0} />
+            <div className="flex items-center gap-3">
+              {connected.map((m) => (
+                <ConnectedNode key={m.id} monitor={m} onClick={() => openDialog(m)} readOnly={readOnly} />
+              ))}
+              {!readOnly && <AddSystemNode onClick={() => openDialog(null)} />}
+            </div>
+          </>
+        )}
       </div>
 
       {!readOnly && (
