@@ -58,9 +58,10 @@ export default async function ClientTicketsPage() {
                 Send us an email and we&apos;ll get back to you within{" "}
                 <span className="font-semibold text-slate-700">24 hours</span>.
               </p>
-              <p className="mt-3 text-[12px] font-medium text-slate-400 font-mono">
-                {SUPPORT_EMAIL}
-              </p>
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100">
+                <Mail className="w-3 h-3 text-[#7C1CFF]" />
+                <span className="text-[12px] font-bold text-[#7C1CFF] font-mono">{SUPPORT_EMAIL}</span>
+              </div>
             </div>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="flex-shrink-0">
               <Button className="rounded-full font-semibold gap-2">
