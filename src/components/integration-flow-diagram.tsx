@@ -104,29 +104,41 @@ function FlowConnector({ active = true }: { active?: boolean }) {
 function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; onClick: () => void; readOnly?: boolean }) {
   const Tag = readOnly ? "div" : "button";
   return (
-    <Tag
-      {...(!readOnly && { onClick })}
-      className={cn(
-        "group relative flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-rose-100 shadow-sm transition-all flex-shrink-0",
-        !readOnly && "hover:shadow-md hover:border-rose-200 cursor-pointer"
-      )}
-      style={{ width: 132 }}
+    <motion.div
+      className="relative flex-shrink-0"
+      style={{ width: 132, overflow: "visible" }}
+      animate={{
+        boxShadow: [
+          "0 0 12px 3px rgba(232,41,75,0.10)",
+          "0 0 28px 8px rgba(232,41,75,0.22)",
+          "0 0 12px 3px rgba(232,41,75,0.10)",
+        ],
+      }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
     >
-      {!readOnly && (
-        <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-      )}
-      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
-        <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-cover" />
-      </div>
-      <div className="text-center">
-        <p className="text-[13px] font-bold text-slate-800 leading-tight">HiBob</p>
-        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider mt-0.5">HRIS</p>
-        <p className="text-[10px] text-slate-400 mt-0.5">Source of Truth</p>
-      </div>
-      <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
-        <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
-      </div>
-    </Tag>
+      <Tag
+        {...(!readOnly && { onClick })}
+        className={cn(
+          "group relative w-full flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-rose-100 transition-all",
+          !readOnly && "hover:border-rose-200 cursor-pointer"
+        )}
+      >
+        {!readOnly && (
+          <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+        )}
+        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+          <img src="/images/logos/hibob-icon.jpg" alt="HiBob" className="w-full h-full object-cover" />
+        </div>
+        <div className="text-center">
+          <p className="text-[13px] font-bold text-slate-800 leading-tight">HiBob</p>
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider mt-0.5">HRIS</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Source of Truth</p>
+        </div>
+        <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
+          <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
+        </div>
+      </Tag>
+    </motion.div>
   );
 }
 
@@ -140,9 +152,9 @@ function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; 
       style={{ width: 148, overflow: "visible" }}
       animate={{
         boxShadow: [
-          "0 0 16px 4px rgba(251,146,60,0.08)",
-          "0 0 24px 8px rgba(251,146,60,0.18)",
-          "0 0 16px 4px rgba(251,146,60,0.08)",
+          "0 0 12px 3px rgba(0,189,176,0.10)",
+          "0 0 28px 8px rgba(0,189,176,0.24)",
+          "0 0 12px 3px rgba(0,189,176,0.10)",
         ],
       }}
       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -186,14 +198,16 @@ function ConnectedNode({ monitor, onClick, readOnly }: { monitor: Monitor; onCli
   };
 
   const Tag = readOnly ? "div" : "button";
+  // Convert hex brand color to a soft glow
+  const glowColor = meta.from;
   return (
     <Tag
       {...(!readOnly && { onClick })}
       className={cn(
-        "group relative flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all flex-shrink-0",
-        !readOnly && "hover:shadow-md hover:border-slate-200 cursor-pointer"
+        "group relative flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 transition-all flex-shrink-0",
+        !readOnly && "cursor-pointer hover:border-slate-200"
       )}
-      style={{ width: 132 }}
+      style={{ width: 132, boxShadow: `0 0 18px 4px ${glowColor}1A` }}
     >
       {!readOnly && (
         <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
