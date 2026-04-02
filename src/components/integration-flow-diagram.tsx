@@ -18,7 +18,7 @@ type Monitor = {
 };
 
 const PAYROLL_META: Record<string, { name: string; role: string; abbr: string; from: string; to: string; logo: string }> = {
-  keypay:   { name: "KeyPay",   role: "Employment Hero",      abbr: "KP", from: "#3B82F6", to: "#1D4ED8", logo: "/images/logos/keypay-icon.jpg" },
+  keypay:   { name: "KeyPay",   role: "Payroll",              abbr: "KP", from: "#3B82F6", to: "#1D4ED8", logo: "/images/logos/keypay-icon.jpg" },
   myob:     { name: "MYOB",     role: "Payroll & Accounting", abbr: "MB", from: "#8B5CF6", to: "#6D28D9", logo: "/images/logos/myob-icon.png"   },
   deputy:   { name: "Deputy",   role: "Workforce Mgmt",       abbr: "DP", from: "#10B981", to: "#047857", logo: "/images/logos/deputy-icon.png"  },
   netsuite: { name: "NetSuite", role: "ERP & Payroll",        abbr: "NS", from: "#60A5FA", to: "#1D4ED8", logo: "/images/logos/netsuite-icon.svg"},
