@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Plus, Settings, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ConfigureIntegrationDialog } from "@/components/configure-integration-dialog";
@@ -135,41 +134,29 @@ function HiBobNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; on
 function WorkatoNode({ monitor, onClick, readOnly }: { monitor: Monitor | null; onClick: () => void; readOnly?: boolean }) {
   const Tag = readOnly ? "div" : "button";
   return (
-    <motion.div
-      className="relative flex-shrink-0"
-      style={{ width: 148, overflow: "visible" }}
-      animate={{
-        boxShadow: [
-          "0 2px 8px 0 rgba(0,0,0,0.06)",
-          "0 4px 16px 0 rgba(0,0,0,0.10)",
-          "0 2px 8px 0 rgba(0,0,0,0.06)",
-        ],
-      }}
-      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+    <Tag
+      {...(!readOnly && { onClick })}
+      className={cn(
+        "group relative flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all flex-shrink-0",
+        !readOnly && "hover:shadow-md hover:border-orange-200 cursor-pointer"
+      )}
+      style={{ width: 148 }}
     >
-      <Tag
-        {...(!readOnly && { onClick })}
-        className={cn(
-          "group relative w-full flex flex-col items-center gap-2 py-4 px-4 bg-white rounded-2xl border border-slate-100 shadow-md transition-all",
-          !readOnly && "hover:shadow-lg hover:border-orange-200 cursor-pointer"
-        )}
-      >
-        {!readOnly && (
-          <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-        )}
-        <div className="w-12 h-12 flex items-center justify-center overflow-hidden p-1">
-          <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
-        </div>
-        <div className="text-center">
-          <p className="text-[13px] font-bold text-slate-800 leading-tight">Workato</p>
-          <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider mt-0.5">Middleware</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Integration Hub</p>
-        </div>
-        <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
-          <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
-        </div>
-      </Tag>
-    </motion.div>
+      {!readOnly && (
+        <Settings className="absolute top-3 left-3 w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+      )}
+      <div className="w-12 h-12 flex items-center justify-center overflow-hidden p-1">
+        <img src="/images/logos/workato-icon.png" alt="Workato" className="w-full h-full object-contain" />
+      </div>
+      <div className="text-center">
+        <p className="text-[13px] font-bold text-slate-800 leading-tight">Workato</p>
+        <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider mt-0.5">Middleware</p>
+        <p className="text-[10px] text-slate-400 mt-0.5">Integration Hub</p>
+      </div>
+      <div className="pt-1 border-t border-slate-100 w-full flex justify-center">
+        <StatusIndicator status={monitor?.currentStatus ?? null} lastCheckedAt={monitor?.lastCheckedAt ?? null} serviceType={monitor?.serviceType} />
+      </div>
+    </Tag>
   );
 }
 
