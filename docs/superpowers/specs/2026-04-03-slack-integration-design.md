@@ -48,7 +48,8 @@ type PortalEvent =
   | { event: "uat_reviewed"; projectId: string; projectName: string; clientId: string; action: "approve" | "request_changes"; reviewNotes?: string }
   | { event: "bob_config_submitted"; projectId: string; projectName: string; clientId: string }
   | { event: "bob_config_withdrawn"; projectId: string; projectName: string; clientId: string }
-  | { event: "bob_config_approved"; projectId: string; projectName: string; clientId: string }
+  | { event: "bob_config_approved"; projectId: string; projectName: string; clientId: string; reviewNotes?: string }
+  | { event: "bob_config_changes_requested"; projectId: string; projectName: string; clientId: string; reviewNotes?: string }
   | { event: "provisioning_step_completed"; projectId: string; projectName: string; clientId: string; stepName: string }
   | { event: "provisioning_step_verified"; projectId: string; projectName: string; clientId: string; stepName: string }
   | { event: "client_flag_raised"; projectId: string; projectName: string; clientId: string; flagMessage: string }
@@ -91,6 +92,7 @@ These fire when an admin takes action. Client users get in-app notifications + e
 | `mapping_reviewed` | Mapping Reviewed | :world_map: | Approved or changes requested |
 | `uat_reviewed` | UAT Reviewed | :test_tube: | Approved or changes requested |
 | `bob_config_approved` | Bob Config Approved | :gear: | No |
+| `bob_config_changes_requested` | Bob Config — Changes Requested | :gear: | Review notes if present |
 | `stage_advanced` | Stage Advanced | :arrow_forward: | From → To stage names |
 | `admin_flag_raised` | Input Requested | :raised_hand: | Flag message text |
 | `provisioning_step_verified` | Provisioning Step Verified | :white_check_mark: | Step name |
