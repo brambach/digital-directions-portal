@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { projects, uatResults, signoffs, users, userNotifications } from "@/lib/db/schema";
+import { projects, uatResults, signoffs } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
-import { sendUatEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // PUT /api/projects/[id]/uat/review — admin approves or requests changes
 export async function PUT(
@@ -79,8 +78,15 @@ export async function PUT(
         }),
       });
 
-    // Notify client users
-    await notifyClientsOfUatReview(projectId, project.clientId, project.name, "approved", reviewNotes);
+    // Notify client users (fire-and-forget)
+    notifyEvent({
+      event: "uat_reviewed",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+      action: "approve",
+      reviewNotes: reviewNotes || undefined,
+    });
 
     return NextResponse.json(updated);
   }
@@ -97,61 +103,15 @@ export async function PUT(
     .where(eq(uatResults.id, result.id))
     .returning();
 
-  // Notify client users
-  await notifyClientsOfUatReview(projectId, project.clientId, project.name, "changes_requested", reviewNotes);
+  // Notify client users (fire-and-forget)
+  notifyEvent({
+    event: "uat_reviewed",
+    projectId,
+    projectName: project.name,
+    clientId: project.clientId,
+    action: "request_changes",
+    reviewNotes: reviewNotes || undefined,
+  });
 
   return NextResponse.json(updated);
-}
-
-async function notifyClientsOfUatReview(
-  projectId: string,
-  clientId: string,
-  projectName: string,
-  event: "approved" | "changes_requested",
-  reviewNotes?: string
-) {
-  try {
-    const clientUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.clientId, clientId), isNull(users.deletedAt)));
-
-    const clerk = await clerkClient();
-
-    const title = event === "approved" ? "UAT Approved" : "UAT Changes Requested";
-    const message =
-      event === "approved"
-        ? `Your UAT results for "${projectName}" have been approved. Please sign off to proceed to Go-Live.`
-        : `The Digital Directions team has requested changes to your UAT results for "${projectName}".${reviewNotes ? ` Notes: ${reviewNotes}` : ""}`;
-
-    for (const clientUser of clientUsers) {
-      await db.insert(userNotifications).values({
-        userId: clientUser.id,
-        type: event === "approved" ? "uat_approved" : "uat_changes_requested",
-        title,
-        message,
-        linkUrl: `/dashboard/client/projects/${projectId}/uat`,
-      });
-
-      try {
-        const clerkUser = await clerk.users.getUser(clientUser.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name = `${clerkUser.firstName || ""}`.trim() || "there";
-        if (email) {
-          await sendUatEmail({
-            to: email,
-            recipientName: name,
-            projectName,
-            projectId,
-            event,
-            reviewNotes,
-          });
-        }
-      } catch {
-        // Non-fatal
-      }
-    }
-  } catch (err) {
-    console.error("Failed to notify clients of UAT review:", err);
-  }
 }
