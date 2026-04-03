@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { bobConfigChecklist, projects, users, userNotifications } from "@/lib/db/schema";
+import { bobConfigChecklist, projects } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendBobConfigEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 interface BobConfigItem {
   id: string;
@@ -72,40 +71,13 @@ export async function POST(
       .where(eq(bobConfigChecklist.id, checklist.id))
       .returning();
 
-    // Notify admin users
-    const adminUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
-
-    for (const admin of adminUsers) {
-      await db.insert(userNotifications).values({
-        userId: admin.id,
-        type: "bob_config",
-        title: "HiBob configuration submitted",
-        message: `The HiBob configuration checklist for "${project.name}" has been submitted for review.`,
-        linkUrl: `/dashboard/admin/projects/${projectId}/bob-config`,
-      });
-
-      try {
-        const clerk = await clerkClient();
-        const clerkUser = await clerk.users.getUser(admin.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name =
-          `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "there";
-        if (email) {
-          await sendBobConfigEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: "submitted",
-          });
-        }
-      } catch (emailErr) {
-        console.error("Error sending bob config submitted email:", emailErr);
-      }
-    }
+    // Notify admins (fire-and-forget)
+    notifyEvent({
+      event: "bob_config_submitted",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+    });
 
     return NextResponse.json({
       checklist: { ...updated, items: JSON.parse(updated.items) },

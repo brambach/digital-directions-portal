@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { bobConfigChecklist, projects, users, userNotifications } from "@/lib/db/schema";
+import { bobConfigChecklist, projects } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendBobConfigEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // POST /api/projects/[id]/bob-config/approve — Admin approves or requests changes
 export async function POST(
@@ -81,51 +80,23 @@ export async function POST(
       .where(eq(bobConfigChecklist.id, checklist.id))
       .returning();
 
-    // Notify client users
-    const clientUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.clientId, project.clientId), isNull(users.deletedAt)));
-
-    const notifTitle =
-      action === "approve"
-        ? "HiBob configuration approved"
-        : "Changes requested on HiBob configuration";
-    const notifMessage =
-      action === "approve"
-        ? `Your HiBob configuration for "${project.name}" has been approved.`
-        : `Changes have been requested on your HiBob configuration for "${project.name}".${reviewNotes ? ` Notes: ${reviewNotes}` : ""}`;
-
-    const emailEvent = action === "approve" ? "approved" : "changes_requested";
-
-    for (const clientUser of clientUsers) {
-      await db.insert(userNotifications).values({
-        userId: clientUser.id,
-        type: "bob_config",
-        title: notifTitle,
-        message: notifMessage,
-        linkUrl: `/dashboard/client/projects/${projectId}/bob-config`,
+    // Notify client users (fire-and-forget)
+    if (action === "approve") {
+      notifyEvent({
+        event: "bob_config_approved",
+        projectId,
+        projectName: project.name,
+        clientId: project.clientId,
+        reviewNotes: reviewNotes || undefined,
       });
-
-      try {
-        const clerk = await clerkClient();
-        const clerkUser = await clerk.users.getUser(clientUser.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name =
-          `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "there";
-        if (email) {
-          await sendBobConfigEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: emailEvent as "approved" | "changes_requested",
-            reviewNotes: reviewNotes || undefined,
-          });
-        }
-      } catch (emailErr) {
-        console.error("Error sending bob config review email:", emailErr);
-      }
+    } else {
+      notifyEvent({
+        event: "bob_config_changes_requested",
+        projectId,
+        projectName: project.name,
+        clientId: project.clientId,
+        reviewNotes: reviewNotes || undefined,
+      });
     }
 
     return NextResponse.json({
