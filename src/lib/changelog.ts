@@ -15,6 +15,20 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── April 2026 ──────────────────────────────────────────────
   {
+    id: "2026-04-03-unified-notification-service",
+    date: "2026-04-03",
+    title: "Unified Notification Service",
+    description: "Centralised notification dispatcher for all lifecycle events with Slack, email, and in-app support.",
+    tags: ["internal"],
+    audience: "admin",
+    items: [
+      "New notifyEvent() dispatcher handles all 22 portal event types from a single call",
+      "Slack Block Kit messages with emoji headers, context lines, and 'View in Portal' buttons",
+      "Automatic recipient resolution for admin and client users via Clerk",
+      "Foundation for refactoring inline notification logic across all API routes",
+    ],
+  },
+  {
     id: "2026-04-02-client-submission-withdrawal",
     date: "2026-04-02",
     title: "Withdraw Submissions & Undo",
