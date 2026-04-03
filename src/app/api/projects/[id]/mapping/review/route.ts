@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import {
-  dataMappingConfigs,
-  projects,
-  users,
-  userNotifications,
-} from "@/lib/db/schema";
+import { dataMappingConfigs, projects } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendMappingEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // POST /api/projects/[id]/mapping/review — Admin reviews (approve or request changes)
 export async function POST(
@@ -90,56 +84,15 @@ export async function POST(
       .where(eq(dataMappingConfigs.id, config.id))
       .returning();
 
-    // Notify client users
-    const clientUsers = await db
-      .select()
-      .from(users)
-      .where(
-        and(eq(users.clientId, project.clientId), isNull(users.deletedAt))
-      );
-
-    const notifTitle =
-      action === "approve"
-        ? "Data mapping approved"
-        : "Changes requested on data mapping";
-
-    const notifMessage =
-      action === "approve"
-        ? `The data mapping for "${project.name}" has been approved.`
-        : `Changes have been requested on the data mapping for "${project.name}".${reviewNotes ? ` Notes: ${reviewNotes}` : ""}`;
-
-    const emailEvent = action === "approve" ? "approved" : "changes_requested";
-
-    for (const clientUser of clientUsers) {
-      await db.insert(userNotifications).values({
-        userId: clientUser.id,
-        type: "mapping",
-        title: notifTitle,
-        message: notifMessage,
-        linkUrl: `/dashboard/client/projects/${projectId}/mapping`,
-      });
-
-      try {
-        const clerk = await clerkClient();
-        const clerkUser = await clerk.users.getUser(clientUser.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name =
-          `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
-          "there";
-        if (email) {
-          await sendMappingEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: emailEvent as "approved" | "changes_requested",
-            reviewNotes: reviewNotes || undefined,
-          });
-        }
-      } catch (emailErr) {
-        console.error("Error sending mapping email:", emailErr);
-      }
-    }
+    // Notify client users (fire-and-forget)
+    notifyEvent({
+      event: "mapping_reviewed",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+      action: action as "approve" | "request_changes",
+      reviewNotes: reviewNotes || undefined,
+    });
 
     return NextResponse.json({
       ...updated,
