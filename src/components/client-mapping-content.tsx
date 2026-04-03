@@ -9,7 +9,10 @@ import {
   Check,
   Loader2,
   AlertTriangle,
+  Undo2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { WithdrawSubmissionDialog } from "@/components/withdraw-submission-dialog";
 import {
   MAPPING_CATEGORIES,
   type MappingCategory,
@@ -39,6 +42,8 @@ export function ClientMappingContent({ projectId }: ClientMappingContentProps) {
   const [activeCategory, setActiveCategory] = useState<MappingCategory>("leave_types");
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -176,13 +181,44 @@ export function ClientMappingContent({ projectId }: ClientMappingContentProps) {
   // In review — read only
   if (config.status === "in_review") {
     return (
-      <ReadOnlyMappingView
-        config={config}
-        entries={entries}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-        bannerType="review"
-      />
+      <>
+        <ReadOnlyMappingView
+          config={config}
+          entries={entries}
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          bannerType="review"
+          onWithdraw={() => setWithdrawOpen(true)}
+          withdrawing={withdrawing}
+        />
+        <WithdrawSubmissionDialog
+          open={withdrawOpen}
+          onOpenChange={setWithdrawOpen}
+          loading={withdrawing}
+          stageName="data mapping"
+          onConfirm={async () => {
+            setWithdrawing(true);
+            try {
+              const res = await fetch(`/api/projects/${projectId}/mapping/withdraw`, {
+                method: "POST",
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to withdraw");
+              }
+              toast.success("Submission withdrawn — you can now edit your mappings.");
+              setWithdrawOpen(false);
+              router.refresh();
+              fetchMapping();
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : "Failed to withdraw";
+              toast.error(message);
+            } finally {
+              setWithdrawing(false);
+            }
+          }}
+        />
+      </>
     );
   }
 
@@ -249,6 +285,8 @@ function ReadOnlyMappingView({
   onCategoryChange,
   bannerType,
   reviewNotes,
+  onWithdraw,
+  withdrawing,
 }: {
   config: MappingConfig;
   entries: MappingEntry[];
@@ -256,6 +294,8 @@ function ReadOnlyMappingView({
   onCategoryChange: (cat: MappingCategory) => void;
   bannerType: "review" | "approved";
   reviewNotes?: string | null;
+  onWithdraw?: () => void;
+  withdrawing?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -263,7 +303,7 @@ function ReadOnlyMappingView({
       {bannerType === "review" ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
           <DigiMascot variant="construction" size="xs" />
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800">
               Your data mapping is being reviewed
             </p>
@@ -271,6 +311,12 @@ function ReadOnlyMappingView({
               The Digital Directions team is reviewing your mappings. You&apos;ll be notified when the review is complete.
             </p>
           </div>
+          {onWithdraw && (
+            <Button variant="outline" size="sm" onClick={onWithdraw} disabled={withdrawing} className="shrink-0">
+              <Undo2 className="w-4 h-4 mr-2" />
+              Withdraw
+            </Button>
+          )}
         </div>
       ) : (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
