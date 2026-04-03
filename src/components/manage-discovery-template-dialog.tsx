@@ -603,9 +603,9 @@ function QuestionEditor({
                 <label className="text-xs text-slate-500">Show only when (optional)</label>
                 <div className="flex items-center gap-2">
                   <Select
-                    value={question.showWhen?.questionId || ""}
+                    value={question.showWhen?.questionId || "__none__"}
                     onValueChange={(v) => {
-                      if (!v) {
+                      if (v === "__none__") {
                         onUpdate("showWhen", undefined);
                       } else {
                         onUpdate("showWhen", {
@@ -619,7 +619,7 @@ function QuestionEditor({
                       <SelectValue placeholder="Select a question..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No condition</SelectItem>
+                      <SelectItem value="__none__">No condition</SelectItem>
                       {priorQuestions.map((pq) => (
                         <SelectItem key={pq.id} value={pq.id}>
                           {pq.label || `Question ${sectionQuestions.indexOf(pq) + 1}`}
