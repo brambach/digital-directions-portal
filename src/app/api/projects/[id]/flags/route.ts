@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { clientFlags, projects, clients } from "@/lib/db/schema";
+import { clientFlags, projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendSlackNotification } from "@/lib/slack";
+import { notifyEvent } from "@/lib/notify";
 
 // GET /api/projects/[id]/flags — list unresolved flags
 export async function GET(
@@ -120,24 +120,21 @@ export async function POST(
       })
       .returning();
 
-    // Get client name for Slack notification
-    const [client] = await db
-      .select({ companyName: clients.companyName })
-      .from(clients)
-      .where(eq(clients.id, project.clientId))
-      .limit(1);
-
-    // Send Slack notification for client blockers
     if (type === "client_blocker") {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      await sendSlackNotification({
-        type: "ticket_created",
-        ticketTitle: `Flag: ${message.trim().substring(0, 80)}`,
-        clientName: client?.companyName || "Unknown",
+      notifyEvent({
+        event: "client_flag_raised",
+        projectId: id,
         projectName: project.name,
-        priority: "high",
-        ticketType: "Client Flag",
-        link: `${baseUrl}/dashboard/admin/projects/${id}`,
+        clientId: project.clientId,
+        flagMessage: message.trim(),
+      });
+    } else {
+      notifyEvent({
+        event: "admin_flag_raised",
+        projectId: id,
+        projectName: project.name,
+        clientId: project.clientId,
+        flagMessage: message.trim(),
       });
     }
 
