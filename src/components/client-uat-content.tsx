@@ -12,10 +12,12 @@ import {
   Send,
   ExternalLink,
   PartyPopper,
+  Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DigiMascot } from "@/components/digi-mascot";
 import { UatSignoffBanner } from "@/components/uat-signoff-banner";
+import { WithdrawSubmissionDialog } from "@/components/withdraw-submission-dialog";
 
 interface UatScenario {
   id: string;
@@ -101,6 +103,8 @@ export function ClientUatContent({
     }
   );
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const allSelected = scenarios.every((s) => results[s.id]?.result !== null);
   const isReadOnly = uatResult?.status === "in_review" || uatResult?.status === "approved" || uatResult?.status === "complete";
@@ -223,13 +227,43 @@ export function ClientUatContent({
           <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
             <Clock className="w-4 h-4 text-amber-600" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800">Results Under Review</p>
             <p className="text-xs text-amber-600 mt-0.5">
               The Digital Directions team is reviewing your test results. You&apos;ll be notified once they&apos;re approved.
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)} disabled={withdrawing} className="shrink-0">
+            <Undo2 className="w-4 h-4 mr-2" />
+            Withdraw
+          </Button>
         </div>
+        <WithdrawSubmissionDialog
+          open={withdrawOpen}
+          onOpenChange={setWithdrawOpen}
+          loading={withdrawing}
+          stageName="UAT results"
+          onConfirm={async () => {
+            setWithdrawing(true);
+            try {
+              const res = await fetch(`/api/projects/${projectId}/uat/withdraw`, {
+                method: "POST",
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to withdraw");
+              }
+              toast.success("Submission withdrawn — you can now update your test results.");
+              setWithdrawOpen(false);
+              router.refresh();
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : "Failed to withdraw";
+              toast.error(message);
+            } finally {
+              setWithdrawing(false);
+            }
+          }}
+        />
         <DigiHeader variant="neutral" headline="Results submitted" subtext="Sit tight — our team is reviewing your test results." />
         <ScenarioList scenarios={scenarios} results={results} isReadOnly={true} />
       </>
