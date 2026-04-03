@@ -37,6 +37,12 @@ interface Question {
   type: string;
   required: boolean;
   options?: string[];
+  helpText?: string;
+  placeholder?: string;
+  showWhen?: {
+    questionId: string;
+    equals: string[];
+  };
 }
 
 interface Section {
@@ -234,6 +240,9 @@ export function ManageDiscoveryTemplateDialog({
         questions: s.questions.map((q) => ({
           ...q,
           options: q.type === "select" ? q.options?.filter((o) => o.trim()) : undefined,
+          helpText: q.helpText?.trim() || undefined,
+          placeholder: q.placeholder?.trim() || undefined,
+          showWhen: q.showWhen?.questionId ? q.showWhen : undefined,
         })),
       }));
 
@@ -395,6 +404,7 @@ export function ManageDiscoveryTemplateDialog({
                             key={question.id}
                             question={question}
                             index={qIdx}
+                            sectionQuestions={section.questions}
                             onUpdate={(field, value) =>
                               updateQuestion(section.id, question.id, field, value)
                             }
@@ -462,14 +472,22 @@ export function ManageDiscoveryTemplateDialog({
 function QuestionEditor({
   question,
   index,
+  sectionQuestions,
   onUpdate,
   onRemove,
 }: {
   question: Question;
   index: number;
+  sectionQuestions: Question[];
   onUpdate: (field: keyof Question, value: unknown) => void;
   onRemove: () => void;
 }) {
+  const [showAdvanced, setShowAdvanced] = useState(
+    !!(question.helpText || question.placeholder || question.showWhen?.questionId)
+  );
+
+  const priorQuestions = sectionQuestions.slice(0, index);
+
   return (
     <div className="flex gap-3 items-start p-3 bg-white rounded-lg border border-slate-100">
       <span className="text-xs font-bold text-slate-300 mt-2.5 shrink-0 w-5 text-center">
@@ -511,8 +529,15 @@ function QuestionEditor({
             />
             <span className="text-xs text-slate-500">Required</span>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-xs text-slate-400 hover:text-slate-600 ml-auto"
+          >
+            {showAdvanced ? "Hide advanced" : "Advanced"}
+          </button>
         </div>
-        {/* Options for select type */}
+
         {question.type === "select" && (
           <div className="space-y-1.5 pl-1">
             {(question.options || []).map((opt, oIdx) => (
@@ -550,6 +575,109 @@ function QuestionEditor({
               <Plus className="w-3 h-3 mr-1" />
               Add option
             </Button>
+          </div>
+        )}
+
+        {showAdvanced && (
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500">Help text (optional)</label>
+              <Textarea
+                value={question.helpText || ""}
+                onChange={(e) => onUpdate("helpText", e.target.value)}
+                placeholder="Explain this question in plain English for the client"
+                className="bg-white border-slate-200 rounded-lg text-xs min-h-[50px]"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500">Placeholder text (optional)</label>
+              <Input
+                value={question.placeholder || ""}
+                onChange={(e) => onUpdate("placeholder", e.target.value)}
+                placeholder="Example text shown in the input field"
+                className="bg-white border-slate-200 rounded-lg text-xs h-8"
+              />
+            </div>
+            {priorQuestions.length > 0 && (
+              <div className="space-y-1">
+                <label className="text-xs text-slate-500">Show only when (optional)</label>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={question.showWhen?.questionId || ""}
+                    onValueChange={(v) => {
+                      if (!v) {
+                        onUpdate("showWhen", undefined);
+                      } else {
+                        onUpdate("showWhen", {
+                          questionId: v,
+                          equals: question.showWhen?.equals || [],
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="flex-1 h-8 text-xs bg-white border-slate-200 rounded-lg">
+                      <SelectValue placeholder="Select a question..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No condition</SelectItem>
+                      {priorQuestions.map((pq) => (
+                        <SelectItem key={pq.id} value={pq.id}>
+                          {pq.label || `Question ${sectionQuestions.indexOf(pq) + 1}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {question.showWhen?.questionId && (
+                  <div className="space-y-1 pl-2">
+                    <label className="text-xs text-slate-400">equals any of:</label>
+                    {(question.showWhen.equals || []).map((val, vIdx) => (
+                      <div key={vIdx} className="flex items-center gap-2">
+                        <Input
+                          value={val}
+                          onChange={(e) => {
+                            const newEquals = [...(question.showWhen?.equals || [])];
+                            newEquals[vIdx] = e.target.value;
+                            onUpdate("showWhen", {
+                              ...question.showWhen,
+                              equals: newEquals,
+                            });
+                          }}
+                          placeholder="Matching value..."
+                          className="bg-white border-slate-200 rounded-lg text-xs h-7 flex-1"
+                        />
+                        <button
+                          onClick={() => {
+                            const newEquals = (question.showWhen?.equals || []).filter(
+                              (_, i) => i !== vIdx
+                            );
+                            onUpdate("showWhen", {
+                              ...question.showWhen,
+                              equals: newEquals,
+                            });
+                          }}
+                          className="p-0.5 rounded hover:bg-red-50 text-slate-400 hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() =>
+                        onUpdate("showWhen", {
+                          ...question.showWhen,
+                          equals: [...(question.showWhen?.equals || []), ""],
+                        })
+                      }
+                      className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add value
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
