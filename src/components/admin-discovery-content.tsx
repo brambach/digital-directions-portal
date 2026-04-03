@@ -39,6 +39,21 @@ interface Question {
   type: string;
   required: boolean;
   options?: string[];
+  helpText?: string;
+  placeholder?: string;
+  showWhen?: {
+    questionId: string;
+    equals: string[];
+  };
+}
+
+function isQuestionVisible(
+  question: Question,
+  answers: Record<string, string | boolean>
+): boolean {
+  if (!question.showWhen) return true;
+  const dependentAnswer = String(answers[question.showWhen.questionId] || "");
+  return question.showWhen.equals.includes(dependentAnswer);
 }
 
 interface Section {
@@ -442,14 +457,16 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
   const sections: Section[] = response.sections || template?.sections || [];
 
   // Count answered questions
-  const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
+  const totalQuestions = sections.reduce((sum, s) => sum + s.questions.filter((q) => isQuestionVisible(q, response.responses)).length, 0);
   const answeredQuestions = sections.reduce(
     (sum, s) =>
       sum +
-      s.questions.filter((q) => {
-        const answer = response.responses[q.id];
-        return answer !== undefined && answer !== "" && answer !== null;
-      }).length,
+      s.questions
+        .filter((q) => isQuestionVisible(q, response.responses))
+        .filter((q) => {
+          const answer = response.responses[q.id];
+          return answer !== undefined && answer !== "" && answer !== null;
+        }).length,
     0
   );
 
@@ -482,7 +499,8 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
       <div className="space-y-4">
         {sections.map((section, sIdx) => {
           const isExpanded = expandedSections.has(section.id);
-          const sectionAnswered = section.questions.filter((q) => {
+          const visibleInSection = section.questions.filter((q) => isQuestionVisible(q, response.responses));
+          const sectionAnswered = visibleInSection.filter((q) => {
             const answer = response.responses[q.id];
             return answer !== undefined && answer !== "" && answer !== null;
           }).length;
@@ -508,7 +526,7 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
                   {section.title}
                 </span>
                 <span className="text-xs text-slate-400 shrink-0">
-                  {sectionAnswered}/{section.questions.length} answered
+                  {sectionAnswered}/{visibleInSection.length} answered
                 </span>
               </button>
 
@@ -529,11 +547,17 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
                     {section.questions.map((question) => {
                       const answer = response.responses[question.id];
                       const hasAnswer = answer !== undefined && answer !== "" && answer !== null;
+                      const visible = isQuestionVisible(question, response.responses);
 
                       return (
                         <div
                           key={question.id}
-                          className="flex gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100"
+                          className={cn(
+                            "flex gap-4 p-3 rounded-lg border",
+                            visible
+                              ? "bg-slate-50 border-slate-100"
+                              : "bg-slate-50/50 border-slate-50 opacity-50"
+                          )}
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-slate-700">
@@ -542,12 +566,17 @@ export function AdminDiscoveryContent({ projectId, projectName }: AdminDiscovery
                                 <span className="text-red-400 ml-0.5">*</span>
                               )}
                             </p>
+                            {question.helpText && (
+                              <p className="text-xs text-slate-400 mt-0.5">{question.helpText}</p>
+                            )}
                             <span className="text-[10px] text-slate-400 uppercase font-semibold">
                               {question.type}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0 text-right">
-                            {hasAnswer ? (
+                            {!visible ? (
+                              <p className="text-sm text-slate-300 italic">Not applicable</p>
+                            ) : hasAnswer ? (
                               <p className="text-sm text-slate-900">
                                 {typeof answer === "boolean"
                                   ? answer
