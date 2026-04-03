@@ -149,7 +149,7 @@ export function LifecycleStepper({
                   }}
                   transition={
                     celebratingIdx === index
-                      ? { type: "spring", stiffness: 400, damping: 15 }
+                      ? { type: "tween", duration: 0.4, ease: "easeInOut" }
                       : { type: "spring", stiffness: 400, damping: 22, delay: index * 0.06 }
                   }
                 >
