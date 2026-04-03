@@ -15,6 +15,18 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── April 2026 ──────────────────────────────────────────────
   {
+    id: "2026-04-02-client-submission-withdrawal",
+    date: "2026-04-02",
+    title: "Withdraw Submissions & Undo",
+    description: "Clients can now withdraw submitted sections for editing and undo provisioning step completions.",
+    tags: ["feature"],
+    audience: "all",
+    items: [
+      "You can now withdraw a submitted questionnaire, mapping, checklist, or UAT result before it's reviewed — edit your answers and resubmit when ready",
+      "Provisioning steps can be undone before your DD specialist verifies them",
+    ],
+  },
+  {
     id: "2026-04-02-enhanced-discovery-templates",
     date: "2026-04-02",
     title: "Enhanced Discovery Templates",
