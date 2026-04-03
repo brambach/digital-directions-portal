@@ -93,9 +93,9 @@ async function resolveRecipients(
   }
 
   const recipients: RecipientInfo[] = [];
+  const clerk = await clerkClient();
   for (const u of dbUsers) {
     try {
-      const clerk = await clerkClient();
       const clerkUser = await clerk.users.getUser(u.clerkId);
       recipients.push({
         userId: u.id,
@@ -296,7 +296,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           header: approved ? "Discovery Approved" : "Discovery — Changes Requested",
           body: approved
             ? `Discovery questionnaire has been approved.`
-            : `Changes have been requested on the discovery questionnaire.`,
+            : `Changes have been requested on the discovery questionnaire.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
@@ -420,7 +420,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           header: approved ? "Mapping Approved" : "Mapping — Changes Requested",
           body: approved
             ? `Data mapping has been approved.`
-            : `Changes have been requested on the data mapping.`,
+            : `Changes have been requested on the data mapping.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
@@ -544,7 +544,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           header: approved ? "UAT Approved" : "UAT — Changes Requested",
           body: approved
             ? `UAT results have been approved.`
-            : `Changes have been requested on the UAT results.`,
+            : `Changes have been requested on the UAT results.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
@@ -702,7 +702,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
         await sendSlack({
           emoji: ":leftwards_arrow_with_hook:",
           header: "HiBob Config — Changes Requested",
-          body: `Changes have been requested on the HiBob configuration.`,
+          body: `Changes have been requested on the HiBob configuration.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
@@ -978,11 +978,21 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
         const adminUserIds = adminRecipients.map((r) => r.userId);
         const clientUserIds = clientRecipients.map((r) => r.userId);
 
+        // Admin notifications — link to admin URL
         await createNotificationsForUsers({
-          userIds: [...adminUserIds, ...clientUserIds],
+          userIds: adminUserIds,
           type: "project_update",
-          title: "Integration Is Live!",
-          message: `${payload.projectName} for ${clientName} has gone live!`,
+          title: "Go-live triggered!",
+          message: `"${payload.projectName}" has gone live!`,
+          linkUrl: `/dashboard/admin/projects/${payload.projectId}/go-live`,
+        });
+
+        // Client notifications — link to client URL
+        await createNotificationsForUsers({
+          userIds: clientUserIds,
+          type: "project_update",
+          title: "Your project is live!",
+          message: `"${payload.projectName}" has officially gone live! Congratulations!`,
           linkUrl: `/dashboard/client/projects/${payload.projectId}/go-live`,
         });
 
@@ -1039,7 +1049,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         await createNotificationsForUsers({
           userIds,
-          type: "project_update",
+          type: "client_added",
           title: "New User Joined",
           message: `${payload.userName} from ${payload.clientName} has accepted their invite and joined the portal.`,
           linkUrl: `/dashboard/admin/clients`,
@@ -1055,6 +1065,11 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           linkUrl: `${APP_URL}/dashboard/admin/clients`,
         });
         break;
+      }
+
+      default: {
+        const _exhaustive: never = payload;
+        console.warn(`Unknown notification event: ${(_exhaustive as any).event}`);
       }
     }
   } catch (error) {
