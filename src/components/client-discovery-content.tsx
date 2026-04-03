@@ -34,6 +34,21 @@ interface Question {
   type: string;
   required: boolean;
   options?: string[];
+  helpText?: string;
+  placeholder?: string;
+  showWhen?: {
+    questionId: string;
+    equals: string[];
+  };
+}
+
+function isQuestionVisible(
+  question: Question,
+  answers: Record<string, string | boolean>
+): boolean {
+  if (!question.showWhen) return true;
+  const dependentAnswer = String(answers[question.showWhen.questionId] || "");
+  return question.showWhen.equals.includes(dependentAnswer);
 }
 
 interface Section {
