@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoomEmbed } from "@/components/loom-embed";
@@ -13,8 +14,10 @@ import {
   HelpCircle,
   Video,
   Send,
+  Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WithdrawSubmissionDialog } from "@/components/withdraw-submission-dialog";
 
 interface FaqItem {
   question: string;
@@ -189,11 +192,14 @@ function ChecklistItem({
 }
 
 export function ClientBobConfigContent({ projectId }: ClientBobConfigContentProps) {
+  const router = useRouter();
   const [checklist, setChecklist] = useState<BobConfigChecklist | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const fetchChecklist = useCallback(async () => {
     try {
@@ -286,18 +292,51 @@ export function ClientBobConfigContent({ projectId }: ClientBobConfigContentProp
     <div className="space-y-5">
       {/* Status banners */}
       {checklist.status === "in_review" && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center gap-3">
-          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-amber-800">
-              Submitted — awaiting review
-            </p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              Your Digital Directions team is reviewing your configuration. You&apos;ll be
-              notified when complete.
-            </p>
+        <>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center gap-3">
+            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">
+                Submitted — awaiting review
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                Your Digital Directions team is reviewing your configuration. You&apos;ll be
+                notified when complete.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)} disabled={withdrawing} className="shrink-0">
+              <Undo2 className="w-4 h-4 mr-2" />
+              Withdraw
+            </Button>
           </div>
-        </div>
+          <WithdrawSubmissionDialog
+            open={withdrawOpen}
+            onOpenChange={setWithdrawOpen}
+            loading={withdrawing}
+            stageName="HiBob configuration checklist"
+            onConfirm={async () => {
+              setWithdrawing(true);
+              try {
+                const res = await fetch(`/api/projects/${projectId}/bob-config/withdraw`, {
+                  method: "POST",
+                });
+                if (!res.ok) {
+                  const data = await res.json();
+                  throw new Error(data.error || "Failed to withdraw");
+                }
+                toast.success("Submission withdrawn — you can now edit your checklist.");
+                setWithdrawOpen(false);
+                router.refresh();
+                fetchChecklist();
+              } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : "Failed to withdraw";
+                toast.error(message);
+              } finally {
+                setWithdrawing(false);
+              }
+            }}
+          />
+        </>
       )}
 
       {checklist.status === "approved" && (
