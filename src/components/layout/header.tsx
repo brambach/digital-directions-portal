@@ -49,7 +49,7 @@ export async function Header() {
             </span>
           </div>
           <UserButton
-            signInUrl="/"
+            afterSignOutUrl="/"
             appearance={{
               elements: {
                 userButtonAvatarBox: "w-9 h-9 rounded-full border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
