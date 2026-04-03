@@ -17,7 +17,8 @@
     "invite-admin": "tsx scripts/invite-admin.ts",
     "delete-user": "tsx scripts/delete-user.ts",
     "link-client": "tsx scripts/link-client.ts",
-    "cleanup-users": "tsx src/lib/db/cleanup-users.ts"
+    "cleanup-users": "tsx src/lib/db/cleanup-users.ts",
+    "db:seed-discovery": "tsx scripts/seed-keypay-discovery.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
