@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { nextStage, prevStage, stageIndex } from "@/lib/lifecycle";
+import { notifyEvent } from "@/lib/notify";
 
 export async function POST(
   request: NextRequest,
@@ -27,7 +28,7 @@ export async function POST(
 
     // Get current project
     const [project] = await db
-      .select({ id: projects.id, currentStage: projects.currentStage })
+      .select({ id: projects.id, currentStage: projects.currentStage, clientId: projects.clientId, name: projects.name })
       .from(projects)
       .where(and(eq(projects.id, id), isNull(projects.deletedAt)))
       .limit(1);
@@ -83,6 +84,15 @@ export async function POST(
       })
       .where(eq(projects.id, id))
       .returning();
+
+    notifyEvent({
+      event: "stage_advanced",
+      projectId: id,
+      projectName: project.name,
+      clientId: project.clientId,
+      fromStage: project.currentStage,
+      toStage: newStage!,
+    });
 
     return NextResponse.json({ project: updated });
   } catch (error: any) {
