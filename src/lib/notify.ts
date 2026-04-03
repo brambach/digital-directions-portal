@@ -119,6 +119,17 @@ async function resolveRecipients(
 
 // --- Slack formatting ---
 
+// Color palette for the attachment bar
+const COLORS = {
+  brand: "#7C1CFF",    // DD Violet — standard updates, submissions
+  success: "#22C55E",  // Green — approvals, completions, go-live
+  warning: "#F59E0B",  // Orange — changes requested, input needed
+  danger: "#EF4444",   // Red — client blockers
+  info: "#6366F1",     // Indigo — messages, new users
+} as const;
+
+type SlackColor = (typeof COLORS)[keyof typeof COLORS];
+
 interface SlackMessageConfig {
   emoji: string;
   header: string;
@@ -126,15 +137,24 @@ interface SlackMessageConfig {
   clientName: string;
   projectName?: string;
   linkUrl: string;
+  color?: SlackColor;
 }
 
 function buildSlackBlocks(config: SlackMessageConfig) {
   return [
     {
+      type: "header" as const,
+      text: {
+        type: "plain_text" as const,
+        text: `${config.emoji}  ${config.header}`,
+        emoji: true,
+      },
+    },
+    {
       type: "section" as const,
       text: {
         type: "mrkdwn" as const,
-        text: `${config.emoji} *${config.header}*\n${config.body}`,
+        text: config.body,
       },
     },
     {
@@ -142,18 +162,22 @@ function buildSlackBlocks(config: SlackMessageConfig) {
       elements: [
         {
           type: "mrkdwn" as const,
-          text: `${config.clientName}${config.projectName ? ` — ${config.projectName}` : ""}`,
+          text: `*${config.clientName}*${config.projectName ? `  ·  ${config.projectName}` : ""}  ·  <!date^${Math.floor(Date.now() / 1000)}^{date_short_pretty} at {time}|just now>`,
         },
       ],
+    },
+    {
+      type: "divider" as const,
     },
     {
       type: "actions" as const,
       elements: [
         {
           type: "button" as const,
-          text: { type: "plain_text" as const, text: "View in Portal" },
+          text: { type: "plain_text" as const, text: "View in Portal  →", emoji: true },
           url: config.linkUrl,
           action_id: "view_in_portal",
+          style: "primary" as const,
         },
       ],
     },
@@ -165,7 +189,12 @@ async function sendSlack(config: SlackMessageConfig): Promise<void> {
   try {
     await slack.chat.postMessage({
       channel: SLACK_CHANNEL_ID,
-      blocks: buildSlackBlocks(config),
+      attachments: [
+        {
+          color: config.color || COLORS.brand,
+          blocks: buildSlackBlocks(config),
+        },
+      ],
       text: `${config.header} — ${config.clientName}${config.projectName ? ` — ${config.projectName}` : ""}`,
     });
   } catch (error) {
@@ -217,6 +246,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           body: `${clientName} has submitted their discovery questionnaire.`,
           clientName,
           projectName: payload.projectName,
+          color: COLORS.brand,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
         });
         break;
@@ -255,6 +285,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           body: `${clientName} has withdrawn their discovery submission.`,
           clientName,
           projectName: payload.projectName,
+          color: COLORS.brand,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
         });
         break;
@@ -300,6 +331,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
+          color: approved ? COLORS.success : COLORS.warning,
         });
         break;
       }
@@ -342,6 +374,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -380,6 +413,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -424,6 +458,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: approved ? COLORS.success : COLORS.warning,
         });
         break;
       }
@@ -466,6 +501,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -504,6 +540,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -548,6 +585,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: approved ? COLORS.success : COLORS.warning,
         });
         break;
       }
@@ -590,6 +628,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -628,6 +667,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.brand,
         });
         break;
       }
@@ -667,6 +707,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.success,
         });
         break;
       }
@@ -706,6 +747,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.warning,
         });
         break;
       }
@@ -756,6 +798,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/provisioning`,
+          color: COLORS.success,
         });
         break;
       }
@@ -776,6 +819,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/provisioning`,
+          color: COLORS.success,
         });
 
         // Only notify client users + send emails when allVerified is true
@@ -838,6 +882,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.danger,
         });
         break;
       }
@@ -868,6 +913,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.warning,
         });
         break;
       }
@@ -902,6 +948,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.info,
         });
         break;
       }
@@ -928,6 +975,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.info,
         });
         break;
       }
@@ -960,6 +1008,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.success,
         });
         break;
       }
@@ -1035,6 +1084,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           clientName,
           projectName: payload.projectName,
           linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/go-live`,
+          color: COLORS.success,
         });
         break;
       }
@@ -1063,6 +1113,7 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           body: `${payload.userName} from ${payload.clientName} has joined the portal.`,
           clientName: payload.clientName,
           linkUrl: `${APP_URL}/dashboard/admin/clients`,
+          color: COLORS.info,
         });
         break;
       }
