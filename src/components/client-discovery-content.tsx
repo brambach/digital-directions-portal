@@ -25,7 +25,9 @@ import {
   Send,
   Video,
   AlertTriangle,
+  Undo2,
 } from "lucide-react";
+import { WithdrawSubmissionDialog } from "@/components/withdraw-submission-dialog";
 import { cn } from "@/lib/utils";
 
 interface Question {
@@ -90,6 +92,8 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
   const [currentSection, setCurrentSection] = useState(0);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const [showLoom, setShowLoom] = useState<string | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -231,11 +235,42 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
   // In review — read only
   if (response.status === "in_review") {
     return (
-      <ReadOnlyView
-        template={template}
-        answers={answers}
-        bannerType="review"
-      />
+      <>
+        <ReadOnlyView
+          template={template}
+          answers={answers}
+          bannerType="review"
+          onWithdraw={() => setWithdrawOpen(true)}
+          withdrawing={withdrawing}
+        />
+        <WithdrawSubmissionDialog
+          open={withdrawOpen}
+          onOpenChange={setWithdrawOpen}
+          loading={withdrawing}
+          stageName="discovery questionnaire"
+          onConfirm={async () => {
+            setWithdrawing(true);
+            try {
+              const res = await fetch(`/api/projects/${projectId}/discovery/withdraw`, {
+                method: "POST",
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to withdraw");
+              }
+              toast.success("Submission withdrawn — you can now edit your responses.");
+              setWithdrawOpen(false);
+              router.refresh();
+              fetchDiscovery();
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : "Failed to withdraw";
+              toast.error(message);
+            } finally {
+              setWithdrawing(false);
+            }
+          }}
+        />
+      </>
     );
   }
 
@@ -548,11 +583,15 @@ function ReadOnlyView({
   answers,
   bannerType,
   reviewNotes,
+  onWithdraw,
+  withdrawing,
 }: {
   template: Template | null;
   answers: Record<string, string | boolean>;
   bannerType: "review" | "approved";
   reviewNotes?: string | null;
+  onWithdraw?: () => void;
+  withdrawing?: boolean;
 }) {
   if (!template) return null;
 
@@ -562,7 +601,7 @@ function ReadOnlyView({
       {bannerType === "review" ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
           <DigiMascot variant="construction" size="xs" />
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800">
               Your questionnaire is being reviewed
             </p>
@@ -570,6 +609,12 @@ function ReadOnlyView({
               The Digital Directions team is reviewing your responses. You&apos;ll be notified when the review is complete.
             </p>
           </div>
+          {onWithdraw && (
+            <Button variant="outline" size="sm" onClick={onWithdraw} disabled={withdrawing} className="shrink-0">
+              <Undo2 className="w-4 h-4 mr-2" />
+              Withdraw
+            </Button>
+          )}
         </div>
       ) : (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
