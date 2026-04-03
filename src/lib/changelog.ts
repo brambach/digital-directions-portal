@@ -13,6 +13,21 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  // ── April 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-04-02-enhanced-discovery-templates",
+    date: "2026-04-02",
+    title: "Enhanced Discovery Templates",
+    description: "Discovery questionnaires now feature help text, conditional questions, and a new Standard KeyPay template.",
+    tags: ["feature"],
+    audience: "all",
+    items: [
+      "New Standard KeyPay Discovery template with 30 guided questions across 6 sections",
+      "Questions now show helpful explanations so clients can complete discovery without a call",
+      "Smart conditional logic hides irrelevant follow-up questions based on your answers",
+      "Loom video guide slots available per section — videos added by the DD team",
+    ],
+  },
   // ── March 2026 ──────────────────────────────────────────────
   {
     id: "2026-03-10-guided-tour-polish",
