@@ -250,7 +250,7 @@ export async function sendDiscoveryEmail(params: {
   recipientName: string;
   projectName: string;
   projectId: string;
-  event: "ready" | "submitted" | "approved" | "changes_requested";
+  event: "ready" | "submitted" | "approved" | "changes_requested" | "withdrawn";
   reviewNotes?: string;
 }): Promise<EmailResult> {
   if (!resend) {
@@ -299,6 +299,16 @@ export async function sendDiscoveryEmail(params: {
       ctaText: "Update Questionnaire",
       ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/discovery`,
       ctaColor: "#F59E0B",
+    },
+    withdrawn: {
+      subject: `Discovery submission withdrawn: ${params.projectName}`,
+      heading: "Discovery Submission Withdrawn",
+      gradientColors: "#6B7280 0%, #4B5563 100%",
+      body: `<p>The discovery questionnaire submission for <strong>${params.projectName}</strong> has been withdrawn by the client. They may resubmit after making changes.</p>
+        <p>No action needed on your end.</p>`,
+      ctaText: "View Project",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/discovery`,
+      ctaColor: "#6B7280",
     },
   };
 
@@ -440,7 +450,7 @@ export async function sendProvisioningEmail(params: {
   recipientName: string;
   projectName: string;
   projectId: string;
-  event: "step_completed" | "all_verified";
+  event: "step_completed" | "all_verified" | "step_uncompleted";
   stepTitle?: string;
 }): Promise<EmailResult> {
   if (!resend) {
@@ -467,6 +477,16 @@ export async function sendProvisioningEmail(params: {
       ctaText: "View Project",
       ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/provisioning`,
       ctaColor: "#10B981",
+    },
+    step_uncompleted: {
+      subject: `Provisioning step reverted: ${params.projectName}`,
+      heading: "Provisioning Step Reverted",
+      gradientColors: "#6B7280 0%, #4B5563 100%",
+      body: `<p>A provisioning step${params.stepTitle ? ` (<strong>${params.stepTitle}</strong>)` : ""} for <strong>${params.projectName}</strong> has been reverted by the client. They may re-mark it as complete when ready.</p>
+        <p>No action needed on your end.</p>`,
+      ctaText: "View Provisioning",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/provisioning`,
+      ctaColor: "#6B7280",
     },
   };
 
@@ -525,7 +545,7 @@ export async function sendMappingEmail(params: {
   recipientName: string;
   projectName: string;
   projectId: string;
-  event: "ready" | "submitted" | "approved" | "changes_requested" | "exported";
+  event: "ready" | "submitted" | "approved" | "changes_requested" | "exported" | "withdrawn";
   reviewNotes?: string;
 }): Promise<EmailResult> {
   if (!resend) {
@@ -584,6 +604,16 @@ export async function sendMappingEmail(params: {
       ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/mapping`,
       ctaColor: "#10B981",
     },
+    withdrawn: {
+      subject: `Data mapping submission withdrawn: ${params.projectName}`,
+      heading: "Data Mapping Submission Withdrawn",
+      gradientColors: "#6B7280 0%, #4B5563 100%",
+      body: `<p>The data mapping submission for <strong>${params.projectName}</strong> has been withdrawn by the client. They may resubmit after making changes.</p>
+        <p>No action needed on your end.</p>`,
+      ctaText: "View Project",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/mapping`,
+      ctaColor: "#6B7280",
+    },
   };
 
   const config = eventConfig[params.event];
@@ -641,7 +671,7 @@ export async function sendBobConfigEmail(params: {
   recipientName: string;
   projectName: string;
   projectId: string;
-  event: "submitted" | "approved" | "changes_requested";
+  event: "submitted" | "approved" | "changes_requested" | "withdrawn";
   reviewNotes?: string;
 }): Promise<EmailResult> {
   if (!resend) {
@@ -680,6 +710,16 @@ export async function sendBobConfigEmail(params: {
       ctaText: "Update Configuration",
       ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/bob-config`,
       ctaColor: "#F59E0B",
+    },
+    withdrawn: {
+      subject: `HiBob config submission withdrawn: ${params.projectName}`,
+      heading: "HiBob Config Submission Withdrawn",
+      gradientColors: "#6B7280 0%, #4B5563 100%",
+      body: `<p>The HiBob configuration checklist submission for <strong>${params.projectName}</strong> has been withdrawn by the client. They may resubmit after making changes.</p>
+        <p>No action needed on your end.</p>`,
+      ctaText: "View Project",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/bob-config`,
+      ctaColor: "#6B7280",
     },
   };
 
@@ -980,7 +1020,7 @@ export async function sendUatEmail(params: {
   recipientName: string;
   projectName: string;
   projectId: string;
-  event: "published" | "submitted" | "approved" | "changes_requested";
+  event: "published" | "submitted" | "approved" | "changes_requested" | "withdrawn";
   reviewNotes?: string;
 }): Promise<EmailResult> {
   if (!resend) {
@@ -1029,6 +1069,16 @@ export async function sendUatEmail(params: {
       ctaText: "Update Results",
       ctaUrl: `${APP_URL}/dashboard/client/projects/${params.projectId}/uat`,
       ctaColor: "#F59E0B",
+    },
+    withdrawn: {
+      subject: `UAT results withdrawn: ${params.projectName}`,
+      heading: "UAT Results Withdrawn",
+      gradientColors: "#6B7280 0%, #4B5563 100%",
+      body: `<p>The UAT results submission for <strong>${params.projectName}</strong> has been withdrawn by the client. They may resubmit after making changes.</p>
+        <p>No action needed on your end.</p>`,
+      ctaText: "View Project",
+      ctaUrl: `${APP_URL}/dashboard/admin/projects/${params.projectId}/uat`,
+      ctaColor: "#6B7280",
     },
   };
 
