@@ -165,7 +165,7 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
     const unanswered: string[] = [];
     for (const section of template.sections) {
       for (const q of section.questions) {
-        if (q.required) {
+        if (q.required && isQuestionVisible(q, answers)) {
           const answer = answers[q.id];
           if (answer === undefined || answer === "" || answer === null) {
             unanswered.push(`"${q.label}" in "${section.title}"`);
@@ -259,14 +259,19 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
   const isLastSection = currentSection === sections.length - 1;
 
   // Calculate progress
-  const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
+  const totalQuestions = sections.reduce(
+    (sum, s) => sum + s.questions.filter((q) => isQuestionVisible(q, answers)).length,
+    0
+  );
   const answeredQuestions = sections.reduce(
     (sum, s) =>
       sum +
-      s.questions.filter((q) => {
-        const answer = answers[q.id];
-        return answer !== undefined && answer !== "" && answer !== null;
-      }).length,
+      s.questions
+        .filter((q) => isQuestionVisible(q, answers))
+        .filter((q) => {
+          const answer = answers[q.id];
+          return answer !== undefined && answer !== "" && answer !== null;
+        }).length,
     0
   );
   const progressPercent = totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
@@ -318,11 +323,12 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
       {/* Section navigation pills */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
         {sections.map((s, idx) => {
-          const sectionAnswered = s.questions.filter((q) => {
+          const visibleQuestions = s.questions.filter((q) => isQuestionVisible(q, answers));
+          const sectionAnswered = visibleQuestions.filter((q) => {
             const answer = answers[q.id];
             return answer !== undefined && answer !== "" && answer !== null;
           }).length;
-          const isComplete = sectionAnswered === s.questions.length;
+          const isComplete = visibleQuestions.length > 0 && sectionAnswered === visibleQuestions.length;
 
           return (
             <button
@@ -390,14 +396,16 @@ export function ClientDiscoveryContent({ projectId }: ClientDiscoveryContentProp
 
         {/* Questions */}
         <div className="space-y-5">
-          {section.questions.map((question) => (
-            <QuestionInput
-              key={question.id}
-              question={question}
-              value={answers[question.id]}
-              onChange={(value) => handleAnswerChange(question.id, value)}
-            />
-          ))}
+          {section.questions
+            .filter((question) => isQuestionVisible(question, answers))
+            .map((question) => (
+              <QuestionInput
+                key={question.id}
+                question={question}
+                value={answers[question.id]}
+                onChange={(value) => handleAnswerChange(question.id, value)}
+              />
+            ))}
         </div>
       </div>
 
@@ -457,19 +465,30 @@ function QuestionInput({
   onChange: (value: string | boolean) => void;
 }) {
   const stringValue = typeof value === "boolean" ? "" : (value || "");
+  const placeholder = question.placeholder || (
+    question.type === "textarea" ? "Type your answer..." :
+    question.type === "text" ? "Type your answer..." :
+    question.type === "number" ? "Enter a number..." :
+    undefined
+  );
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700">
-        {question.label}
-        {question.required && <span className="text-red-400 ml-0.5">*</span>}
-      </label>
+      <div>
+        <label className="text-sm font-medium text-slate-700">
+          {question.label}
+          {question.required && <span className="text-red-400 ml-0.5">*</span>}
+        </label>
+        {question.helpText && (
+          <p className="text-xs text-slate-400 mt-0.5">{question.helpText}</p>
+        )}
+      </div>
 
       {question.type === "text" && (
         <Input
           value={stringValue}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Type your answer..."
+          placeholder={placeholder}
           className="bg-white border-slate-200 rounded-xl"
         />
       )}
@@ -478,7 +497,7 @@ function QuestionInput({
         <Textarea
           value={stringValue}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Type your answer..."
+          placeholder={placeholder}
           className="bg-white border-slate-200 rounded-xl min-h-[100px]"
         />
       )}
@@ -488,7 +507,7 @@ function QuestionInput({
           type="number"
           value={stringValue}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Enter a number..."
+          placeholder={placeholder}
           className="bg-white border-slate-200 rounded-xl w-48"
         />
       )}
@@ -496,7 +515,7 @@ function QuestionInput({
       {question.type === "select" && question.options && (
         <Select value={stringValue} onValueChange={(v) => onChange(v)}>
           <SelectTrigger className="bg-white border-slate-200 rounded-xl w-full max-w-sm">
-            <SelectValue placeholder="Select an option..." />
+            <SelectValue placeholder={question.placeholder || "Select an option..."} />
           </SelectTrigger>
           <SelectContent>
             {question.options.map((opt) => (
@@ -581,17 +600,31 @@ function ReadOnlyView({
             {section.questions.map((q) => {
               const answer = answers[q.id];
               const hasAnswer = answer !== undefined && answer !== "" && answer !== null;
+              const visible = isQuestionVisible(q, answers);
 
               return (
-                <div key={q.id} className="flex gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <div
+                  key={q.id}
+                  className={cn(
+                    "flex gap-4 p-3 rounded-lg border",
+                    visible
+                      ? "bg-slate-50 border-slate-100"
+                      : "bg-slate-50/50 border-slate-50 opacity-50"
+                  )}
+                >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-700">
                       {q.label}
                       {q.required && <span className="text-red-400 ml-0.5">*</span>}
                     </p>
+                    {q.helpText && (
+                      <p className="text-xs text-slate-400 mt-0.5">{q.helpText}</p>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 text-right">
-                    {hasAnswer ? (
+                    {!visible ? (
+                      <p className="text-sm text-slate-300 italic">Not applicable</p>
+                    ) : hasAnswer ? (
                       <p className="text-sm text-slate-900">
                         {typeof answer === "boolean" ? (answer ? "Yes" : "No") : String(answer)}
                       </p>
