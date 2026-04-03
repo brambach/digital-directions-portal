@@ -80,7 +80,7 @@ export default function TopNav({ navItems, isAdmin }: TopNavProps) {
               <NotificationBell />
               <div className="w-px h-6 bg-slate-200 mx-2" />
               <UserButton
-                afterSignOutUrl="/"
+                signInUrl="/"
                 appearance={{
                   elements: {
                     avatarBox:
@@ -131,7 +131,7 @@ export default function TopNav({ navItems, isAdmin }: TopNavProps) {
               <div className="flex items-center justify-between px-4">
                 <NotificationBell />
                 <UserButton
-                  afterSignOutUrl="/"
+                  signInUrl="/"
                   appearance={{
                     elements: {
                       avatarBox: "w-9 h-9 rounded-lg",

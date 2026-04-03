@@ -228,9 +228,8 @@ export default function InvitePage() {
               card: "bg-white shadow-lg border-slate-200",
             },
           }}
-          afterSignUpUrl={`/invite/${token}/complete`}
+          forceRedirectUrl={`/invite/${token}/complete`}
           signInUrl="/sign-in"
-          redirectUrl={`/invite/${token}/complete`}
         />
 
         <p className="text-center text-sm text-slate-500 mt-6">
