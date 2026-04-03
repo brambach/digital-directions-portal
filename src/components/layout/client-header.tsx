@@ -32,7 +32,6 @@ export function ClientHeader() {
             <div className="flex items-center gap-3 flex-1 max-w-sm">
                 <GlobalSearch role="client" />
             </div>
-
             {/* Right Tools */}
             <div className="flex items-center gap-1">
                 <NotificationBell />
@@ -53,7 +52,7 @@ export function ClientHeader() {
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-violet-100 border-2 border-white ring-1 ring-slate-200 transition-all group-hover:ring-violet-300">
                             {user?.imageUrl ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
-                                <img src={user.imageUrl} alt={displayName} className="w-full h-full object-cover" />
+                                (<img src={user.imageUrl} alt={displayName} className="w-full h-full object-cover" />)
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-violet-700 text-sm font-bold">
                                     {displayName.charAt(0)}

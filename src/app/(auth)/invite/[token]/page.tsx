@@ -1,10 +1,10 @@
 "use client";
-
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { SignUp, useUser, useSignUp } from "@clerk/nextjs";
+import { SignUp, useUser } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs/legacy";
 import { Loader2, ChevronRight } from "lucide-react";
 
 interface InviteData {

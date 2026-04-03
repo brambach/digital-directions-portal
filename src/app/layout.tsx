@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className={cn(geist.className, "antialiased")}>
         <ClerkProvider
           appearance={{
-            baseTheme: undefined,
+            theme: undefined,
             variables: {
               colorPrimary: "#7C1CFF",
               borderRadius: "0.75rem",
