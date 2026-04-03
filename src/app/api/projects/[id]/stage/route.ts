@@ -85,14 +85,17 @@ export async function POST(
       .where(eq(projects.id, id))
       .returning();
 
-    notifyEvent({
-      event: "stage_advanced",
-      projectId: id,
-      projectName: project.name,
-      clientId: project.clientId,
-      fromStage: project.currentStage,
-      toStage: newStage!,
-    });
+    // Only notify on forward advancement, not rollbacks
+    if (action === "advance") {
+      notifyEvent({
+        event: "stage_advanced",
+        projectId: id,
+        projectName: project.name,
+        clientId: project.clientId,
+        fromStage: project.currentStage,
+        toStage: newStage!,
+      });
+    }
 
     return NextResponse.json({ project: updated });
   } catch (error: any) {
