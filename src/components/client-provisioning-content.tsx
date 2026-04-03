@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Video,
   Info,
+  Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -66,11 +67,15 @@ function StepCard({
   index,
   onMarkComplete,
   completing,
+  onUncomplete,
+  uncompleting,
 }: {
   step: ProvisioningStep;
   index: number;
   onMarkComplete: (stepId: string) => void;
   completing: string | null;
+  onUncomplete: (stepId: string) => void;
+  uncompleting: string | null;
 }) {
   const [showRevokeNote, setShowRevokeNote] = useState(false);
   const parsed = parseDescription(step.description);
@@ -197,21 +202,39 @@ function StepCard({
               Mark as Complete
             </Button>
             <p className="text-xs text-slate-400 mt-2">
-              Only mark complete once you&apos;ve followed all steps above. If you made a mistake,
-              contact your DD Integration Specialist.
+              Only mark complete once you&apos;ve followed all steps above. You can undo this
+              before your DD Integration Specialist verifies the step.
             </p>
           </div>
         )}
 
         {isComplete && (
-          <div className="pt-1 flex items-center gap-2 text-xs text-slate-400">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            Marked complete on{" "}
-            {new Date(step.completedAt!).toLocaleDateString("en-AU", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+          <div className="pt-1 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              Marked complete on{" "}
+              {new Date(step.completedAt!).toLocaleDateString("en-AU", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+            {!isVerified && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onUncomplete(step.id)}
+                disabled={uncompleting === step.id}
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                {uncompleting === step.id ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                ) : (
+                  <Undo2 className="w-3.5 h-3.5 mr-1" />
+                )}
+                Undo
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -223,6 +246,7 @@ export function ClientProvisioningContent({ projectId }: ClientProvisioningConte
   const [steps, setSteps] = useState<ProvisioningStep[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState<string | null>(null);
+  const [uncompleting, setUncompleting] = useState<string | null>(null);
 
   const fetchSteps = useCallback(async () => {
     try {
@@ -258,6 +282,26 @@ export function ClientProvisioningContent({ projectId }: ClientProvisioningConte
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setCompleting(null);
+    }
+  };
+
+  const handleUncomplete = async (stepId: string) => {
+    setUncompleting(stepId);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/provisioning/${stepId}/uncomplete`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to undo step");
+      }
+      toast.success("Step reverted — you can mark it complete again when ready.");
+      await fetchSteps();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setUncompleting(null);
     }
   };
 
@@ -320,6 +364,8 @@ export function ClientProvisioningContent({ projectId }: ClientProvisioningConte
             index={i}
             onMarkComplete={handleMarkComplete}
             completing={completing}
+            onUncomplete={handleUncomplete}
+            uncompleting={uncompleting}
           />
         ))}
       </div>
