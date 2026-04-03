@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { provisioningSteps, projects, users, userNotifications } from "@/lib/db/schema";
+import { provisioningSteps, projects } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendProvisioningEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // POST /api/projects/[id]/provisioning/[stepId]/complete — Client marks step as complete
 export async function POST(
@@ -68,48 +67,14 @@ export async function POST(
 
     const allClientDone = allSteps.every((s) => s.completedAt || s.id === stepId);
 
-    // Notify admin users about this step completion
-    const adminUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
-
-    const notifTitle = allClientDone
-      ? "All provisioning steps completed"
-      : `Provisioning step completed: ${step.title}`;
-    const notifMessage = allClientDone
-      ? `All provisioning steps for "${project.name}" have been completed by the client and are ready for verification.`
-      : `The "${step.title}" provisioning step for "${project.name}" has been marked complete by the client.`;
-
-    for (const adminUser of adminUsers) {
-      await db.insert(userNotifications).values({
-        userId: adminUser.id,
-        type: "provisioning",
-        title: notifTitle,
-        message: notifMessage,
-        linkUrl: `/dashboard/admin/projects/${projectId}/provisioning`,
-      });
-
-      try {
-        const clerk = await clerkClient();
-        const clerkUser = await clerk.users.getUser(adminUser.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name =
-          `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "there";
-        if (email) {
-          await sendProvisioningEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: "step_completed",
-            stepTitle: step.title,
-          });
-        }
-      } catch (emailErr) {
-        console.error("Error sending provisioning email:", emailErr);
-      }
-    }
+    notifyEvent({
+      event: "provisioning_step_completed",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+      stepName: step.title,
+      allComplete: allClientDone,
+    });
 
     return NextResponse.json(updated);
   } catch (error: unknown) {
