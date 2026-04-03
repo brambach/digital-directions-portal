@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { invites, users } from "@/lib/db/schema";
+import { clients, invites, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { notifyEvent } from "@/lib/notify";
 
 // POST - Accept an invite (called after Clerk signup)
 export async function POST(req: NextRequest) {
@@ -133,6 +134,25 @@ export async function POST(req: NextRequest) {
         acceptedAt: new Date(),
       })
       .where(eq(invites.id, invite.id));
+
+    // Send notification for client invites
+    if (invite.clientId) {
+      const clerkUser = await clerk.users.getUser(userId);
+      const userName = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "New User";
+
+      const [client] = await db
+        .select({ companyName: clients.companyName })
+        .from(clients)
+        .where(eq(clients.id, invite.clientId))
+        .limit(1);
+
+      notifyEvent({
+        event: "user_accepted_invite",
+        clientId: invite.clientId,
+        clientName: client?.companyName || "Unknown Client",
+        userName,
+      });
+    }
 
     return NextResponse.json({
       success: true,
