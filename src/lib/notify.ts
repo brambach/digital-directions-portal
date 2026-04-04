@@ -141,7 +141,7 @@ interface SlackMessageConfig {
 }
 
 function buildSlackBlocks(config: SlackMessageConfig) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Slack block types are complex unions — cast to avoid verbose typing
   const blocks: any[] = [
     {
       type: "section",
@@ -194,7 +194,7 @@ async function sendSlack(config: SlackMessageConfig): Promise<void> {
   try {
     await slack.chat.postMessage({
       channel: SLACK_CHANNEL_ID,
-      blocks: buildSlackBlocks(config),
+      blocks: buildSlackBlocks(config) as any,
       attachments: [
         {
           color: config.color || COLORS.brand,
