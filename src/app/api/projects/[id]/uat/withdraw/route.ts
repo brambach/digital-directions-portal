@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { uatResults, projects, users, userNotifications } from "@/lib/db/schema";
+import { uatResults, projects } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendUatEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 export async function POST(
   request: NextRequest,
@@ -58,39 +57,13 @@ export async function POST(
       .where(eq(uatResults.id, result.id))
       .returning();
 
-    const adminUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
-
-    const clerk = await clerkClient();
-
-    for (const adminUser of adminUsers) {
-      await db.insert(userNotifications).values({
-        userId: adminUser.id,
-        type: "uat_submitted",
-        title: "UAT results withdrawn",
-        message: `The UAT results for "${project.name}" have been withdrawn by the client. They may resubmit after making changes.`,
-        linkUrl: `/dashboard/admin/projects/${projectId}/uat`,
-      });
-
-      try {
-        const clerkAdmin = await clerk.users.getUser(adminUser.clerkId);
-        const email = clerkAdmin.emailAddresses[0]?.emailAddress;
-        const name = `${clerkAdmin.firstName || ""}`.trim() || "Team";
-        if (email) {
-          await sendUatEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: "withdrawn",
-          });
-        }
-      } catch {
-        // Non-fatal
-      }
-    }
+    // Notify admins (fire-and-forget)
+    notifyEvent({
+      event: "uat_withdrawn",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+    });
 
     return NextResponse.json(updated);
   } catch (error: unknown) {

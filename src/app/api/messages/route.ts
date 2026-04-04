@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { messages, users, projects, clients } from "@/lib/db/schema";
+import { messages, users, projects } from "@/lib/db/schema";
 import { eq, and, isNull, desc, sql } from "drizzle-orm";
-import { notifyMessageReceived } from "@/lib/slack";
-import { notifyNewMessage } from "@/lib/notifications";
+import { notifyEvent } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
@@ -189,13 +188,6 @@ export async function POST(req: NextRequest) {
       .then((rows) => rows[0]);
 
     if (project) {
-      const client = await db
-        .select({ companyName: clients.companyName })
-        .from(clients)
-        .where(eq(clients.id, project.clientId))
-        .limit(1)
-        .then((rows) => rows[0]);
-
       // Get sender name from Clerk
       let senderName = user.role === "client" ? "Client" : "Digital Directions";
       try {
@@ -206,26 +198,25 @@ export async function POST(req: NextRequest) {
         // Keep default name
       }
 
-      // Send Slack notification for client messages only
       if (user.role === "client") {
-        notifyMessageReceived({
-          senderName,
-          clientName: client?.companyName || "Unknown Client",
+        notifyEvent({
+          event: "client_message_sent",
           projectId,
           projectName: project.name,
+          clientId: project.clientId,
+          senderName,
           messagePreview: content,
-        }).catch((err) => console.error("Slack notification failed:", err));
+        });
+      } else {
+        notifyEvent({
+          event: "admin_message_sent",
+          projectId,
+          projectName: project.name,
+          clientId: project.clientId,
+          senderName,
+          messagePreview: content,
+        });
       }
-
-      // Create in-app notification for recipients
-      notifyNewMessage({
-        senderRole: user.role as "admin" | "client",
-        senderName,
-        projectId,
-        projectName: project.name,
-        clientId: project.clientId,
-        messagePreview: content,
-      }).catch((err) => console.error("In-app notification failed:", err));
     }
 
     return NextResponse.json(newMessage[0], { status: 201 });

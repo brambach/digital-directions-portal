@@ -4,13 +4,10 @@ import {
   dataMappingConfigs,
   dataMappingEntries,
   projects,
-  users,
-  userNotifications,
 } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendMappingEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // POST /api/projects/[id]/mapping/submit — Client submits mappings for review
 export async function POST(
@@ -82,41 +79,13 @@ export async function POST(
       .where(eq(dataMappingConfigs.id, config.id))
       .returning();
 
-    // Notify all admin users
-    const adminUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
-
-    for (const admin of adminUsers) {
-      await db.insert(userNotifications).values({
-        userId: admin.id,
-        type: "mapping",
-        title: "Data mapping submitted",
-        message: `The data mapping for "${project.name}" has been submitted for review.`,
-        linkUrl: `/dashboard/admin/projects/${projectId}/mapping`,
-      });
-
-      try {
-        const clerk = await clerkClient();
-        const clerkUser = await clerk.users.getUser(admin.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name =
-          `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
-          "there";
-        if (email) {
-          await sendMappingEmail({
-            to: email,
-            recipientName: name,
-            projectName: project.name,
-            projectId,
-            event: "submitted",
-          });
-        }
-      } catch (emailErr) {
-        console.error("Error sending mapping email:", emailErr);
-      }
-    }
+    // Notify admins (fire-and-forget)
+    notifyEvent({
+      event: "mapping_submitted",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+    });
 
     return NextResponse.json({
       ...updated,

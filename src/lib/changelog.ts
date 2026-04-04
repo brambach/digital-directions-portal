@@ -15,6 +15,33 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   // ── April 2026 ──────────────────────────────────────────────
   {
+    id: "slack-integration",
+    date: "2026-04-03",
+    title: "Slack Integration",
+    description: "Live portal activity notifications now post to Slack, keeping the DD team informed of client actions in real time.",
+    audience: "admin",
+    tags: ["feature"],
+    items: [
+      "All lifecycle stage events (discovery, mapping, UAT, provisioning, go-live) now post to Slack",
+      "Client messages, flags, and new user signups trigger Slack notifications",
+      "Unified notification service consolidates in-app, email, and Slack into a single call",
+    ],
+  },
+  {
+    id: "2026-04-03-unified-notification-service",
+    date: "2026-04-03",
+    title: "Unified Notification Service",
+    description: "Centralised notification dispatcher for all lifecycle events with Slack, email, and in-app support.",
+    tags: ["internal"],
+    audience: "admin",
+    items: [
+      "New notifyEvent() dispatcher handles all 22 portal event types from a single call",
+      "Slack Block Kit messages with emoji headers, context lines, and 'View in Portal' buttons",
+      "Automatic recipient resolution for admin and client users via Clerk",
+      "Foundation for refactoring inline notification logic across all API routes",
+    ],
+  },
+  {
     id: "2026-04-02-client-submission-withdrawal",
     date: "2026-04-02",
     title: "Withdraw Submissions & Undo",

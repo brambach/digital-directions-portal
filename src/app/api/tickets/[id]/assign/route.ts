@@ -3,7 +3,6 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
-import { notifyTicketAssigned } from "@/lib/slack";
 import {
   isFreshdeskConfigured,
   addNote as fdAddNote,
@@ -127,15 +126,6 @@ export async function POST(
         .then((rows) => rows[0]);
       projectName = project?.name;
     }
-
-    // Send Slack notification
-    notifyTicketAssigned({
-      ticketTitle: existingTicket.title,
-      ticketId: existingTicket.id,
-      clientName: client?.companyName || "Unknown Client",
-      projectName,
-      assigneeName,
-    }).catch((err) => console.error("Slack notification failed:", err));
 
     // Add assignment note to Freshdesk (fire and forget)
     if (isFreshdeskConfigured() && existingTicket.freshdeskId) {

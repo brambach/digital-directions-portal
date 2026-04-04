@@ -101,54 +101,6 @@ export async function getClientUserIds(clientId: string): Promise<string[]> {
 // ============================================
 
 /**
- * Notify when a new message is received on a project
- * - Admin sends message → Notify all client users
- * - Client sends message → Notify all admins
- */
-export async function notifyNewMessage({
-  senderRole,
-  senderName,
-  projectId,
-  projectName,
-  clientId,
-  messagePreview,
-}: {
-  senderRole: "admin" | "client";
-  senderName: string;
-  projectId: string;
-  projectName: string;
-  clientId: string;
-  messagePreview: string;
-}): Promise<void> {
-  const truncatedMessage =
-    messagePreview.length > 100
-      ? messagePreview.substring(0, 100) + "..."
-      : messagePreview;
-
-  if (senderRole === "admin") {
-    // Admin sent message - notify all client users
-    const clientUserIds = await getClientUserIds(clientId);
-    await createNotificationsForUsers({
-      userIds: clientUserIds,
-      type: "message",
-      title: "New message from Digital Directions",
-      message: `${senderName} sent a message about ${projectName}: "${truncatedMessage}"`,
-      linkUrl: `/dashboard/client/projects/${projectId}`,
-    });
-  } else {
-    // Client sent message - notify all admins
-    const adminUserIds = await getAllAdminUserIds();
-    await createNotificationsForUsers({
-      userIds: adminUserIds,
-      type: "message",
-      title: "New client message",
-      message: `${senderName} sent a message about ${projectName}: "${truncatedMessage}"`,
-      linkUrl: `/dashboard/admin/projects/${projectId}`,
-    });
-  }
-}
-
-/**
  * Notify when a new ticket is created
  * - Notify all admins
  */

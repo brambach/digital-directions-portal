@@ -4,13 +4,10 @@ import {
   projects,
   goLiveChecklist,
   goLiveEvents,
-  users,
-  userNotifications,
 } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
-import { sendGoLiveEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 interface ChecklistItem {
   id: string;
@@ -113,86 +110,12 @@ export async function POST(
     .where(eq(projects.id, projectId));
 
   // Notify everyone
-  await notifyGoLiveTriggered(projectId, project.clientId, project.name);
+  notifyEvent({
+    event: "go_live_triggered",
+    projectId,
+    projectName: project.name,
+    clientId: project.clientId,
+  });
 
   return NextResponse.json(event, { status: 201 });
-}
-
-async function notifyGoLiveTriggered(
-  projectId: string,
-  clientId: string,
-  projectName: string
-) {
-  try {
-    const clerk = await clerkClient();
-
-    // Notify client users
-    const clientUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.clientId, clientId), isNull(users.deletedAt)));
-
-    for (const clientUser of clientUsers) {
-      await db.insert(userNotifications).values({
-        userId: clientUser.id,
-        type: "go_live_triggered",
-        title: "Your Integration Is Live!",
-        message: `Congratulations! The integration for "${projectName}" is now live.`,
-        linkUrl: `/dashboard/client/projects/${projectId}/go-live`,
-      });
-
-      try {
-        const clerkUser = await clerk.users.getUser(clientUser.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name = `${clerkUser.firstName || ""}`.trim() || "there";
-        if (email) {
-          await sendGoLiveEmail({
-            to: email,
-            recipientName: name,
-            projectName,
-            projectId,
-            event: "go_live_triggered",
-          });
-        }
-      } catch {
-        // Non-fatal
-      }
-    }
-
-    // Notify admin users
-    const adminUsers = await db
-      .select()
-      .from(users)
-      .where(and(eq(users.role, "admin"), isNull(users.deletedAt)));
-
-    for (const admin of adminUsers) {
-      await db.insert(userNotifications).values({
-        userId: admin.id,
-        type: "go_live_triggered",
-        title: "Go-Live Triggered",
-        message: `The integration for "${projectName}" has been switched to production.`,
-        linkUrl: `/dashboard/admin/projects/${projectId}/go-live`,
-      });
-
-      try {
-        const clerkUser = await clerk.users.getUser(admin.clerkId);
-        const email = clerkUser.emailAddresses[0]?.emailAddress;
-        const name = `${clerkUser.firstName || ""}`.trim() || "there";
-        if (email) {
-          await sendGoLiveEmail({
-            to: email,
-            recipientName: name,
-            projectName,
-            projectId,
-            event: "go_live_triggered",
-            isAdmin: true,
-          });
-        }
-      } catch {
-        // Non-fatal
-      }
-    }
-  } catch (err) {
-    console.error("Failed to notify go-live triggered:", err);
-  }
 }

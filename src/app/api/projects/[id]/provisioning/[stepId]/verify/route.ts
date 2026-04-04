@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { provisioningSteps, projects, users, userNotifications } from "@/lib/db/schema";
+import { provisioningSteps, projects } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
-import { sendProvisioningEmail } from "@/lib/email";
-import { clerkClient } from "@clerk/nextjs/server";
+import { notifyEvent } from "@/lib/notify";
 
 // POST /api/projects/[id]/provisioning/[stepId]/verify — Admin verifies a step
 export async function POST(
@@ -71,42 +70,14 @@ export async function POST(
 
     const allVerified = allSteps.every((s) => s.verifiedAt || s.id === stepId);
 
-    if (allVerified) {
-      // Notify client users — all provisioning steps are verified!
-      const clientUsers = await db
-        .select()
-        .from(users)
-        .where(and(eq(users.clientId, project.clientId), isNull(users.deletedAt)));
-
-      for (const clientUser of clientUsers) {
-        await db.insert(userNotifications).values({
-          userId: clientUser.id,
-          type: "provisioning",
-          title: "System provisioning complete!",
-          message: `All provisioning steps for "${project.name}" have been verified. Your project is ready to move to the next stage.`,
-          linkUrl: `/dashboard/client/projects/${projectId}/provisioning`,
-        });
-
-        try {
-          const clerk = await clerkClient();
-          const clerkUser = await clerk.users.getUser(clientUser.clerkId);
-          const email = clerkUser.emailAddresses[0]?.emailAddress;
-          const name =
-            `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "there";
-          if (email) {
-            await sendProvisioningEmail({
-              to: email,
-              recipientName: name,
-              projectName: project.name,
-              projectId,
-              event: "all_verified",
-            });
-          }
-        } catch (emailErr) {
-          console.error("Error sending provisioning all-verified email:", emailErr);
-        }
-      }
-    }
+    notifyEvent({
+      event: "provisioning_step_verified",
+      projectId,
+      projectName: project.name,
+      clientId: project.clientId,
+      stepName: step.title,
+      allVerified,
+    });
 
     return NextResponse.json({ ...updated, allVerified });
   } catch (error: unknown) {

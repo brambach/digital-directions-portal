@@ -3,7 +3,6 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { tickets, users, clients } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
-import { notifyTicketResolved } from "@/lib/slack";
 import { sendTicketResolvedEmail } from "@/lib/email";
 import {
   isFreshdeskConfigured,
@@ -118,14 +117,6 @@ export async function POST(
       .where(eq(clients.id, existingTicket.clientId))
       .limit(1)
       .then((rows) => rows[0]);
-
-    // Send Slack notification
-    notifyTicketResolved({
-      ticketTitle: existingTicket.title,
-      ticketId: existingTicket.id,
-      clientName: client?.companyName || "Unknown Client",
-      resolverName,
-    }).catch((err) => console.error("Slack notification failed:", err));
 
     // Send email notification to client
     if (client?.contactEmail) {

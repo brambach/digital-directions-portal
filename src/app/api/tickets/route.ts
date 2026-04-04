@@ -3,7 +3,6 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { tickets, users, clients, projects } from "@/lib/db/schema";
 import { eq, and, isNull, desc, sql, or } from "drizzle-orm";
-import { notifyTicketCreated } from "@/lib/slack";
 import { notifyNewTicket } from "@/lib/notifications";
 import {
   isFreshdeskConfigured,
@@ -298,16 +297,6 @@ export async function POST(req: NextRequest) {
     } catch {
       // Keep default name
     }
-
-    // Send Slack notification (fire and forget)
-    notifyTicketCreated({
-      ticketTitle: title,
-      ticketId: newTicket[0].id,
-      clientName: client?.companyName || "Unknown Client",
-      projectName,
-      priority: priority || "medium",
-      ticketType: type || "general_support",
-    }).catch((err) => console.error("Slack notification failed:", err));
 
     // Create in-app notification for admins (only for client-created tickets)
     if (user.role === "client") {
