@@ -92,29 +92,26 @@ async function resolveRecipients(
       .where(and(eq(users.clientId, clientId), isNull(users.deletedAt)));
   }
 
-  const recipients: RecipientInfo[] = [];
   const clerk = await clerkClient();
-  for (const u of dbUsers) {
-    try {
+  const results = await Promise.allSettled(
+    dbUsers.map(async (u) => {
       const clerkUser = await clerk.users.getUser(u.clerkId);
-      recipients.push({
+      return {
         userId: u.id,
         clerkId: u.clerkId,
         email: clerkUser.emailAddresses[0]?.emailAddress || "",
         name:
           `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
           "there",
-      });
-    } catch {
-      recipients.push({
-        userId: u.id,
-        clerkId: u.clerkId,
-        email: "",
-        name: "there",
-      });
-    }
-  }
-  return recipients;
+      };
+    })
+  );
+
+  return results.map((r, i) =>
+    r.status === "fulfilled"
+      ? r.value
+      : { userId: dbUsers[i].id, clerkId: dbUsers[i].clerkId, email: "", name: "there" }
+  );
 }
 
 // --- Slack formatting ---
@@ -227,6 +224,17 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "discovery_submitted": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":blue_book:",
+          header: "Discovery Submitted",
+          body: `${clientName} has submitted their discovery questionnaire.`,
+          clientName,
+          projectName: payload.projectName,
+          color: COLORS.brand,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -252,20 +260,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":blue_book:",
-          header: "Discovery Submitted",
-          body: `${clientName} has submitted their discovery questionnaire.`,
-          clientName,
-          projectName: payload.projectName,
-          color: COLORS.brand,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
-        });
         break;
       }
 
       case "discovery_withdrawn": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":blue_book:",
+          header: "Discovery Withdrawn",
+          body: `${clientName} has withdrawn their discovery submission.`,
+          clientName,
+          projectName: payload.projectName,
+          color: COLORS.brand,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -291,23 +301,27 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":blue_book:",
-          header: "Discovery Withdrawn",
-          body: `${clientName} has withdrawn their discovery submission.`,
-          clientName,
-          projectName: payload.projectName,
-          color: COLORS.brand,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
-        });
         break;
       }
 
       case "discovery_reviewed": {
         const clientName = await getClientName(payload.clientId);
+        const approved = payload.action === "approve";
+
+        await sendSlack({
+          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
+          header: approved ? "Discovery Approved" : "Discovery — Changes Requested",
+          body: approved
+            ? `Discovery questionnaire has been approved.`
+            : `Changes have been requested on the discovery questionnaire.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
+          color: approved ? COLORS.success : COLORS.warning,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
-        const approved = payload.action === "approve";
 
         await createNotificationsForUsers({
           userIds,
@@ -334,17 +348,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
-          header: approved ? "Discovery Approved" : "Discovery — Changes Requested",
-          body: approved
-            ? `Discovery questionnaire has been approved.`
-            : `Changes have been requested on the discovery questionnaire.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/discovery`,
-          color: approved ? COLORS.success : COLORS.warning,
-        });
         break;
       }
 
@@ -354,6 +357,17 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "mapping_submitted": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":world_map:",
+          header: "Mapping Submitted",
+          body: `${clientName} has submitted their data mapping.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -379,20 +393,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":world_map:",
-          header: "Mapping Submitted",
-          body: `${clientName} has submitted their data mapping.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "mapping_withdrawn": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":world_map:",
+          header: "Mapping Withdrawn",
+          body: `${clientName} has withdrawn their mapping submission.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -418,23 +434,27 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":world_map:",
-          header: "Mapping Withdrawn",
-          body: `${clientName} has withdrawn their mapping submission.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "mapping_reviewed": {
         const clientName = await getClientName(payload.clientId);
+        const approved = payload.action === "approve";
+
+        await sendSlack({
+          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
+          header: approved ? "Mapping Approved" : "Mapping — Changes Requested",
+          body: approved
+            ? `Data mapping has been approved.`
+            : `Changes have been requested on the data mapping.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
+          color: approved ? COLORS.success : COLORS.warning,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
-        const approved = payload.action === "approve";
 
         await createNotificationsForUsers({
           userIds,
@@ -461,17 +481,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
-          header: approved ? "Mapping Approved" : "Mapping — Changes Requested",
-          body: approved
-            ? `Data mapping has been approved.`
-            : `Changes have been requested on the data mapping.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/mapping`,
-          color: approved ? COLORS.success : COLORS.warning,
-        });
         break;
       }
 
@@ -481,6 +490,17 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "uat_submitted": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":test_tube:",
+          header: "UAT Results Submitted",
+          body: `UAT results have been submitted: ${payload.passed} passed, ${payload.failed} failed, ${payload.na} N/A.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -506,20 +526,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":test_tube:",
-          header: "UAT Results Submitted",
-          body: `UAT results have been submitted: ${payload.passed} passed, ${payload.failed} failed, ${payload.na} N/A.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "uat_withdrawn": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":test_tube:",
+          header: "UAT Withdrawn",
+          body: `${clientName} has withdrawn their UAT submission.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -545,23 +567,27 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":test_tube:",
-          header: "UAT Withdrawn",
-          body: `${clientName} has withdrawn their UAT submission.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "uat_reviewed": {
         const clientName = await getClientName(payload.clientId);
+        const approved = payload.action === "approve";
+
+        await sendSlack({
+          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
+          header: approved ? "UAT Approved" : "UAT — Changes Requested",
+          body: approved
+            ? `UAT results have been approved.`
+            : `Changes have been requested on the UAT results.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
+          color: approved ? COLORS.success : COLORS.warning,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
-        const approved = payload.action === "approve";
 
         await createNotificationsForUsers({
           userIds,
@@ -588,17 +614,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: approved ? ":white_check_mark:" : ":leftwards_arrow_with_hook:",
-          header: approved ? "UAT Approved" : "UAT — Changes Requested",
-          body: approved
-            ? `UAT results have been approved.`
-            : `Changes have been requested on the UAT results.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/uat`,
-          color: approved ? COLORS.success : COLORS.warning,
-        });
         break;
       }
 
@@ -608,6 +623,17 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "bob_config_submitted": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":gear:",
+          header: "HiBob Config Submitted",
+          body: `${clientName} has submitted their HiBob configuration.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -633,20 +659,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":gear:",
-          header: "HiBob Config Submitted",
-          body: `${clientName} has submitted their HiBob configuration.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "bob_config_withdrawn": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":gear:",
+          header: "HiBob Config Withdrawn",
+          body: `${clientName} has withdrawn their HiBob configuration submission.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.brand,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -672,20 +700,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":gear:",
-          header: "HiBob Config Withdrawn",
-          body: `${clientName} has withdrawn their HiBob configuration submission.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
-          color: COLORS.brand,
-        });
         break;
       }
 
       case "bob_config_approved": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":white_check_mark:",
+          header: "HiBob Config Approved",
+          body: `HiBob configuration has been approved.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.success,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
 
@@ -712,20 +742,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":white_check_mark:",
-          header: "HiBob Config Approved",
-          body: `HiBob configuration has been approved.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
-          color: COLORS.success,
-        });
         break;
       }
 
       case "bob_config_changes_requested": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":leftwards_arrow_with_hook:",
+          header: "HiBob Config — Changes Requested",
+          body: `Changes have been requested on the HiBob configuration.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
+          color: COLORS.warning,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
 
@@ -752,15 +784,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":leftwards_arrow_with_hook:",
-          header: "HiBob Config — Changes Requested",
-          body: `Changes have been requested on the HiBob configuration.${payload.reviewNotes ? ` Notes: "${payload.reviewNotes.substring(0, 300)}"` : ""}`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/bob-config`,
-          color: COLORS.warning,
-        });
         break;
       }
 
@@ -770,11 +793,24 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "provisioning_step_completed": {
         const clientName = await getClientName(payload.clientId);
-        const recipients = await resolveRecipients("admin");
-        const userIds = recipients.map((r) => r.userId);
         const header = payload.allComplete
           ? "All Provisioning Steps Completed"
           : "Provisioning Step Completed";
+
+        await sendSlack({
+          emoji: ":white_check_mark:",
+          header,
+          body: payload.allComplete
+            ? `All provisioning steps have been completed by the client.`
+            : `Client completed provisioning step: "${payload.stepName}".`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/provisioning`,
+          color: COLORS.success,
+        });
+
+        const recipients = await resolveRecipients("admin");
+        const userIds = recipients.map((r) => r.userId);
 
         await createNotificationsForUsers({
           userIds,
@@ -801,17 +837,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":white_check_mark:",
-          header,
-          body: payload.allComplete
-            ? `All provisioning steps have been completed by the client.`
-            : `Client completed provisioning step: "${payload.stepName}".`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/provisioning`,
-          color: COLORS.success,
-        });
         break;
       }
 
@@ -870,12 +895,23 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "client_flag_raised": {
         const clientName = await getClientName(payload.clientId);
-        const recipients = await resolveRecipients("admin");
-        const userIds = recipients.map((r) => r.userId);
         const truncatedMessage =
           payload.flagMessage.length > 300
             ? payload.flagMessage.substring(0, 300) + "..."
             : payload.flagMessage;
+
+        await sendSlack({
+          emoji: ":triangular_flag_on_post:",
+          header: "Client Flag Raised",
+          body: `${clientName} raised a flag: "${truncatedMessage}"`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.danger,
+        });
+
+        const recipients = await resolveRecipients("admin");
+        const userIds = recipients.map((r) => r.userId);
 
         await createNotificationsForUsers({
           userIds,
@@ -887,26 +923,28 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for flags — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":triangular_flag_on_post:",
-          header: "Client Flag Raised",
-          body: `${clientName} raised a flag: "${truncatedMessage}"`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
-          color: COLORS.danger,
-        });
         break;
       }
 
       case "admin_flag_raised": {
         const clientName = await getClientName(payload.clientId);
-        const recipients = await resolveRecipients("client", payload.clientId);
-        const userIds = recipients.map((r) => r.userId);
         const truncatedMessage =
           payload.flagMessage.length > 300
             ? payload.flagMessage.substring(0, 300) + "..."
             : payload.flagMessage;
+
+        await sendSlack({
+          emoji: ":raised_hand:",
+          header: "Admin Flag Raised",
+          body: `Admin raised a flag: "${truncatedMessage}"`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.warning,
+        });
+
+        const recipients = await resolveRecipients("client", payload.clientId);
+        const userIds = recipients.map((r) => r.userId);
 
         await createNotificationsForUsers({
           userIds,
@@ -918,15 +956,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for flags — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":raised_hand:",
-          header: "Admin Flag Raised",
-          body: `Admin raised a flag: "${truncatedMessage}"`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
-          color: COLORS.warning,
-        });
         break;
       }
 
@@ -936,12 +965,23 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "client_message_sent": {
         const clientName = await getClientName(payload.clientId);
-        const recipients = await resolveRecipients("admin");
-        const userIds = recipients.map((r) => r.userId);
         const truncatedPreview =
           payload.messagePreview.length > 200
             ? payload.messagePreview.substring(0, 200) + "..."
             : payload.messagePreview;
+
+        await sendSlack({
+          emoji: ":speech_balloon:",
+          header: "New Client Message",
+          body: `${payload.senderName} sent a message: "${truncatedPreview}"`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.info,
+        });
+
+        const recipients = await resolveRecipients("admin");
+        const userIds = recipients.map((r) => r.userId);
 
         await createNotificationsForUsers({
           userIds,
@@ -953,20 +993,22 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for messages — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":speech_balloon:",
-          header: "New Client Message",
-          body: `${payload.senderName} sent a message: "${truncatedPreview}"`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
-          color: COLORS.info,
-        });
         break;
       }
 
       case "admin_message_sent": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":speech_balloon:",
+          header: "Admin Message Sent",
+          body: `${payload.senderName} sent a message to the client.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.info,
+        });
+
         const recipients = await resolveRecipients("client", payload.clientId);
         const userIds = recipients.map((r) => r.userId);
 
@@ -980,15 +1022,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for messages — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":speech_balloon:",
-          header: "Admin Message Sent",
-          body: `${payload.senderName} sent a message to the client.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
-          color: COLORS.info,
-        });
         break;
       }
 
@@ -998,10 +1031,21 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "stage_advanced": {
         const clientName = await getClientName(payload.clientId);
-        const recipients = await resolveRecipients("client", payload.clientId);
-        const userIds = recipients.map((r) => r.userId);
         const fromLabel = stageLabel(payload.fromStage);
         const toLabel = stageLabel(payload.toStage);
+
+        await sendSlack({
+          emoji: ":arrow_forward:",
+          header: "Stage Advanced",
+          body: `Project moved from ${fromLabel} to ${toLabel}.`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
+          color: COLORS.success,
+        });
+
+        const recipients = await resolveRecipients("client", payload.clientId);
+        const userIds = recipients.map((r) => r.userId);
 
         await createNotificationsForUsers({
           userIds,
@@ -1013,15 +1057,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for stage advances — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":arrow_forward:",
-          header: "Stage Advanced",
-          body: `Project moved from ${fromLabel} to ${toLabel}.`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}`,
-          color: COLORS.success,
-        });
         break;
       }
 
@@ -1031,6 +1066,16 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
       case "go_live_triggered": {
         const clientName = await getClientName(payload.clientId);
+
+        await sendSlack({
+          emoji: ":rocket:",
+          header: "Integration Is Live!",
+          body: `${payload.projectName} has gone live!`,
+          clientName,
+          projectName: payload.projectName,
+          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/go-live`,
+          color: COLORS.success,
+        });
 
         // Notify both admins and client users
         const adminRecipients = await resolveRecipients("admin");
@@ -1089,15 +1134,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
           }
         }
 
-        await sendSlack({
-          emoji: ":rocket:",
-          header: "Integration Is Live!",
-          body: `${payload.projectName} has gone live!`,
-          clientName,
-          projectName: payload.projectName,
-          linkUrl: `${APP_URL}/dashboard/admin/projects/${payload.projectId}/go-live`,
-          color: COLORS.success,
-        });
         break;
       }
 
@@ -1106,6 +1142,15 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
       // =====================
 
       case "user_accepted_invite": {
+        await sendSlack({
+          emoji: ":wave:",
+          header: "New User Joined",
+          body: `${payload.userName} from ${payload.clientName} has joined the portal.`,
+          clientName: payload.clientName,
+          linkUrl: `${APP_URL}/dashboard/admin/clients`,
+          color: COLORS.info,
+        });
+
         const recipients = await resolveRecipients("admin");
         const userIds = recipients.map((r) => r.userId);
 
@@ -1119,14 +1164,6 @@ export async function notifyEvent(payload: PortalEvent): Promise<void> {
 
         // No email for invite accepted — in-app + Slack only
 
-        await sendSlack({
-          emoji: ":wave:",
-          header: "New User Joined",
-          body: `${payload.userName} from ${payload.clientName} has joined the portal.`,
-          clientName: payload.clientName,
-          linkUrl: `${APP_URL}/dashboard/admin/clients`,
-          color: COLORS.info,
-        });
         break;
       }
 
