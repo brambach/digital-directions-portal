@@ -141,7 +141,8 @@ interface SlackMessageConfig {
 }
 
 function buildSlackBlocks(config: SlackMessageConfig) {
-  const blocks: object[] = [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blocks: any[] = [
     {
       type: "section",
       text: {
