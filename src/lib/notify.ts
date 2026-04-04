@@ -141,45 +141,51 @@ interface SlackMessageConfig {
 }
 
 function buildSlackBlocks(config: SlackMessageConfig) {
-  return [
+  const blocks: object[] = [
     {
-      type: "section" as const,
+      type: "section",
       text: {
-        type: "mrkdwn" as const,
+        type: "mrkdwn",
         text: `${config.emoji}  *${config.header}*`,
       },
     },
     {
-      type: "section" as const,
+      type: "section",
       text: {
-        type: "mrkdwn" as const,
+        type: "mrkdwn",
         text: config.body,
       },
     },
     {
-      type: "context" as const,
+      type: "context",
       elements: [
         {
-          type: "mrkdwn" as const,
+          type: "mrkdwn",
           text: `*${config.clientName}*${config.projectName ? `  ·  ${config.projectName}` : ""}  ·  <!date^${Math.floor(Date.now() / 1000)}^{date_short_pretty} at {time}|just now>`,
         },
       ],
     },
-    {
-      type: "divider" as const,
-    },
-    {
-      type: "actions" as const,
-      elements: [
-        {
-          type: "button" as const,
-          text: { type: "plain_text" as const, text: "View in Portal  →", emoji: true },
-          url: config.linkUrl,
-          action_id: "view_in_portal",
-        },
-      ],
-    },
   ];
+
+  // Slack requires HTTPS URLs for buttons — skip button in local dev
+  if (config.linkUrl.startsWith("https://")) {
+    blocks.push(
+      { type: "divider" },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: { type: "plain_text", text: "View in Portal  →", emoji: true },
+            url: config.linkUrl,
+            action_id: "view_in_portal",
+          },
+        ],
+      }
+    );
+  }
+
+  return blocks;
 }
 
 async function sendSlack(config: SlackMessageConfig): Promise<void> {
