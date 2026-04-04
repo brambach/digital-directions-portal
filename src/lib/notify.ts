@@ -187,10 +187,11 @@ async function sendSlack(config: SlackMessageConfig): Promise<void> {
   try {
     await slack.chat.postMessage({
       channel: SLACK_CHANNEL_ID,
+      blocks: buildSlackBlocks(config),
       attachments: [
         {
           color: config.color || COLORS.brand,
-          blocks: buildSlackBlocks(config),
+          blocks: [],
         },
       ],
       text: `${config.header} — ${config.clientName}${config.projectName ? ` — ${config.projectName}` : ""}`,
