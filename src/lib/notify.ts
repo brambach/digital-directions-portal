@@ -192,16 +192,22 @@ function buildSlackBlocks(config: SlackMessageConfig) {
 async function sendSlack(config: SlackMessageConfig): Promise<void> {
   if (!slack || !SLACK_CHANNEL_ID) return;
   try {
+    const linkLine = config.linkUrl.startsWith("https://")
+      ? `\n<${config.linkUrl}|View in Portal →>`
+      : "";
+    const contextLine = `${config.clientName}${config.projectName ? `  ·  ${config.projectName}` : ""}`;
+
     await slack.chat.postMessage({
       channel: SLACK_CHANNEL_ID,
-      blocks: buildSlackBlocks(config) as any,
       attachments: [
         {
           color: config.color || COLORS.brand,
-          blocks: [],
+          fallback: `${config.header} — ${contextLine}`,
+          mrkdwn_in: ["text"],
+          text: `${config.emoji}  *${config.header}*\n\n${config.body}${linkLine}\n\n_${contextLine}_`,
         },
       ],
-      text: `${config.header} — ${config.clientName}${config.projectName ? ` — ${config.projectName}` : ""}`,
+      text: `${config.header} — ${contextLine}`,
     });
   } catch (error) {
     console.error("Slack notification failed:", error);
