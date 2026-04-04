@@ -143,11 +143,10 @@ interface SlackMessageConfig {
 function buildSlackBlocks(config: SlackMessageConfig) {
   return [
     {
-      type: "header" as const,
+      type: "section" as const,
       text: {
-        type: "plain_text" as const,
-        text: `${config.emoji}  ${config.header}`,
-        emoji: true,
+        type: "mrkdwn" as const,
+        text: `${config.emoji}  *${config.header}*`,
       },
     },
     {
@@ -177,7 +176,6 @@ function buildSlackBlocks(config: SlackMessageConfig) {
           text: { type: "plain_text" as const, text: "View in Portal  →", emoji: true },
           url: config.linkUrl,
           action_id: "view_in_portal",
-          style: "primary" as const,
         },
       ],
     },
